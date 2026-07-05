@@ -33,6 +33,8 @@ namespace Yomic.Core.Sources
         private string _scriptCode = "";
         private bool _supportsStatusFilter;
         private long _id;
+        private List<string> _availableGenres = new();
+        private List<string> _availableFormats = new();
 
         private static string _selectedLanguage = "en";
         public static string SelectedLanguage
@@ -53,6 +55,10 @@ namespace Yomic.Core.Sources
         public bool IsNsfw => _isNsfw;
         public override bool IsHasMorePages => _isHasMorePages;
         public bool SupportsStatusFilter => _supportsStatusFilter;
+        public bool SupportsGenreFilter => _availableGenres.Count > 0;
+        public List<string> AvailableGenres => _availableGenres;
+        public bool SupportsFormatFilter => _availableFormats.Count > 0;
+        public List<string> AvailableFormats => _availableFormats;
         public override bool RequiresProxy => _requiresProxy;
 
         protected override void ConfigureClient(System.Net.Http.HttpClient client)
@@ -102,13 +108,22 @@ namespace Yomic.Core.Sources
                 if (obj.HasProperty("iconForeground")) _iconForeground = obj.Get("iconForeground").AsString();
                 if (obj.HasProperty("isHasMorePages")) _isHasMorePages = obj.Get("isHasMorePages").AsBoolean();
                 if (obj.HasProperty("isNsfw")) _isNsfw = obj.Get("isNsfw").AsBoolean();
-                 if (obj.HasProperty("requiresProxy")) _requiresProxy = obj.Get("requiresProxy").AsBoolean();
-                 if (obj.HasProperty("userAgent")) _userAgent = obj.Get("userAgent").AsString();
+                if (obj.HasProperty("requiresProxy")) _requiresProxy = obj.Get("requiresProxy").AsBoolean();
+                if (obj.HasProperty("userAgent")) _userAgent = obj.Get("userAgent").AsString();
 
-                 if (string.IsNullOrEmpty(_userAgent) && (_name.Contains("MangaDex", StringComparison.OrdinalIgnoreCase) || _baseUrl.Contains("mangadex.org", StringComparison.OrdinalIgnoreCase)))
-                 {
-                     _userAgent = "Yomic/1.0.3";
-                 }
+                if (string.IsNullOrEmpty(_userAgent) && (_name.Contains("MangaDex", StringComparison.OrdinalIgnoreCase) || _baseUrl.Contains("mangadex.org", StringComparison.OrdinalIgnoreCase)))
+                {
+                    _userAgent = "Yomic/1.0.3";
+                }
+
+                if (obj.HasProperty("genres"))
+                {
+                    _availableGenres = ParseStringListFromJs(obj.Get("genres"));
+                }
+                if (obj.HasProperty("formats"))
+                {
+                    _availableFormats = ParseStringListFromJs(obj.Get("formats"));
+                }
 
                 var idVal = obj.Get("id");
                 if (idVal.IsNumber())
@@ -315,12 +330,24 @@ namespace Yomic.Core.Sources
 
         public async Task<(List<Manga> Items, int TotalPages)> GetMangaListAsync(int page, int status)
         {
+            return await GetMangaListAsync(page, status, null, null);
+        }
+
+        public async Task<(List<Manga> Items, int TotalPages)> GetMangaListAsync(int page, int status, List<string>? genres)
+        {
+            return await GetMangaListAsync(page, status, genres, null);
+        }
+
+        public async Task<(List<Manga> Items, int TotalPages)> GetMangaListAsync(int page, int status, List<string>? genres, List<string>? formats)
+        {
             return await ExecuteJsAsync(engine =>
             {
                 var hasFilteredMethod = engine.Invoke("__hasMethod", "getMangaList").AsBoolean();
                 if (hasFilteredMethod)
                 {
-                    var jsResult = engine.Invoke("__callMethod", "getMangaList", page, status);
+                    var genresJs = genres != null ? JsValue.FromObject(engine, genres.ToArray()) : JsValue.Undefined;
+                    var formatsJs = formats != null ? JsValue.FromObject(engine, formats.ToArray()) : JsValue.Undefined;
+                    var jsResult = engine.Invoke("__callMethod", "getMangaList", page, status, genresJs, formatsJs);
                     return ParsePagedMangaListFromJs(jsResult, page);
                 }
 
