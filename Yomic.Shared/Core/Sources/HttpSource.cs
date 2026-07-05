@@ -8,7 +8,7 @@ using Yomic.Core.Services;
 
 namespace Yomic.Core.Sources
 {
-    public abstract class HttpSource : IMangaSource
+    public abstract class HttpSource : IMangaSource, ICloudflareBypassable
     {
         /// <summary>
         /// Unique stable ID generated from the class name.
@@ -41,7 +41,6 @@ namespace Yomic.Core.Sources
 
         // Dynamic client management
         private HttpClient? _client;
-        private bool _lastProxyState = false;
         protected readonly CookieContainer _cookieContainer = new CookieContainer();
         
         /// <summary>
@@ -55,25 +54,19 @@ namespace Yomic.Core.Sources
         /// </summary>
         public virtual bool RequiresProxy => false;
         
-        // Property that gets/creates HttpClient with current proxy state
+        // Property that gets/creates HttpClient
         protected HttpClient Client
         {
             get
             {
-                // Only use proxy if: VPN is running AND this source requires proxy
-                bool shouldUseProxy = SingboxService.Instance.IsRunning && RequiresProxy;
-                
-                // Recreate client if proxy state changed or client doesn't exist
-                if (_client == null || shouldUseProxy != _lastProxyState)
+                if (_client == null)
                 {
-                    _client?.Dispose();
-                    _client = CreateHttpClient(shouldUseProxy);
-                    _lastProxyState = shouldUseProxy;
+                    _client = CreateHttpClient();
                     
                     // Re-apply extension-specific configuration (headers, etc.)
                     ConfigureClient(_client);
                     
-                    Console.WriteLine($"[HttpSource] HttpClient created with proxy: {shouldUseProxy} (RequiresProxy: {RequiresProxy})");
+                    Console.WriteLine("[HttpSource] HttpClient created");
                 }
                 
                 return _client;
@@ -82,7 +75,7 @@ namespace Yomic.Core.Sources
 
         /// <summary>
         /// Virtual method for extensions to configure the HttpClient with custom headers.
-        /// Called every time the HttpClient is created/recreated (e.g., when proxy state changes).
+        /// Called every time the HttpClient is created/recreated.
         /// </summary>
         protected virtual void ConfigureClient(HttpClient client)
         {
@@ -94,124 +87,99 @@ namespace Yomic.Core.Sources
             // Client will be created lazily on first access via the Client property
         }
         
-        private HttpClient CreateHttpClient(bool useProxy)
+        private HttpClient CreateHttpClient()
         {
-            SocketsHttpHandler handler;
-            
-            if (useProxy)
+            SocketsHttpHandler handler = new SocketsHttpHandler
             {
-                // When using SOCKS5 proxy, don't use custom ConnectCallback
-                Console.WriteLine($"[HttpSource] Creating client with SOCKS5 proxy at {SingboxService.Instance.ProxyAddress}:{SingboxService.Instance.ProxyPort}");
-                handler = new SocketsHttpHandler
+                ConnectCallback = async (context, token) =>
                 {
-                    Proxy = new WebProxy($"socks5://{SingboxService.Instance.ProxyAddress}:{SingboxService.Instance.ProxyPort}"),
-                    UseProxy = true,
-                    SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+                    var host = context.DnsEndPoint.Host;
+                    System.Net.IPAddress? ipAddress = null;
+                    var logBuilder = new System.Text.StringBuilder();
+
+                    // List of DoH providers (IPv4)
+                    var dohQueries = new[]
                     {
-                        RemoteCertificateValidationCallback = delegate { return true; },
-                        EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
-                    },
-                    PooledConnectionLifetime = TimeSpan.FromMinutes(2),
-                    AutomaticDecompression = System.Net.DecompressionMethods.All,
-                    UseCookies = true,
-                    CookieContainer = _cookieContainer
-                };
-            }
-            else
-            {
-                // When not using proxy, use custom DoH ConnectCallback
-                handler = new SocketsHttpHandler
-                {
-                    ConnectCallback = async (context, token) =>
+                        (Provider: "https://8.8.8.8/resolve?name={0}&type=A", Type: "IPv4"), // Direct IP
+                        (Provider: "https://cloudflare-dns.com/dns-query?name={0}&type=A", Type: "IPv4"),
+                        (Provider: "https://dns.google/resolve?name={0}&type=A", Type: "IPv4"),
+                    };
+
+                    foreach (var (template, type) in dohQueries)
                     {
-                        var host = context.DnsEndPoint.Host;
-                        System.Net.IPAddress? ipAddress = null;
-                        var logBuilder = new System.Text.StringBuilder();
-
-                        // List of DoH providers (IPv4)
-                        var dohQueries = new[]
-                        {
-                            (Provider: "https://8.8.8.8/resolve?name={0}&type=A", Type: "IPv4"), // Direct IP
-                            (Provider: "https://cloudflare-dns.com/dns-query?name={0}&type=A", Type: "IPv4"),
-                            (Provider: "https://dns.google/resolve?name={0}&type=A", Type: "IPv4"),
-                        };
-
-                        foreach (var (template, type) in dohQueries)
-                        {
-                            try
-                            {
-                                string dohUrl = string.Format(template, host);
-                                var request = new HttpRequestMessage(HttpMethod.Get, dohUrl);
-                                request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/dns-json"));
-                                
-                                var response = await _dohClient.SendAsync(request, token);
-                                if (response.IsSuccessStatusCode)
-                                {
-                                    var json = await response.Content.ReadAsStringAsync(token);
-                                    var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
-                                    var answers = obj["Answer"];
-                                    
-                                    if (answers != null)
-                                    {
-                                        foreach (var ans in answers)
-                                        {
-                                            var ipStr = ans["data"]?.ToString();
-                                            if (System.Net.IPAddress.TryParse(ipStr, out var parsedIp))
-                                            {
-                                                ipAddress = parsedIp;
-                                                logBuilder.AppendLine($"[DoH] Resolved {host} ({type}) via {dohUrl} -> {ipAddress}");
-                                                break; 
-                                            }
-                                        }
-                                        
-                                        if (ipAddress != null) break;
-                                    }
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                logBuilder.AppendLine($"[DoH] Failed {template}: {ex.Message}");
-                            }
-                        }
-
-                        if (ipAddress == null)
-                        {
-                            logBuilder.AppendLine("[DoH] All providers failed. Falling back to System DNS.");
-                            var entry = await System.Net.Dns.GetHostEntryAsync(host, token);
-                            ipAddress = entry.AddressList.FirstOrDefault();
-                        }
-                        
-                        System.Diagnostics.Debug.WriteLine(logBuilder.ToString());
-                        if (ipAddress == null) 
-                        {
-                            Console.WriteLine($"[DoH] FAILED resolving {host}!");
-                            throw new Exception($"Could not resolve host: {host}\nLogs:\n{logBuilder}");
-                        }
-
-                        var socket = new System.Net.Sockets.Socket(System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
                         try
                         {
-                            await socket.ConnectAsync(ipAddress, context.DnsEndPoint.Port, token);
-                            var networkStream = new System.Net.Sockets.NetworkStream(socket, ownsSocket: true);
-                            return new DpiBypassStream(networkStream);
+                            string dohUrl = string.Format(template, host);
+                            var request = new HttpRequestMessage(HttpMethod.Get, dohUrl);
+                            request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/dns-json"));
+                            
+                            var response = await _dohClient.SendAsync(request, token);
+                            if (response.IsSuccessStatusCode)
+                            {
+                                var json = await response.Content.ReadAsStringAsync(token);
+                                var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
+                                var answers = obj["Answer"];
+                                
+                                if (answers != null)
+                                {
+                                    foreach (var ans in answers)
+                                    {
+                                        var ipStr = ans["data"]?.ToString();
+                                        if (System.Net.IPAddress.TryParse(ipStr, out var parsedIp))
+                                        {
+                                            ipAddress = parsedIp;
+                                            logBuilder.AppendLine($"[DoH] Resolved {host} ({type}) via {dohUrl} -> {ipAddress}");
+                                            break; 
+                                        }
+                                    }
+                                    
+                                    if (ipAddress != null) break;
+                                }
+                            }
                         }
-                        catch
+                        catch (Exception ex)
                         {
-                            socket.Dispose();
-                            throw;
+                            logBuilder.AppendLine($"[DoH] Failed {template}: {ex.Message}");
                         }
-                    },
-                    SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+                    }
+
+                    if (ipAddress == null)
                     {
-                        RemoteCertificateValidationCallback = delegate { return true; },
-                        EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
-                    },
-                    PooledConnectionLifetime = TimeSpan.FromMinutes(2),
-                    AutomaticDecompression = System.Net.DecompressionMethods.All,
-                    UseCookies = true,
-                    CookieContainer = _cookieContainer
-                };
-            }
+                        logBuilder.AppendLine("[DoH] All providers failed. Falling back to System DNS.");
+                        var entry = await System.Net.Dns.GetHostEntryAsync(host, token);
+                        ipAddress = entry.AddressList.FirstOrDefault();
+                    }
+                    
+                    System.Diagnostics.Debug.WriteLine(logBuilder.ToString());
+                    if (ipAddress == null) 
+                    {
+                        Console.WriteLine($"[DoH] FAILED resolving {host}!");
+                        throw new Exception($"Could not resolve host: {host}\nLogs:\n{logBuilder}");
+                    }
+
+                    var socket = new System.Net.Sockets.Socket(System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+                    try
+                    {
+                        await socket.ConnectAsync(ipAddress, context.DnsEndPoint.Port, token);
+                        var networkStream = new System.Net.Sockets.NetworkStream(socket, ownsSocket: true);
+                        return new DpiBypassStream(networkStream);
+                    }
+                    catch
+                    {
+                        socket.Dispose();
+                        throw;
+                    }
+                },
+                SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+                {
+                    RemoteCertificateValidationCallback = delegate { return true; },
+                    EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
+                },
+                PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+                AutomaticDecompression = System.Net.DecompressionMethods.All,
+                UseCookies = true,
+                CookieContainer = _cookieContainer
+            };
             
             var client = new HttpClient(handler);
             client.Timeout = TimeSpan.FromSeconds(15); // Increased timeout for proxy
@@ -323,6 +291,29 @@ namespace Yomic.Core.Sources
               Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [HttpSource] FORCING HEADLESS BROWSER FETCH for: {url} (Wait: {waitForSelector ?? "None"})");
               return await CloudflareBypassService.Instance.GetContentAsync(url, waitForSelector);
          }
+
+        public virtual async Task InitializeBrowserAsync()
+        {
+            var result = await CloudflareBypassService.Instance.SolveInteractiveAsync(BaseUrl);
+            
+            // Inject the captured cookies into our HttpClient's CookieContainer
+            foreach (var entry in result.Cookies)
+            {
+                try
+                {
+                    var uri = new Uri(BaseUrl);
+                    var cookie = new System.Net.Cookie(entry.Key, entry.Value)
+                    {
+                        Domain = uri.Host
+                    };
+                    _cookieContainer.Add(cookie);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[HttpSource] Error injecting cookie {entry.Key}: {ex.Message}");
+                }
+            }
+        }
     }
 
     public class DpiBypassStream : Stream
