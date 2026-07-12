@@ -429,11 +429,17 @@
                                 <!-- 2. Content Overlay -->
                                 <Grid ColumnDefinitions="*, Auto, Auto" Margin="20,15">
                                     <!-- Text Info -->
-                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Orientation="Horizontal" IsHitTestVisible="False">
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Orientation="Horizontal" IsHitTestVisible="False" Spacing="8">
                                         <TextBlock Text="{Binding Title}" Foreground="{DynamicResource PrimaryText}" FontWeight="SemiBold" FontSize="15"
                                                    Opacity="{Binding IsRead, Converter={x:Static vm:StatusToColorConverter.BoolToOpacity}}"
                                                    VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" MaxWidth="300"/>
+                                                   TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" MaxWidth="260"/>
+                                        
+                                        <!-- NEW Badge -->
+                                        <Border Background="#D20F39" CornerRadius="4" Padding="5,1.5" VerticalAlignment="Center"
+                                                IsVisible="{Binding IsNewRelease}">
+                                            <TextBlock Text="NEW" Foreground="White" FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </Border>
                                     </StackPanel>
 
                                     <!-- Bookmark Toggle -->
