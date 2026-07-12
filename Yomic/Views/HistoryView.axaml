@@ -11,8 +11,32 @@
              Background="{DynamicResource PrimaryBackground}">
 
     <UserControl.Styles>
+         <!-- Card Style same as Library/SourceFeed -->
+         <Style Selector="Border.MangaCard">
+             <Setter Property="ZIndex" Value="1"/>
+             <Setter Property="Transitions">
+                 <Transitions>
+                     <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2"/>
+                 </Transitions>
+             </Setter>
+         </Style>
+         <Style Selector="Border.MangaCard:pointerover">
+             <Setter Property="ZIndex" Value="10"/>
+             <Setter Property="BoxShadow" Value="0 10 20 0 #60000000"/>
+             <Setter Property="Cursor" Value="Hand"/>
+         </Style>
 
-        
+         <Style Selector="Border.MangaCard Image">
+             <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+             <Setter Property="Transitions">
+                 <Transitions>
+                     <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.35" Easing="CubicEaseOut"/>
+                 </Transitions>
+             </Setter>
+         </Style>
+         <Style Selector="Border.MangaCard:pointerover Image">
+             <Setter Property="RenderTransform" Value="scale(1.08)"/>
+         </Style>
         <!-- Standard Header Action Button Style -->
         <Style Selector="Button.header-action">
             <Setter Property="Background" Value="Transparent"/>
@@ -100,7 +124,8 @@
                 </StackPanel>
 
                 <!-- Scrollable Content -->
-                <ScrollViewer x:Name="HistoryScrollViewer" Grid.Row="1" Padding="0,0,0,30" IsVisible="{Binding HasItems}">
+                <ScrollViewer x:Name="HistoryScrollViewer" Grid.Row="1" Padding="0,0,0,30" IsVisible="{Binding HasItems}"
+                              VerticalScrollBarVisibility="Visible" AllowAutoHide="False">
                     <StackPanel>
                         <!-- Grid View Mode -->
                         <ItemsControl ItemsSource="{Binding HistoryItems}" IsVisible="{Binding !IsListView}">
@@ -116,8 +141,9 @@
                                          Command="{Binding DataContext.OpenMangaCommand, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}"
                                          CommandParameter="{Binding}">
                                      <Button.Styles>
-                                        <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                        <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
                                             <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Opacity" Value="1.0"/>
                                         </Style>
                                      </Button.Styles>
 
@@ -137,47 +163,35 @@
                                      
                                     <StackPanel Width="150" Spacing="8">
                                         <!-- Cover Image -->
-                                        <Border Width="150" Height="225" CornerRadius="12" 
+                                        <Border Classes="MangaCard" Width="150" Height="225" CornerRadius="12" 
                                                 Background="{DynamicResource SidebarBackground}" ClipToBounds="True"
                                                 BoxShadow="0 4 10 0 #40000000">
-                                            
-                                            <Border.Styles>
-                                                <Style Selector="Border:pointerover">
-                                                    <Setter Property="RenderTransform" Value="scale(1.02) translateY(-4px)"/>
-                                                    <Setter Property="BoxShadow" Value="0 10 20 0 #60000000"/>
-                                                    <Setter Property="Cursor" Value="Hand"/>
-                                                </Style>
-                                                <Style Selector="Border">
-                                                    <Setter Property="Transitions">
-                                                        <Transitions>
-                                                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="CubicEaseOut"/>
-                                                            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2"/>
-                                                        </Transitions>
-                                                    </Setter>
-                                                </Style>
-                                            </Border.Styles>
-                                            
                                             <Grid>
-                                                <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}" Stretch="UniformToFill"/>
+                                                <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}" 
+                                                       helpers:SecureImageLoader.DecodeWidth="300"
+                                                       Stretch="UniformToFill"/>
                                                 
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Spacing="4" Margin="8">
-                                                    <!-- NEW Badge -->
-                                                    <Border Background="#89B4FA" CornerRadius="6"
-                                                            Padding="6,2"
-                                                            IsVisible="{Binding IsNewBadgeVisible}">
-                                                        <TextBlock Text="NEW" Foreground="#1E1E2E"
-                                                                   FontSize="10" FontWeight="Bold"/>
-                                                    </Border>
+                                                 <Border HorizontalAlignment="Left" VerticalAlignment="Top" 
+                                                         Width="100" Height="18" Margin="-32,9,0,0"
+                                                         Background="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.Instance}}"
+                                                         IsVisible="{Binding Status, Converter={x:Static vm:StatusToColorConverter.StatusToVisibility}}">
+                                                     <Border.RenderTransform>
+                                                         <RotateTransform Angle="-45"/>
+                                                     </Border.RenderTransform>
+                                                     <TextBlock Text="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.ToUpperConverter}}" 
+                                                                FontSize="8" FontWeight="900" Foreground="White"
+                                                                HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                                                 </Border>
 
-                                                    <!-- Status Badge -->
-                                                    <Border Background="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.Instance}}" 
-                                                            Opacity="0.95" CornerRadius="6" 
-                                                            Padding="6,3"
-                                                            IsVisible="{Binding StatusString, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                                                        <TextBlock Text="{Binding StatusString}" Foreground="White" 
-                                                                   FontSize="9" FontWeight="Bold"/>
-                                                    </Border>
-                                                </StackPanel>
+                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Spacing="4" Margin="8">
+                                                     <!-- NEW Badge -->
+                                                     <Border Background="#89B4FA" CornerRadius="6"
+                                                             Padding="6,2"
+                                                             IsVisible="{Binding IsNewBadgeVisible}">
+                                                         <TextBlock Text="NEW" Foreground="#1E1E2E"
+                                                                    FontSize="10" FontWeight="Bold"/>
+                                                     </Border>
+                                                 </StackPanel>
                                                 
                                                 <!-- Last Read Badge -->
                                                 <Border Background="{DynamicResource OverlayBackground}" Opacity="0.9" CornerRadius="6" 
@@ -192,7 +206,7 @@
                                         <!-- Title Below Image -->
                                         <TextBlock Text="{Binding Title}" Foreground="{DynamicResource PrimaryText}" 
                                                    TextAlignment="Left" TextTrimming="CharacterEllipsis"
-                                                   FontSize="13" FontWeight="SemiBold" MaxLines="2" Height="36"
+                                                   FontSize="13" FontWeight="SemiBold" MaxLines="2"
                                                    ToolTip.Tip="{Binding Title}"/>
                                     </StackPanel>
                                  </Button>
@@ -252,9 +266,11 @@
                                                  </ContextMenu>
                                              </Border.ContextMenu>
 
-                                            <Grid ColumnDefinitions="40, 16, *, Auto">
-                                                <Border Grid.Column="0" Height="55" Width="40" CornerRadius="4" ClipToBounds="True" Background="{DynamicResource SidebarBackground}">
-                                                    <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}" Stretch="UniformToFill"/>
+                                            <Grid ColumnDefinitions="60, 16, *, Auto">
+                                                <Border Grid.Column="0" Height="80" Width="60" CornerRadius="4" ClipToBounds="True" Background="{DynamicResource SidebarBackground}">
+                                                    <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}" 
+                                                           helpers:SecureImageLoader.DecodeWidth="300"
+                                                           Stretch="UniformToFill"/>
                                                 </Border>
                                                 
                                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="4">
@@ -278,11 +294,12 @@
                                                             IsVisible="{Binding IsNewBadgeVisible}">
                                                         <TextBlock Text="NEW" Foreground="#1E1E2E" FontSize="10" FontWeight="Bold"/>
                                                     </Border>
-                                                    <Border Background="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.Instance}}" 
-                                                            Opacity="0.95" CornerRadius="4" Padding="6,3"
-                                                            IsVisible="{Binding StatusString, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                                                        <TextBlock Text="{Binding StatusString}" Foreground="White" FontSize="9" FontWeight="Bold"/>
-                                                    </Border>
+                                                     <Border Background="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.Instance}}" 
+                                                             CornerRadius="4" Padding="6,2"
+                                                             IsVisible="{Binding Status, Converter={x:Static vm:StatusToColorConverter.StatusToVisibility}}">
+                                                         <TextBlock Text="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.ToUpperConverter}}" 
+                                                                    Foreground="White" FontSize="10" FontWeight="Bold"/>
+                                                     </Border>
                                                 </StackPanel>
                                             </Grid>
                                          </Border>

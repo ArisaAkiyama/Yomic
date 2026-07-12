@@ -41,7 +41,7 @@ namespace Yomic.Core.Services
             }
         }
 
-        public async Task<Bitmap?> LoadImageAsync(string url, string? referer = null)
+        public async Task<Bitmap?> LoadImageAsync(string url, string? referer = null, int? decodeWidth = null)
         {
             if (string.IsNullOrEmpty(url)) return null;
 
@@ -63,6 +63,13 @@ namespace Yomic.Core.Services
                 }
             }
 
+            // Avalonia Bitmap does not natively support AVIF on all platforms.
+            // Transparently proxy AVIF images through wsrv.nl to convert them to webp.
+            if (url.Contains(".avif", StringComparison.OrdinalIgnoreCase))
+            {
+                url = $"https://wsrv.nl/?url={Uri.EscapeDataString(url)}&output=webp";
+            }
+
             // 1. Check Memory Cache
             var cached = _imageCacheService.GetImage(url);
             if (cached != null) return cached;
@@ -77,7 +84,9 @@ namespace Yomic.Core.Services
                 try
                 {
                     using var stream = File.OpenRead(cachePath);
-                    var bitmap = new Bitmap(stream);
+                    var bitmap = decodeWidth.HasValue 
+                        ? Bitmap.DecodeToWidth(stream, decodeWidth.Value)
+                        : new Bitmap(stream);
                     _imageCacheService.AddImage(url, bitmap);
                     return bitmap;
                 }
@@ -89,7 +98,7 @@ namespace Yomic.Core.Services
             }
 
             // 4. Download
-            return await DownloadAndCacheAsync(url, cachePath, referer, userAgent);
+            return await DownloadAndCacheAsync(url, cachePath, referer, userAgent, decodeWidth);
         }
 
         public void ClearDiskCache()
@@ -110,7 +119,7 @@ namespace Yomic.Core.Services
             }
         }
 
-        private async Task<Bitmap?> DownloadAndCacheAsync(string url, string cachePath, string? referer, string? userAgent)
+        private async Task<Bitmap?> DownloadAndCacheAsync(string url, string cachePath, string? referer, string? userAgent, int? decodeWidth)
         {
             await _downloadSemaphore.WaitAsync();
             try
@@ -135,7 +144,7 @@ namespace Yomic.Core.Services
                 {
                     // Fallback heuristics based on image URL domain
                     if (url.Contains("komikcast")) req.Headers.Referrer = new Uri("https://komikcast.ch/");
-                    else if (url.Contains("mangabats") || url.Contains("2xstorage.com")) req.Headers.Referrer = new Uri("https://www.mangabats.com/");
+                    else if (url.Contains("mangabats") || url.Contains("2xstorage.com") || url.Contains("waitst.com")) req.Headers.Referrer = new Uri("https://www.mangabats.com/");
                     else if (url.Contains("weebcentral")) req.Headers.Referrer = new Uri("https://weebcentral.com/");
                     else if (url.Contains("komiku") || url.Contains("img.komiku")) req.Headers.Referrer = new Uri("https://komiku.org/");
                     else
@@ -196,7 +205,9 @@ namespace Yomic.Core.Services
 
                 // Load to Memory
                 using var ms = new MemoryStream(data);
-                var bitmap = new Bitmap(ms);
+                var bitmap = decodeWidth.HasValue
+                    ? Bitmap.DecodeToWidth(ms, decodeWidth.Value)
+                    : new Bitmap(ms);
                 _imageCacheService.AddImage(url, bitmap);
                 
                 return bitmap;

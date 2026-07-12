@@ -202,10 +202,10 @@ namespace Yomic.ViewModels
                         // Within each timeframe group, deduplicate by Manga, preferring the most recently uploaded
                         Items = new ObservableCollection<ChapterItem>(g
                             .GroupBy(c => c.MangaId)
-                            .Select(mg => mg.OrderByDescending(c => c.DateUpload > 0 ? c.DateUpload : c.DateFetch).First())
-                            .OrderByDescending(c => c.DateUpload > 0 ? c.DateUpload : c.DateFetch)
-                            .Select(c => 
+                            .Select(mg => 
                             {
+                                 var sorted = mg.OrderByDescending(c => c.DateUpload > 0 ? c.DateUpload : c.DateFetch).ToList();
+                                 var c = sorted[0];
                                  var actualDate = c.DateUpload > 0 ? c.DateUpload : c.DateFetch;
                                  var item = new ChapterItem(null, null, null, null, null) 
                                  {
@@ -213,12 +213,17 @@ namespace Yomic.ViewModels
                                     Url = c.Url,
                                     MangaRef = c.Manga,
                                     Date = GetTimeAgo(actualDate),
+                                    FullDateString = DateTimeOffset.FromUnixTimeMilliseconds(actualDate).ToLocalTime().ToString("dddd, d MMMM yyyy – hh:mm tt"),
+                                    DateUpload = actualDate,
                                     IsRead = c.Read,
                                     IsDownloaded = c.IsDownloaded,
-                                    IsNewRelease = c.IsNew
+                                    IsNewRelease = c.IsNew,
+                                    AdditionalChaptersCount = sorted.Count - 1
                                  };
                                  return item;
-                            }))
+                            })
+                            .OrderByDescending(item => item.DateUpload)
+                            .ToList())
                     })
                     // To ensure the headers output in correct chronological order:
                     .OrderBy(g => 

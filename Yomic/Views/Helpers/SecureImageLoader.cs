@@ -27,6 +27,12 @@ namespace Yomic.Views.Helpers
         public static string? GetReferer(Image element) => element.GetValue(RefererProperty);
         public static void SetReferer(Image element, string? value) => element.SetValue(RefererProperty, value);
 
+        public static readonly AttachedProperty<int> DecodeWidthProperty =
+            AvaloniaProperty.RegisterAttached<SecureImageLoader, Image, int>("DecodeWidth", 0);
+
+        public static int GetDecodeWidth(Image element) => element.GetValue(DecodeWidthProperty);
+        public static void SetDecodeWidth(Image element, int value) => element.SetValue(DecodeWidthProperty, value);
+
         static SecureImageLoader()
         {
             UrlProperty.Changed.Subscribe(OnUrlChanged);
@@ -64,7 +70,8 @@ namespace Yomic.Views.Helpers
                 // Verify we are still requesting this URL (Simple concurrency check)
                 if (GetUrl(image) != url) return;
 
-                var bitmap = await Service!.LoadImageAsync(url, referer);
+                int decodeWidth = GetDecodeWidth(image);
+                var bitmap = await Service!.LoadImageAsync(url, referer, decodeWidth > 0 ? decodeWidth : null);
 
                 // Double check before setting
                 Dispatcher.UIThread.Post(() =>

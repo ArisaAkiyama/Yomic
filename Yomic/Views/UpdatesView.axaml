@@ -88,7 +88,7 @@
                     <Border IsVisible="False" Background="#1AFFB900" BorderBrush="#FFB900" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,15,0,0">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <TextBlock Text="&#xE7BA;" FontFamily="Segoe Fluent Icons" Foreground="#FFB900" FontSize="14" VerticalAlignment="Center" Margin="0,0,0,0"/>
-                            <TextBlock Text="Hindari sinkronisasi massal berlebihan untuk mencegah pemblokiran IP oleh proteksi bot (seperti Cloudflare)."
+                            <TextBlock Text="Avoid excessive mass synchronization to prevent IP bans by bot protection (like Cloudflare)."
                                        Foreground="{DynamicResource PrimaryText}"
                                        FontSize="12"
                                        TextWrapping="Wrap"
@@ -139,6 +139,7 @@
                                                             <!-- Col 1: Cover (Portrait 56x80) -->
                                                             <Border Grid.Column="0" Width="56" Height="80" CornerRadius="6" ClipToBounds="True" Background="#181825" VerticalAlignment="Center">
                                                                 <Image helpers:SecureImageLoader.Url="{Binding MangaRef.ThumbnailUrl}"
+                                                                       helpers:SecureImageLoader.DecodeWidth="300"
                                                                        Stretch="UniformToFill" />
                                                             </Border>
 
@@ -152,27 +153,42 @@
                                                                            VerticalAlignment="Center"/>
                                                                 
                                                                 <!-- Chapter Name Row -->
-                                                                <StackPanel Orientation="Horizontal" Spacing="0">
+                                                                <Grid ColumnDefinitions="Auto, *, Auto" HorizontalAlignment="Stretch">
                                                                     <!-- Unread Dot (Mihon style) -->
-                                                                    <Border Width="8" Height="8" CornerRadius="4" 
+                                                                    <Border Grid.Column="0" Width="8" Height="8" CornerRadius="4" 
                                                                             Background="{DynamicResource PrimaryAccent}" 
                                                                             Margin="0,0,8,0" VerticalAlignment="Center" 
                                                                             IsVisible="{Binding !IsRead}"/>
                                                                     
                                                                     <!-- Chapter Title -->
-                                                                    <TextBlock Classes.read="{Binding IsRead}"
+                                                                    <TextBlock Grid.Column="1" Classes.read="{Binding IsRead}"
                                                                                Text="{Binding Title}" 
                                                                                Foreground="{DynamicResource SecondaryText}" FontSize="13" 
                                                                                TextTrimming="CharacterEllipsis" MaxLines="1"
                                                                                VerticalAlignment="Center"/>
-                                                                </StackPanel>
+
+                                                                    <!-- Badge: +N more -->
+                                                                    <Border Grid.Column="2" 
+                                                                            Background="{DynamicResource PrimaryAccent}" 
+                                                                            CornerRadius="6" 
+                                                                            Padding="6,2" 
+                                                                            Margin="8,0,0,0" 
+                                                                            VerticalAlignment="Center"
+                                                                            IsVisible="{Binding HasAdditionalChapters}">
+                                                                        <TextBlock Text="{Binding AdditionalChaptersCount, StringFormat='+{0} more'}" 
+                                                                                   Foreground="#FFFFFF" 
+                                                                                   FontSize="10" 
+                                                                                   FontWeight="Bold"
+                                                                                   VerticalAlignment="Center"/>
+                                                                    </Border>
+                                                                </Grid>
                                                             </StackPanel>
 
                                                             <!-- Col 3: Meta (Timestamp) -->
                                                             <TextBlock Grid.Column="2" Text="{Binding Date}" 
                                                                        Foreground="{DynamicResource SecondaryText}" FontSize="12" 
                                                                        VerticalAlignment="Center" HorizontalAlignment="Right" Margin="10,0,5,0"
-                                                                       Opacity="0.8"/>
+                                                                       Opacity="0.8" ToolTip.Tip="{Binding FullDateString}"/>
                                                         </Grid>
                                                     </Border>
                                                 </Button>

@@ -10,8 +10,8 @@ namespace Yomic.Views
     public partial class MangaDetailView : UserControl
     {
         private ScrollViewer? _scrollViewer;
-        private ListBox? _listBox;
         private Border? _stickyHeader;
+        private Grid? _chaptersDivider;
 
         public MangaDetailView()
         {
@@ -43,24 +43,24 @@ namespace Yomic.Views
 
         private void InitializeStickyHeader()
         {
-            if (_listBox == null)
-            {
-                _listBox = this.FindControl<ListBox>("ChaptersListBox");
-            }
-            if (_listBox == null) return;
-
+            // Get the outer ScrollViewer (MainScrollViewer), not the inner ListBox's one
             if (_scrollViewer == null)
             {
-                _scrollViewer = _listBox.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+                _scrollViewer = this.FindControl<ScrollViewer>("MainScrollViewer");
                 if (_scrollViewer != null)
                 {
                     _scrollViewer.ScrollChanged += OnScrollChanged;
                 }
             }
-            
+
             if (_stickyHeader == null)
             {
                 _stickyHeader = this.FindControl<Border>("StickyHeader");
+            }
+
+            if (_chaptersDivider == null)
+            {
+                _chaptersDivider = this.FindControl<Grid>("ChaptersDivider");
             }
         }
 
@@ -71,40 +71,25 @@ namespace Yomic.Views
 
         private void UpdateStickyHeaderVisibility()
         {
-            if (_listBox == null || _scrollViewer == null) return;
-            
-            var container = _listBox.ContainerFromIndex(0) as Visual;
-            if (container == null)
+            if (_scrollViewer == null || _stickyHeader == null) return;
+
+            if (_chaptersDivider == null)
             {
-                // Container is virtualized (recycled) — this only happens when 
-                // the header item has been scrolled far above the viewport.
-                // In this case, the sticky header should ALWAYS be visible.
-                if (_stickyHeader != null) _stickyHeader.IsVisible = _scrollViewer.Offset.Y > 0;
+                _stickyHeader.IsVisible = false;
                 return;
             }
 
-            var chaptersDivider = container.GetVisualDescendants()
-                .OfType<Grid>()
-                .FirstOrDefault(g => g.Name == "ChaptersDivider");
-
-            if (chaptersDivider == null)
-            {
-                if (_stickyHeader != null) _stickyHeader.IsVisible = false;
-                return;
-            }
-
-            var relativePoint = chaptersDivider.TranslatePoint(new Avalonia.Point(0, 0), _listBox);
+            // Translate the ChaptersDivider position relative to this UserControl
+            var relativePoint = _chaptersDivider.TranslatePoint(new Point(0, 0), this);
             if (relativePoint != null)
             {
+                // Show sticky header once the chapter divider scrolls above the top of the view
                 bool shouldBeSticky = relativePoint.Value.Y <= 15;
-                if (_stickyHeader != null)
-                {
-                    _stickyHeader.IsVisible = shouldBeSticky;
-                }
+                _stickyHeader.IsVisible = shouldBeSticky;
             }
             else
             {
-                if (_stickyHeader != null) _stickyHeader.IsVisible = false;
+                _stickyHeader.IsVisible = false;
             }
         }
 
@@ -128,35 +113,25 @@ namespace Yomic.Views
             var dialog = new DownloadAllDialog(info);
             return await dialog.ShowDialog<DownloadAllMode?>(owner);
         }
-        
+
         private void OnSynopsisToggleClick(object? sender, RoutedEventArgs e)
         {
-            // Find the ListBox's ScrollViewer to preserve scroll position
-            var listBox = this.FindControl<ListBox>("ChaptersListBox") ?? this.GetVisualDescendants()
-                .OfType<ListBox>().FirstOrDefault();
-            
-            if (listBox == null) return;
-            
-            var scrollViewer = listBox.GetVisualDescendants()
-                .OfType<ScrollViewer>().FirstOrDefault();
-            
-            if (scrollViewer == null) return;
-            
-            // Measure current header height before the command executes
-            var currentOffset = scrollViewer.Offset;
-            
-            // After layout updates, restore the scroll offset
+            if (_scrollViewer == null) return;
+
+            // Preserve the current scroll offset before the synopsis layout changes
+            var currentOffset = _scrollViewer.Offset;
+
+            // After layout recalculates (synopsis expands/collapses), restore scroll position
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                scrollViewer.Offset = currentOffset;
+                _scrollViewer.Offset = currentOffset;
                 UpdateStickyHeaderVisibility();
             }, Avalonia.Threading.DispatcherPriority.Render);
         }
 
         private void OnBackClick(object? sender, RoutedEventArgs e)
         {
-            // Find the MainWindow and get its ViewModel
-            if (this.VisualRoot is MainWindow mainWindow && 
+            if (this.VisualRoot is MainWindow mainWindow &&
                 mainWindow.DataContext is MainWindowViewModel vm)
             {
                 vm.GoBack();
@@ -166,23 +141,23 @@ namespace Yomic.Views
         private void OnReadClick(object? sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.DataContext is ChapterItem chapter &&
-                this.VisualRoot is MainWindow mainWindow && 
+                this.VisualRoot is MainWindow mainWindow &&
                 mainWindow.DataContext is MainWindowViewModel vm)
             {
-                // Get chapter list from MangaDetailViewModel
                 System.Collections.Generic.List<ChapterItem>? chapters = null;
                 long sourceId = 3;
                 string title = "";
-                
+
                 if (this.DataContext is MangaDetailViewModel detailVm)
                 {
                     chapters = detailVm.Chapters;
                     sourceId = detailVm.SourceId;
                     title = detailVm.Title;
-                    // Pass URL to enable online persistence
-                    vm.GoToReader(chapter, chapters, sourceId, title, detailVm.Url, detailVm.IsExplicitContent);
-                } else {
-                     vm.GoToReader(chapter, chapters, sourceId, title);
+                    vm.GoToReader(chapter, chapters, sourceId, title, detailVm.Url, detailVm.IsExplicitContent, detailVm.ThumbnailUrl ?? "");
+                }
+                else
+                {
+                    vm.GoToReader(chapter, chapters, sourceId, title, "", false, "");
                 }
             }
         }

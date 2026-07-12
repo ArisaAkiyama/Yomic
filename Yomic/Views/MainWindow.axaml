@@ -280,7 +280,11 @@
         </Border>
 
         <!-- Full Screen Image Overlay for Theme Transition Crossfade -->
-        <Image RenderOptions.BitmapInterpolationMode="HighQuality" x:Name="ThemeTransitionOverlay" ZIndex="2000" IsHitTestVisible="False" IsVisible="False" Stretch="Fill" />
+        <Image RenderOptions.BitmapInterpolationMode="HighQuality" x:Name="ThemeTransitionOverlay" ZIndex="2000" IsHitTestVisible="False" IsVisible="False" Stretch="Fill" RenderTransformOrigin="0.5,0.5">
+            <Image.RenderTransform>
+                <ScaleTransform ScaleX="1.0" ScaleY="1.0" />
+            </Image.RenderTransform>
+        </Image>
     </Panel>
 </Window>
 

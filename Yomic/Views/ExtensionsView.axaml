@@ -298,11 +298,11 @@
 
             <!-- Search Box & Add Button -->
             <Grid ColumnDefinitions="*, Auto">
-                <TextBox Grid.Column="0" Width="350" HorizontalAlignment="Left"
+                <TextBox Grid.Column="0" Width="300" HorizontalAlignment="Left"
                          Text="{Binding SearchText}"
                          Watermark="Search extensions..." 
                          Background="{DynamicResource SidebarBackground}" Foreground="{DynamicResource PrimaryText}" 
-                         CornerRadius="20" Padding="15,10"
+                         CornerRadius="20" Padding="8,8,15,8" FontSize="13"
                          BorderThickness="0" VerticalContentAlignment="Center">
                     <TextBox.Styles>
                         <Style Selector="TextBox:focus">
@@ -330,10 +330,10 @@
                              <Setter Property="Foreground" Value="{DynamicResource SecondaryText}"/>
                          </Style>
                     </TextBox.Styles>
-                    <TextBox.InnerRightContent>
+                    <TextBox.InnerLeftContent>
                         <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource SecondaryText}" 
-                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    </TextBox.InnerRightContent>
+                                   VerticalAlignment="Center" Margin="12,0,0,0" FontSize="14"/>
+                    </TextBox.InnerLeftContent>
                 </TextBox>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" Margin="10,0,0,0" VerticalAlignment="Center">

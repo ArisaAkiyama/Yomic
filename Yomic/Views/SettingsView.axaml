@@ -33,7 +33,7 @@
                                 <TextBlock Text="Dark Mode" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
                                 <TextBlock Text="Use system dark theme preferences" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
-                            <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsDarkMode}" OnContent="" OffContent=""/>
+                            <ToggleSwitch Grid.Column="1" IsEnabled="{Binding !IsThemeChanging}" IsChecked="{Binding IsDarkMode}" OnContent="" OffContent=""/>
                         </Grid>
                     </Border>
                     
@@ -170,7 +170,8 @@
                                 <TextBlock Text="Refresh Library Covers" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
                                 <TextBlock Text="Re-download cover thumbnails for all manga in your library" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
-                            <Button Grid.Column="1" Content="Refresh" Command="{Binding RefreshLibraryCoversCommand}" 
+                            <Button Grid.Column="1" Command="{Binding RefreshLibraryCoversCommand}" 
+                                    IsEnabled="{Binding !IsRefreshingCovers}"
                                     Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" 
                                     Foreground="{DynamicResource PrimaryText}" CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
                                      VerticalAlignment="Center" Cursor="Hand">
@@ -179,6 +180,27 @@
                                         <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
                                     </Style>
                                 </Button.Styles>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Path Data="M 12 2 A 10 10 0 1 1 2 12" Stroke="{DynamicResource PrimaryAccent}" StrokeThickness="2" 
+                                          Width="14" Height="14" Stretch="Uniform" RenderTransformOrigin="50%,50%"
+                                          IsVisible="{Binding IsRefreshingCovers}" VerticalAlignment="Center">
+                                        <Path.Styles>
+                                            <Style Selector="Path">
+                                                <Style.Animations>
+                                                    <Animation Duration="0:0:0.8" IterationCount="Infinite">
+                                                        <KeyFrame KeyTime="0:0:0">
+                                                            <Setter Property="RotateTransform.Angle" Value="0"/>
+                                                        </KeyFrame>
+                                                        <KeyFrame KeyTime="0:0:0.8">
+                                                            <Setter Property="RotateTransform.Angle" Value="360"/>
+                                                        </KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </Path.Styles>
+                                    </Path>
+                                    <TextBlock Text="Refresh" VerticalAlignment="Center"/>
+                                </StackPanel>
                             </Button>
                         </Grid>
                     </Border>
@@ -206,72 +228,13 @@
             </StackPanel>
 
 
-            <!-- Data & Storage Section -->
+            <!-- Reader Section -->
             <StackPanel Spacing="15">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                     <TextBlock Text="&#xE78C;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource SecondaryText}"/>
-                     <TextBlock Text="Data &amp; Storage" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
+                     <TextBlock Text="&#xE736;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource SecondaryText}"/>
+                     <TextBlock Text="Reader" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
                 </StackPanel>
                  <StackPanel Spacing="6">
-                    <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
-                        <Grid ColumnDefinitions="*, Auto">
-                            <StackPanel Spacing="3">
-                                <TextBlock Text="Create Backup" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Create a backup of your local database and settings" 
-                                           FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
-                            </StackPanel>
-                            <Button Grid.Column="1" Content="Backup" Command="{Binding BackupDataCommand}"
-                                    Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" 
-                                    Foreground="{DynamicResource PrimaryText}" CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
-                                    VerticalAlignment="Center" Cursor="Hand">
-                                <Button.Styles>
-                                    <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                        <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
-                                    </Style>
-                                </Button.Styles>
-                            </Button>
-                        </Grid>
-                    </Border>
-                    <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
-                        <Grid ColumnDefinitions="*, Auto">
-                            <StackPanel Spacing="3">
-                                <TextBlock Text="Restore Backup" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Restore data from a previously created backup file" 
-                                           FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
-                            </StackPanel>
-                            <Button Grid.Column="1" Content="Restore" Command="{Binding RestoreDataCommand}"
-                                    Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" 
-                                    Foreground="{DynamicResource PrimaryText}" CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
-                                    VerticalAlignment="Center" Cursor="Hand">
-                                <Button.Styles>
-                                    <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                        <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
-                                    </Style>
-                                </Button.Styles>
-                            </Button>
-                        </Grid>
-                    </Border>
-
-                    <!-- Clear Cache & Cookies -->
-                    <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000" IsVisible="False">
-                        <Grid ColumnDefinitions="*, Auto">
-                            <StackPanel Spacing="3">
-                                <TextBlock Text="Clear Cache &amp; Cookies" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Free up memory and reset network connections" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
-                            </StackPanel>
-                            <Button Grid.Column="1" Content="Clear Cache" Command="{Binding ClearCacheCookiesCommand}"
-                                    Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" 
-                                    Foreground="{DynamicResource PrimaryText}" CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
-                                     VerticalAlignment="Center" Cursor="Hand">
-                                <Button.Styles>
-                                    <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                        <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
-                                    </Style>
-                                </Button.Styles>
-                            </Button>
-                        </Grid>
-                    </Border>
-
                     <!-- Preload Next Chapter -->
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
@@ -337,10 +300,250 @@
                             </ComboBox>
                         </Grid>
                     </Border>
+                </StackPanel>
+            </StackPanel>
 
-                    <!-- Clear Read History -->
+            <!-- Data & Storage Section -->
+            <StackPanel Spacing="15">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                     <TextBlock Text="&#xE78C;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource SecondaryText}"/>
+                     <TextBlock Text="Data &amp; Storage" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
+                </StackPanel>
+                 <StackPanel Spacing="6">
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Create Backup" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="Create a backup of your local database and settings" 
+                                           FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                                <TextBlock Text="{Binding LastBackupInfo}" 
+                                           FontSize="11" Foreground="{DynamicResource SecondaryText}" Opacity="0.7" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Command="{Binding BackupDataCommand}"
+                                    IsEnabled="{Binding !IsBackingUp}"
+                                    Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" 
+                                    Foreground="{DynamicResource PrimaryText}" CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
+                                    VerticalAlignment="Center" Cursor="Hand">
+                                <Button.Styles>
+                                    <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                        <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+                                    </Style>
+                                </Button.Styles>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Path Data="M 12 2 A 10 10 0 1 1 2 12" Stroke="{DynamicResource PrimaryAccent}" StrokeThickness="2" 
+                                          Width="14" Height="14" Stretch="Uniform" RenderTransformOrigin="50%,50%"
+                                          IsVisible="{Binding IsBackingUp}" VerticalAlignment="Center">
+                                        <Path.Styles>
+                                            <Style Selector="Path">
+                                                <Style.Animations>
+                                                    <Animation Duration="0:0:0.8" IterationCount="Infinite">
+                                                        <KeyFrame KeyTime="0:0:0">
+                                                            <Setter Property="RotateTransform.Angle" Value="0"/>
+                                                        </KeyFrame>
+                                                        <KeyFrame KeyTime="0:0:0.8">
+                                                            <Setter Property="RotateTransform.Angle" Value="360"/>
+                                                        </KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </Path.Styles>
+                                    </Path>
+                                    <TextBlock Text="Backup" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Restore Backup" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="Restore data from a previously created backup file" 
+                                           FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Command="{Binding RestoreDataCommand}"
+                                    IsEnabled="{Binding !IsRestoring}"
+                                    Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" 
+                                    Foreground="{DynamicResource PrimaryText}" CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
+                                    VerticalAlignment="Center" Cursor="Hand">
+                                <Button.Styles>
+                                    <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                        <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+                                    </Style>
+                                </Button.Styles>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Path Data="M 12 2 A 10 10 0 1 1 2 12" Stroke="{DynamicResource PrimaryAccent}" StrokeThickness="2" 
+                                          Width="14" Height="14" Stretch="Uniform" RenderTransformOrigin="50%,50%"
+                                          IsVisible="{Binding IsRestoring}" VerticalAlignment="Center">
+                                        <Path.Styles>
+                                            <Style Selector="Path">
+                                                <Style.Animations>
+                                                    <Animation Duration="0:0:0.8" IterationCount="Infinite">
+                                                        <KeyFrame KeyTime="0:0:0">
+                                                            <Setter Property="RotateTransform.Angle" Value="0"/>
+                                                        </KeyFrame>
+                                                        <KeyFrame KeyTime="0:0:0.8">
+                                                            <Setter Property="RotateTransform.Angle" Value="360"/>
+                                                        </KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </Path.Styles>
+                                    </Path>
+                                    <TextBlock Text="Restore" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Clear Cache & Cookies -->
+                    <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000" IsVisible="False">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Clear Cache &amp; Cookies" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="Free up memory and reset network connections" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Clear Cache" Command="{Binding ClearCacheCookiesCommand}"
+                                    Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" 
+                                    Foreground="{DynamicResource PrimaryText}" CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
+                                     VerticalAlignment="Center" Cursor="Hand">
+                                <Button.Styles>
+                                    <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                        <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+                                    </Style>
+                                </Button.Styles>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    </StackPanel>
+            </StackPanel>
+
+            <!-- Advanced Section -->
+            <StackPanel Spacing="15">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="&#xE9F3;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource SecondaryText}"/>
+                    <TextBlock Text="Advanced" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
+                </StackPanel>
+
+                <StackPanel Spacing="6">
+
+                    <!-- Database Statistics -->
+                    <Border Background="{DynamicResource SidebarBackground}" Padding="20,18" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
+                        <StackPanel Spacing="14">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <StackPanel Spacing="3">
+                                    <TextBlock Text="Database Statistics" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                    <TextBlock Text="Overview of your local manga database" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                                </StackPanel>
+                                <!-- Optimize Button -->
+                                <Button Grid.Column="1" Command="{Binding OptimizeDatabaseCommand}"
+                                        IsEnabled="{Binding !IsOptimizingDb}"
+                                        Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1"
+                                        Foreground="{DynamicResource PrimaryText}" CornerRadius="8" Padding="16,8" FontWeight="SemiBold" FontSize="13"
+                                        VerticalAlignment="Center" Cursor="Hand" ToolTip.Tip="Run VACUUM, REINDEX and ANALYZE to compact and speed up the database">
+                                    <Button.Styles>
+                                        <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                            <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+                                        </Style>
+                                    </Button.Styles>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Path Data="M12 2 A 10 10 0 1 1 2 12" Stroke="{DynamicResource PrimaryAccent}" StrokeThickness="2"
+                                              Width="14" Height="14" Stretch="Uniform" RenderTransformOrigin="50%,50%"
+                                              IsVisible="{Binding IsOptimizingDb}" VerticalAlignment="Center">
+                                            <Path.Styles>
+                                                <Style Selector="Path">
+                                                    <Style.Animations>
+                                                        <Animation Duration="0:0:0.8" IterationCount="Infinite">
+                                                            <KeyFrame KeyTime="0:0:0">
+                                                                <Setter Property="RotateTransform.Angle" Value="0"/>
+                                                            </KeyFrame>
+                                                            <KeyFrame KeyTime="0:0:0.8">
+                                                                <Setter Property="RotateTransform.Angle" Value="360"/>
+                                                            </KeyFrame>
+                                                        </Animation>
+                                                    </Style.Animations>
+                                                </Style>
+                                            </Path.Styles>
+                                        </Path>
+                                        <TextBlock Text="&#xE9F5;" FontFamily="Segoe Fluent Icons" FontSize="14" VerticalAlignment="Center"
+                                                   IsVisible="{Binding !IsOptimizingDb}"/>
+                                        <TextBlock Text="Optimize DB" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <!-- Stats Grid -->
+                            <Border Background="{DynamicResource PrimaryBackground}" CornerRadius="6" Padding="16,12">
+                                <Grid ColumnDefinitions="*, 1, *, 1, *, 1, *">
+                                    <!-- Manga -->
+                                    <StackPanel Grid.Column="0" HorizontalAlignment="Center" Spacing="4">
+                                        <TextBlock Text="{Binding DbStatsManga}" FontSize="22" FontWeight="Bold"
+                                                   Foreground="{DynamicResource PrimaryAccent}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Manga" FontSize="11" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Width="1" Background="{DynamicResource SeparatorBrush}" Margin="0,4"/>
+                                    <!-- Chapters -->
+                                    <StackPanel Grid.Column="2" HorizontalAlignment="Center" Spacing="4">
+                                        <TextBlock Text="{Binding DbStatsChapters}" FontSize="22" FontWeight="Bold"
+                                                   Foreground="{DynamicResource PrimaryAccent}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Chapters" FontSize="11" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="3" Width="1" Background="{DynamicResource SeparatorBrush}" Margin="0,4"/>
+                                    <!-- History -->
+                                    <StackPanel Grid.Column="4" HorizontalAlignment="Center" Spacing="4">
+                                        <TextBlock Text="{Binding DbStatsHistory}" FontSize="22" FontWeight="Bold"
+                                                   Foreground="{DynamicResource PrimaryAccent}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="History" FontSize="11" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="5" Width="1" Background="{DynamicResource SeparatorBrush}" Margin="0,4"/>
+                                    <!-- DB Size -->
+                                    <StackPanel Grid.Column="6" HorizontalAlignment="Center" Spacing="4">
+                                        <TextBlock Text="{Binding DbStatsSize}" FontSize="22" FontWeight="Bold"
+                                                   Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="DB Size" FontSize="11" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Export Logs -->
+                    <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Export App Logs" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="Save the application log file for bug reporting or troubleshooting" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Command="{Binding ExportLogsCommand}"
+                                    Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1"
+                                    Foreground="{DynamicResource PrimaryText}" CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
+                                    VerticalAlignment="Center" Cursor="Hand">
+                                <Button.Styles>
+                                    <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                        <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+                                    </Style>
+                                </Button.Styles>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="&#xE74E;" FontFamily="Segoe Fluent Icons" FontSize="14" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Export Logs" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Danger Zone Section -->
+            <StackPanel Spacing="15">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                     <TextBlock Text="&#xE7BA;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="#FF5555"/>
+                     <TextBlock Text="Danger Zone" FontSize="18" FontWeight="SemiBold" Foreground="#FF5555"/>
+                </StackPanel>
+                <Border BorderBrush="#40FF5555" BorderThickness="1" CornerRadius="8" Background="#05FF5555">
+                    <StackPanel Spacing="0">
+                        <!-- Clear Read History -->
+                        <Grid ColumnDefinitions="*, Auto" Margin="20,15">
                             <StackPanel Spacing="3">
                                 <TextBlock Text="Clear Read History &amp; Cache" FontWeight="SemiBold" Foreground="#F59E0B" FontSize="16"/>
                                 <TextBlock Text="Reset all chapters to unread status and free up memory" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
@@ -357,11 +560,11 @@
                                 </Button.Styles>
                             </Button>
                         </Grid>
-                    </Border>
-
-                    <!-- Danger Zone -->
-                    <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
-                        <Grid ColumnDefinitions="*, Auto">
+                        
+                        <Border Height="1" Background="#20FF5555" Margin="20,0"/>
+                        
+                        <!-- Clear All Data -->
+                        <Grid ColumnDefinitions="*, Auto" Margin="20,15">
                             <StackPanel Spacing="3">
                                 <TextBlock Text="Clear All Data" FontWeight="SemiBold" Foreground="#FF5555" FontSize="16"/>
                                 <TextBlock Text="Irreversible action to clear local database" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
@@ -378,8 +581,8 @@
                                 </Button.Styles>
                             </Button>
                         </Grid>
-                    </Border>
-                </StackPanel>
+                    </StackPanel>
+                </Border>
             </StackPanel>
 
             <!-- About Section -->

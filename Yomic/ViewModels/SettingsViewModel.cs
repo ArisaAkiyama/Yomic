@@ -6,6 +6,7 @@ using System.Linq;
 using Avalonia;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 namespace Yomic.ViewModels
 {
     public class SettingsViewModel : ViewModelBase
@@ -95,11 +96,25 @@ namespace Yomic.ViewModels
             set => this.RaiseAndSetIfChanged(ref _isDarkMode, value);
         }
 
+        private bool _isThemeChanging;
+        public bool IsThemeChanging
+        {
+            get => _isThemeChanging;
+            set => this.RaiseAndSetIfChanged(ref _isThemeChanging, value);
+        }
+
         private bool _isOfflineMode;
         public bool IsOfflineMode
         {
             get => _isOfflineMode;
             set => this.RaiseAndSetIfChanged(ref _isOfflineMode, value);
+        }
+
+        private string _lastBackupInfo = "";
+        public string LastBackupInfo
+        {
+            get => _lastBackupInfo;
+            set => this.RaiseAndSetIfChanged(ref _lastBackupInfo, value);
         }
 
         private bool _checkAppUpdateOnStart;
@@ -225,6 +240,8 @@ namespace Yomic.ViewModels
         public ReactiveCommand<Unit, Unit> OpenTikTokCommand { get; }
         public ReactiveCommand<Unit, Unit> SyncLibraryCommand { get; }
         public ReactiveCommand<Unit, Unit> RefreshLibraryCoversCommand { get; }
+        public ReactiveCommand<Unit, Unit> OptimizeDatabaseCommand { get; }
+        public ReactiveCommand<Unit, Unit> ExportLogsCommand { get; }
 
         private readonly Core.Services.UpdateService _updateService;
 
@@ -493,6 +510,11 @@ namespace Yomic.ViewModels
             OpenTikTokCommand = ReactiveCommand.Create(OpenTikTok);
             SyncLibraryCommand = ReactiveCommand.CreateFromTask(SyncLibraryAsync);
             RefreshLibraryCoversCommand = ReactiveCommand.CreateFromTask(RefreshLibraryCoversAsync);
+            OptimizeDatabaseCommand = ReactiveCommand.CreateFromTask(OptimizeDatabaseAsync);
+            ExportLogsCommand = ReactiveCommand.CreateFromTask(ExportLogsAsync);
+
+            // Load DB stats on init
+            System.Threading.Tasks.Task.Run(LoadDbStatsAsync);
 
             // Load shared startup update info if available
             if (_mainViewModel.LatestUpdateInfo != null && _mainViewModel.LatestUpdateInfo.IsUpdateAvailable)
@@ -503,7 +525,8 @@ namespace Yomic.ViewModels
             }
             
             this.WhenAnyValue(x => x.IsDarkMode)
-                .Subscribe(x => { 
+                .Subscribe(async x => { 
+                    IsThemeChanging = true;
                     _settingsService.IsDarkMode = x; 
                     _settingsService.Save(); 
                     if (Application.Current != null)
@@ -517,6 +540,8 @@ namespace Yomic.ViewModels
                             Application.Current.RequestedThemeVariant = x ? Avalonia.Styling.ThemeVariant.Dark : Avalonia.Styling.ThemeVariant.Light;
                         }
                     }
+                    await Task.Delay(550);
+                    IsThemeChanging = false;
                 });
             this.WhenAnyValue(x => x.IsOfflineMode)
                 .Skip(1)
@@ -574,6 +599,143 @@ namespace Yomic.ViewModels
                     _settingsService.Save();
                     System.Threading.Tasks.Task.Run(() => CleanupReaderCache(mbValue));
                 });
+            
+            RefreshLastBackupInfo();
+        }
+
+        // ─── Advanced: DB Stats ───────────────────────────────────────────────────
+
+        private string _dbStatsManga = "–";
+        public string DbStatsManga
+        {
+            get => _dbStatsManga;
+            set => this.RaiseAndSetIfChanged(ref _dbStatsManga, value);
+        }
+
+        private string _dbStatsChapters = "–";
+        public string DbStatsChapters
+        {
+            get => _dbStatsChapters;
+            set => this.RaiseAndSetIfChanged(ref _dbStatsChapters, value);
+        }
+
+        private string _dbStatsHistory = "–";
+        public string DbStatsHistory
+        {
+            get => _dbStatsHistory;
+            set => this.RaiseAndSetIfChanged(ref _dbStatsHistory, value);
+        }
+
+        private string _dbStatsSize = "–";
+        public string DbStatsSize
+        {
+            get => _dbStatsSize;
+            set => this.RaiseAndSetIfChanged(ref _dbStatsSize, value);
+        }
+
+        private bool _isOptimizingDb;
+        public bool IsOptimizingDb
+        {
+            get => _isOptimizingDb;
+            set => this.RaiseAndSetIfChanged(ref _isOptimizingDb, value);
+        }
+
+        private async Task LoadDbStatsAsync()
+        {
+            try
+            {
+                using var context = new Core.Data.MangaDbContext();
+                var mangaCount = await context.Mangas
+                    .Where(m => m.Favorite)
+                    .CountAsync();
+                var chapCount   = await context.Chapters.CountAsync();
+                var histCount   = await context.History.CountAsync();
+
+                var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                var dbPath  = System.IO.Path.Combine(appData, "Yomic", "manga.db");
+                var dbSize  = System.IO.File.Exists(dbPath)
+                    ? ExtensionsViewModel.FormatBytes(new System.IO.FileInfo(dbPath).Length)
+                    : "N/A";
+
+                DbStatsManga    = mangaCount.ToString("N0");
+                DbStatsChapters = chapCount.ToString("N0");
+                DbStatsHistory  = histCount.ToString("N0");
+                DbStatsSize     = dbSize;
+            }
+            catch (Exception ex)
+            {
+                Core.Services.LogService.Error("SettingsViewModel", "LoadDbStats failed", ex);
+            }
+        }
+
+        private async Task OptimizeDatabaseAsync()
+        {
+            if (IsOptimizingDb) return;
+            IsOptimizingDb = true;
+            _mainViewModel.ShowNotification("Optimizing database…", NotificationType.Info);
+            try
+            {
+                await Task.Run(async () =>
+                {
+                    var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                    var dbPath  = System.IO.Path.Combine(appData, "Yomic", "manga.db");
+                    using var conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={dbPath}");
+                    await conn.OpenAsync();
+                    foreach (var sql in new[]
+                    {
+                        "PRAGMA wal_checkpoint(TRUNCATE);",
+                        "VACUUM;",
+                        "REINDEX;",
+                        "ANALYZE;"
+                    })
+                    {
+                        using var cmd = conn.CreateCommand();
+                        cmd.CommandText = sql;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                });
+                _mainViewModel.ShowNotification("Database optimized!", NotificationType.Success);
+                await LoadDbStatsAsync();
+            }
+            catch (Exception ex)
+            {
+                Core.Services.LogService.Error("SettingsViewModel", "OptimizeDatabase failed", ex);
+                _mainViewModel.ShowNotification("Failed to optimize database.", NotificationType.Error);
+            }
+            finally
+            {
+                IsOptimizingDb = false;
+            }
+        }
+
+        // ─── Advanced: Export Logs ────────────────────────────────────────────────
+
+        public event Action? RequestExportLogsDialog;
+
+        private Task ExportLogsAsync()
+        {
+            RequestExportLogsDialog?.Invoke();
+            return Task.CompletedTask;
+        }
+
+        public async Task ProcessExportLogsAsync(string destinationPath)
+        {
+            try
+            {
+                var logPath = Core.Services.LogService.LogFilePath;
+                if (!System.IO.File.Exists(logPath))
+                {
+                    _mainViewModel.ShowNotification("No log file found to export.", NotificationType.Error);
+                    return;
+                }
+                await Task.Run(() => System.IO.File.Copy(logPath, destinationPath, overwrite: true));
+                _mainViewModel.ShowNotification("Log exported successfully!", NotificationType.Success);
+            }
+            catch (Exception ex)
+            {
+                Core.Services.LogService.Error("SettingsViewModel", "ExportLogs failed", ex);
+                _mainViewModel.ShowNotification("Failed to export log.", NotificationType.Error);
+            }
         }
 
 
@@ -585,6 +747,18 @@ namespace Yomic.ViewModels
         private void RequestRestore()
         {
             RequestRestoreDialog?.Invoke();
+        }
+
+        private void RefreshLastBackupInfo()
+        {
+            if (string.IsNullOrEmpty(_settingsService.LastBackupTime))
+            {
+                LastBackupInfo = "Never backed up";
+            }
+            else
+            {
+                LastBackupInfo = $"Last backup: {_settingsService.LastBackupTime} ({_settingsService.LastBackupSize})";
+            }
         }
 
         private async Task ClearCacheCookiesAsync()
@@ -622,31 +796,82 @@ namespace Yomic.ViewModels
             }
         }
 
+        private bool _isBackingUp;
+        public bool IsBackingUp
+        {
+            get => _isBackingUp;
+            set => this.RaiseAndSetIfChanged(ref _isBackingUp, value);
+        }
+
+        private bool _isRestoring;
+        public bool IsRestoring
+        {
+            get => _isRestoring;
+            set => this.RaiseAndSetIfChanged(ref _isRestoring, value);
+        }
+
+        private bool _isRefreshingCovers;
+        public bool IsRefreshingCovers
+        {
+            get => _isRefreshingCovers;
+            set => this.RaiseAndSetIfChanged(ref _isRefreshingCovers, value);
+        }
+
         public async System.Threading.Tasks.Task ProcessBackupAsync(string path)
         {
-            _mainViewModel.ShowNotification("Creating backup...", NotificationType.Info);
-            bool success = await _backupService.CreateBackupAsync(path);
-            if (success)
+            if (IsBackingUp) return;
+            IsBackingUp = true;
+            try
             {
-                _mainViewModel.ShowNotification("Backup created successfully!", NotificationType.Success);
+                _mainViewModel.ShowNotification("Creating backup...", NotificationType.Info);
+                bool success = await _backupService.CreateBackupAsync(path);
+                if (success)
+                {
+                    _mainViewModel.ShowNotification("Backup created successfully!", NotificationType.Success);
+                    try
+                    {
+                        var fileInfo = new System.IO.FileInfo(path);
+                        _settingsService.LastBackupTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        _settingsService.LastBackupSize = ExtensionsViewModel.FormatBytes(fileInfo.Length);
+                        _settingsService.Save();
+                        RefreshLastBackupInfo();
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Services.LogService.Error("SettingsViewModel", "Error updating last backup metadata", ex);
+                    }
+                }
+                else
+                {
+                    _mainViewModel.ShowNotification("Failed to create backup.", NotificationType.Error);
+                }
             }
-            else
+            finally
             {
-                _mainViewModel.ShowNotification("Failed to create backup.", NotificationType.Error);
+                IsBackingUp = false;
             }
         }
 
         public async System.Threading.Tasks.Task ProcessRestoreAsync(string path)
         {
-            _mainViewModel.ShowNotification("Restoring backup...", NotificationType.Info);
-            bool success = await _backupService.RestoreBackupAsync(path);
-            if (success)
+            if (IsRestoring) return;
+            IsRestoring = true;
+            try
             {
-                _mainViewModel.ShowNotification("Restore completed! Please restart the app manually.", NotificationType.Success);
+                _mainViewModel.ShowNotification("Restoring backup...", NotificationType.Info);
+                bool success = await _backupService.RestoreBackupAsync(path);
+                if (success)
+                {
+                    _mainViewModel.ShowNotification("Restore completed! Please restart the app manually.", NotificationType.Success);
+                }
+                else
+                {
+                    _mainViewModel.ShowNotification("Failed to restore backup.", NotificationType.Error);
+                }
             }
-            else
+            finally
             {
-                _mainViewModel.ShowNotification("Failed to restore backup.", NotificationType.Error);
+                IsRestoring = false;
             }
         }
 
@@ -777,19 +1002,28 @@ namespace Yomic.ViewModels
 
         private async Task RefreshLibraryCoversAsync()
         {
-            _mainViewModel.ShowNotification("Refreshing library covers...", NotificationType.Info);
-            
-            // 1. Clear cover cache in memory and on disk
-            _mainViewModel.ImageCacheService.Clear();
-            _mainViewModel.SecureImageService.ClearDiskCache();
-            
-            // 2. Force reload covers on Library UI
-            await _mainViewModel.LibraryVM.RefreshLibraryCoversForceAsync();
-            
-            // 3. Collect garbage
-            GC.Collect();
-            
-            _mainViewModel.ShowNotification("Library covers refreshed successfully!", NotificationType.Success);
+            if (IsRefreshingCovers) return;
+            IsRefreshingCovers = true;
+            try
+            {
+                _mainViewModel.ShowNotification("Refreshing library covers...", NotificationType.Info);
+                
+                // 1. Clear cover cache in memory and on disk
+                _mainViewModel.ImageCacheService.Clear();
+                _mainViewModel.SecureImageService.ClearDiskCache();
+                
+                // 2. Force reload covers on Library UI
+                await _mainViewModel.LibraryVM.RefreshLibraryCoversForceAsync();
+                
+                // 3. Collect garbage
+                GC.Collect();
+                
+                _mainViewModel.ShowNotification("Library covers refreshed successfully!", NotificationType.Success);
+            }
+            finally
+            {
+                IsRefreshingCovers = false;
+            }
         }
     }
 }

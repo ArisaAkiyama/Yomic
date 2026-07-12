@@ -13,16 +13,26 @@
             <Setter Property="ZIndex" Value="1"/>
             <Setter Property="Transitions">
                 <Transitions>
-                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="CubicEaseOut"/>
                     <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2"/>
                 </Transitions>
             </Setter>
         </Style>
         <Style Selector="Border.MangaCard:pointerover">
-            <Setter Property="RenderTransform" Value="scale(1.02) translateY(-4px)"/>
             <Setter Property="ZIndex" Value="10"/>
             <Setter Property="BoxShadow" Value="0 10 20 0 #60000000"/>
             <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Border.MangaCard Image">
+            <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.35" Easing="CubicEaseOut"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.MangaCard:pointerover Image">
+            <Setter Property="RenderTransform" Value="scale(1.08)"/>
         </Style>
         
         <!-- TextBox style: black text on focus (when background becomes white) -->
@@ -164,7 +174,7 @@
     <Panel>
         <Grid RowDefinitions="Auto, *">
             <StackPanel Grid.Row="0" Margin="30,25,30,15">
-                <!-- Row 0: Title + Badge + Actions -->
+                <!-- Row 0: Title only -->
                 <Grid ColumnDefinitions="*, Auto">
                     <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                         <!-- Header Icon -->
@@ -174,11 +184,27 @@
                                    
                         <TextBlock Text="Library" FontSize="28" FontWeight="Bold" 
                                    Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
-                        
-
                     </StackPanel>
+                </Grid>
 
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+
+
+                <!-- Row 1: Search Toolbar (full width, unified) -->
+                <Grid ColumnDefinitions="*, Auto" Margin="0,14,0,0" VerticalAlignment="Center">
+                    <!-- Search Box - stretches to fill space -->
+                    <TextBox HorizontalAlignment="Stretch"
+                             Watermark="Search library..." CornerRadius="20"
+                             Text="{Binding SearchText}"
+                             Background="{DynamicResource SidebarBackground}" Foreground="{DynamicResource PrimaryText}" BorderThickness="0"
+                             Padding="8,8,15,8" VerticalContentAlignment="Center" FontSize="13">
+                        <TextBox.InnerLeftContent>
+                             <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource SecondaryText}" 
+                                        VerticalAlignment="Center" Margin="12,0,0,0" FontSize="14"/>
+                        </TextBox.InnerLeftContent>
+                    </TextBox>
+
+                    <!-- Action Buttons - right side of toolbar -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="8,0,0,0" VerticalAlignment="Center">
                         <!-- Filter Button -->
                         <Button Classes="header-action" ToolTip.Tip="Sort and Filter">
                             <Button.Flyout>
@@ -227,7 +253,7 @@
                                         </MenuItem.Icon>
                                         <MenuItem.Styles>
                                             <Style Selector="MenuItem > MenuItem" x:DataType="vm:LibraryViewModel+LibrarySourceFilterItem">
-                                                <Setter Property="Command" Value="{Binding ((vm:LibraryViewModel)DataContext).SetSourceFilterCommand, ElementName=root}"/>
+                                                <Setter Property="Command" Value="{Binding $parent[UserControl].((vm:LibraryViewModel)DataContext).SetSourceFilterCommand}"/>
                                                 <Setter Property="CommandParameter" Value="{Binding Name}"/>
                                             </Style>
                                         </MenuItem.Styles>
@@ -254,62 +280,6 @@
                                             </DataTemplate>
                                         </MenuItem.ItemTemplate>
                                     </MenuItem>
-
-                                     <!-- Filter by Format -->
-                                     <MenuItem Header="Filter by Format" ItemsSource="{Binding AvailableFormats}">
-                                         <MenuItem.Icon>
-                                             <TextBlock Text="&#xE9F9;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
-                                         </MenuItem.Icon>
-                                         <MenuItem.Styles>
-                                             <Style Selector="MenuItem > MenuItem" x:DataType="x:String">
-                                                 <Setter Property="Command" Value="{Binding ((vm:LibraryViewModel)DataContext).SetFormatFilterCommand, ElementName=root}"/>
-                                                 <Setter Property="CommandParameter" Value="{Binding}"/>
-                                             </Style>
-                                         </MenuItem.Styles>
-                                         <MenuItem.ItemTemplate>
-                                             <DataTemplate DataType="x:String">
-                                                 <Grid ColumnDefinitions="24, *">
-                                                     <TextBlock Grid.Column="0" Text="&#xE73E;" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center">
-                                                         <TextBlock.IsVisible>
-                                                             <MultiBinding Converter="{x:Static vm:StatusToColorConverter.StringEqualityConverter}">
-                                                                 <Binding Path="$parent[UserControl].DataContext.SelectedFormatFilter" />
-                                                                 <Binding />
-                                                             </MultiBinding>
-                                                         </TextBlock.IsVisible>
-                                                     </TextBlock>
-                                                     <TextBlock Grid.Column="1" Text="{Binding}" VerticalAlignment="Center"/>
-                                                 </Grid>
-                                             </DataTemplate>
-                                         </MenuItem.ItemTemplate>
-                                     </MenuItem>
-
-                                     <!-- Filter by Genre -->
-                                     <MenuItem Header="Filter by Genre" ItemsSource="{Binding AvailableGenres}">
-                                         <MenuItem.Icon>
-                                             <TextBlock Text="&#xE8F1;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
-                                         </MenuItem.Icon>
-                                         <MenuItem.Styles>
-                                             <Style Selector="MenuItem > MenuItem" x:DataType="x:String">
-                                                 <Setter Property="Command" Value="{Binding ((vm:LibraryViewModel)DataContext).SetGenreFilterCommand, ElementName=root}"/>
-                                                 <Setter Property="CommandParameter" Value="{Binding}"/>
-                                             </Style>
-                                         </MenuItem.Styles>
-                                         <MenuItem.ItemTemplate>
-                                             <DataTemplate DataType="x:String">
-                                                 <Grid ColumnDefinitions="24, *">
-                                                     <TextBlock Grid.Column="0" Text="&#xE73E;" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center">
-                                                         <TextBlock.IsVisible>
-                                                             <MultiBinding Converter="{x:Static vm:StatusToColorConverter.StringEqualityConverter}">
-                                                                 <Binding Path="$parent[UserControl].DataContext.SelectedGenreFilter" />
-                                                                 <Binding />
-                                                             </MultiBinding>
-                                                         </TextBlock.IsVisible>
-                                                     </TextBlock>
-                                                     <TextBlock Grid.Column="1" Text="{Binding}" VerticalAlignment="Center"/>
-                                                 </Grid>
-                                             </DataTemplate>
-                                         </MenuItem.ItemTemplate>
-                                     </MenuItem>
 
                                     <!-- Sort Section -->
                                     <MenuItem Header="Sort by">
@@ -347,6 +317,44 @@
                                             </MenuItem.Icon>
                                         </MenuItem>
                                     </MenuItem>
+                                    <MenuItem Header="Filter by Genre" StaysOpenOnClick="True">
+                                        <MenuItem.Icon>
+                                            <TextBlock Text="&#xE8EC;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
+                                        </MenuItem.Icon>
+                                        <MenuItem.Styles>
+                                            <Style Selector="MenuItem > MenuItem">
+                                                <Setter Property="Template">
+                                                    <ControlTemplate>
+                                                        <ContentPresenter Content="{TemplateBinding Header}"
+                                                                          ContentTemplate="{TemplateBinding HeaderTemplate}"/>
+                                                    </ControlTemplate>
+                                                </Setter>
+                                            </Style>
+                                        </MenuItem.Styles>
+                                        <Grid RowDefinitions="Auto, *" Width="180" Margin="12,8,12,8">
+                                            <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,8">
+                                                <TextBlock Text="Filter by Genre" FontWeight="Bold" VerticalAlignment="Center" FontSize="13"/>
+                                                <Button Grid.Column="1" Content="Clear" 
+                                                        Background="Transparent" BorderThickness="0" Foreground="{DynamicResource AccentColor}"
+                                                        Command="{Binding ClearGenreFilterCommand}" 
+                                                        Padding="4,2" FontSize="12"/>
+                                            </Grid>
+                                            
+                                            <ScrollViewer Grid.Row="1" MaxHeight="250" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                                <ItemsControl ItemsSource="{Binding AvailableGenres}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate DataType="vm:LibraryViewModel+GenreFilterItem" x:CompileBindings="False">
+                                                            <CheckBox Content="{Binding Name}" 
+                                                                      IsChecked="{Binding IsSelected}" 
+                                                                      Margin="0"
+                                                                      Padding="8,0,0,0" MinHeight="28"
+                                                                      HorizontalAlignment="Stretch"/>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </ScrollViewer>
+                                        </Grid>
+                                    </MenuItem>
                                     <Separator/>
                                     <MenuItem Header="Manage Categories..." Command="{Binding ManageCategoriesCommand}">
                                         <MenuItem.Icon>
@@ -360,48 +368,30 @@
                                 <TextBlock Text="Filter" VerticalAlignment="Center" FontSize="13" FontWeight="Medium"/>
                             </StackPanel>
                         </Button>
-                        
+
                         <!-- Refresh Button -->
                         <Button Command="{Binding RefreshCommand}"
                                 IsEnabled="{Binding IsOnline}"
                                 Classes="header-action"
                                 ToolTip.Tip="Sync Library">
-                                <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" 
-                                           FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" 
+                                       FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Button>
-                        
+
                         <!-- Toggle View Mode Button -->
                         <Button Command="{Binding ToggleViewModeCommand}"
                                 Classes="header-action"
                                 ToolTip.Tip="Toggle View Mode (Grid/List)">
-                                <Panel>
-                                    <TextBlock Text="&#xE8FD;" FontFamily="Segoe Fluent Icons" 
-                                               FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               IsVisible="{Binding !IsListView}"/>
-                                    <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons" 
-                                               FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               IsVisible="{Binding IsListView}"/>
-                                </Panel>
+                            <Panel>
+                                <TextBlock Text="&#xE8FD;" FontFamily="Segoe Fluent Icons" 
+                                           FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           IsVisible="{Binding !IsListView}"/>
+                                <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons" 
+                                           FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           IsVisible="{Binding IsListView}"/>
+                            </Panel>
                         </Button>
                     </StackPanel>
-                </Grid>
-
-
-
-                <!-- Row 1: Search + Source Tabs -->
-                <Grid ColumnDefinitions="Auto, *" Margin="0,18,0,0">
-                    <TextBox Width="300" HorizontalAlignment="Left"
-                             Watermark="Search library..." CornerRadius="20"
-                             Text="{Binding SearchText}"
-                             Background="{DynamicResource SidebarBackground}" Foreground="{DynamicResource PrimaryText}" BorderThickness="0"
-                             Padding="8,8,15,8" VerticalContentAlignment="Center" FontSize="13">
-                        <TextBox.InnerLeftContent>
-                             <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource SecondaryText}" 
-                                        VerticalAlignment="Center" Margin="12,0,0,0" FontSize="14"/>
-                        </TextBox.InnerLeftContent>
-                    </TextBox>
-
-                    <!-- Removed SourceTabsScrollViewer as it is now in the Filter Menu -->
                 </Grid>
                 
                 <!-- Category Tabs -->
@@ -436,7 +426,7 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
                     </ScrollViewer>
-                    <Button Grid.Column="1" Classes="header-action" Command="{Binding ManageCategoriesCommand}" VerticalAlignment="Center" ToolTip.Tip="Manage Categories" Margin="10,0,0,0">
+                    <Button Grid.Column="1" Classes="header-action" Command="{Binding ManageCategoriesCommand}" VerticalAlignment="Center" ToolTip.Tip="Manage Categories" Margin="10,0,0,0" IsVisible="False">
                         <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="16"/>
                     </Button>
                 </Grid>
@@ -446,6 +436,8 @@
             <ListBox x:Name="LibraryListBox" Grid.Row="1" ItemsSource="{Binding LibraryItems}" 
                      Background="Transparent" BorderThickness="0" 
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.VerticalScrollBarVisibility="Visible"
+                     ScrollViewer.AllowAutoHide="False"
                      IsVisible="{Binding ShowGridView}">
                 <ListBox.Styles>
                     <!-- Disable default ListBoxItem selection styles -->
@@ -473,11 +465,12 @@
                          <Button x:CompileBindings="False" Background="Transparent" Padding="0" Margin="10,0,10,20"
                                  Command="{Binding DataContext.OpenMangaCommand, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}"
                                  CommandParameter="{Binding}">
-                             <Button.Styles>
-                                <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                    <Setter Property="Background" Value="Transparent"/>
-                                </Style>
-                             </Button.Styles>
+                              <Button.Styles>
+                                 <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                     <Setter Property="Background" Value="Transparent"/>
+                                     <Setter Property="Opacity" Value="1.0"/>
+                                 </Style>
+                              </Button.Styles>
                              
                                 <StackPanel Width="150" Spacing="8">
                                 <!-- Cover Image -->
@@ -503,11 +496,9 @@
                                                       Command="{Binding #root.DataContext.EditMangaCategoriesCommand}"
                                                       CommandParameter="{Binding}"/>
                                             <Separator/>
-                                            <MenuItem Header="Remove from Library (Keep Files)"
-                                                      x:CompileBindings="False"
-                                                      Command="{Binding #root.DataContext.RemoveMangaCommand}"
-                                                      CommandParameter="{Binding}"/>
+
                                             <MenuItem Header="Delete All Downloads" Foreground="#FF5555"
+                                                      IsVisible="{Binding IsDownloadedBadgeVisible}"
                                                       x:CompileBindings="False"
                                                       Command="{Binding #root.DataContext.DeleteMangaDownloadsCommand}"
                                                       CommandParameter="{Binding}"/>
@@ -520,19 +511,24 @@
                                 
                                     <Grid>
                                          <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}" 
+                                                helpers:SecureImageLoader.DecodeWidth="300"
                                                 Stretch="UniformToFill"/>
                                         
-                                        <!-- NEW Badge (Top Left) -->
-                                        <Border Background="#89B4FA" CornerRadius="6"
-                                                HorizontalAlignment="Left" VerticalAlignment="Top"
-                                                Margin="8" Padding="6,2"
+                                        <!-- NEW Ribbon (Top Left Diagonal) -->
+                                        <Border HorizontalAlignment="Left" VerticalAlignment="Top" 
+                                                Width="100" Height="18" Margin="-32,9,0,0"
+                                                Background="#16A34A"
                                                 IsVisible="{Binding IsNewBadgeVisible}">
-                                            <TextBlock Text="NEW" Foreground="#1E1E2E"
-                                                       FontSize="10" FontWeight="Bold"/>
+                                            <Border.RenderTransform>
+                                                <RotateTransform Angle="-45"/>
+                                            </Border.RenderTransform>
+                                            <TextBlock Text="NEW" 
+                                                       FontSize="8" FontWeight="900" Foreground="White"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
                                         </Border>
 
                                         <!-- Unread Badge -->
-                                        <Border Background="#0078D7" CornerRadius="6" 
+                                        <Border Background="{DynamicResource PrimaryAccent}" CornerRadius="6" 
                                                 HorizontalAlignment="Right" VerticalAlignment="Top"
                                                 Margin="8" Padding="6,2"
                                                 IsVisible="{Binding UnreadCount, Converter={x:Static ObjectConverters.IsNotNull}}">
@@ -541,7 +537,7 @@
                                         </Border>
 
                                         <!-- Download Badge (Bottom Right) -->
-                                        <Border Background="#059669" CornerRadius="6" 
+                                        <Border Background="#0066CC" CornerRadius="6" 
                                                 HorizontalAlignment="Right" VerticalAlignment="Bottom"
                                                 Margin="8" Padding="6,2"
                                                 IsVisible="{Binding IsDownloadedBadgeVisible}">
@@ -558,7 +554,7 @@
                                 <!-- Title Below Image -->
                                 <TextBlock Text="{Binding Title}" Foreground="{DynamicResource PrimaryText}" 
                                            TextAlignment="Left" TextTrimming="CharacterEllipsis"
-                                           FontSize="13" FontWeight="SemiBold" MaxLines="2" Height="36"
+                                           FontSize="13" FontWeight="SemiBold" MaxLines="2"
                                            ToolTip.Tip="{Binding Title}"/>
 
                                 <!-- Metadata: Source + Last Read -->
@@ -635,11 +631,8 @@
                                                   Command="{Binding #root.DataContext.EditMangaCategoriesCommand}"
                                                   CommandParameter="{Binding}"/>
                                         <Separator/>
-                                        <MenuItem Header="Remove from Library (Keep Files)"
-                                                  x:CompileBindings="False"
-                                                  Command="{Binding #root.DataContext.RemoveMangaCommand}"
-                                                  CommandParameter="{Binding}"/>
                                          <MenuItem Header="Delete All Downloads" Foreground="#FF5555"
+                                                   IsVisible="{Binding IsDownloadedBadgeVisible}"
                                                    x:CompileBindings="False"
                                                    Command="{Binding #root.DataContext.DeleteMangaDownloadsCommand}"
                                                    CommandParameter="{Binding}"/>
@@ -650,10 +643,12 @@
                                     </ContextMenu>
                                 </Border.ContextMenu>
 
-                                <Grid ColumnDefinitions="40, 16, *, Auto">
+                                <Grid ColumnDefinitions="60, 16, *, Auto">
                                     <!-- Tiny Cover Image -->
-                                    <Border Grid.Column="0" Height="55" Width="40" CornerRadius="4" ClipToBounds="True" Background="{DynamicResource SidebarBackground}">
-                                        <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}" Stretch="UniformToFill"/>
+                                    <Border Grid.Column="0" Height="80" Width="60" CornerRadius="4" ClipToBounds="True" Background="{DynamicResource SidebarBackground}">
+                                        <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}" 
+                                               helpers:SecureImageLoader.DecodeWidth="300"
+                                               Stretch="UniformToFill"/>
                                     </Border>
                                     
                                     <!-- Text Info -->
@@ -675,19 +670,19 @@
 
                                     <!-- Badges -->
                                     <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                        <!-- NEW Badge -->
-                                        <Border Background="#89B4FA" CornerRadius="4" Padding="6,2"
+                                        <!-- NEW Badge (List view - keep flat pill) -->
+                                        <Border Background="#16A34A" CornerRadius="4" Padding="6,2"
                                                 IsVisible="{Binding IsNewBadgeVisible}">
-                                            <TextBlock Text="NEW" Foreground="#1E1E2E" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock Text="NEW" Foreground="White" FontSize="10" FontWeight="Bold"/>
                                         </Border>
                                         <!-- Unread Badge -->
-                                        <Border Background="#0078D7" CornerRadius="4" Padding="6,2" MinWidth="24"
+                                        <Border Background="{DynamicResource PrimaryAccent}" CornerRadius="4" Padding="6,2" MinWidth="24"
                                                 IsVisible="{Binding UnreadCount, Converter={x:Static ObjectConverters.IsNotNull}}">
                                             <TextBlock Text="{Binding UnreadCount}" Foreground="#FFFFFF" 
                                                        FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
                                         </Border>
                                         <!-- Download Badge -->
-                                        <Border Background="#059669" CornerRadius="4" Padding="6,2"
+                                        <Border Background="#0066CC" CornerRadius="4" Padding="6,2"
                                                 IsVisible="{Binding IsDownloadedBadgeVisible}">
                                             <StackPanel Orientation="Horizontal" Spacing="4">
                                                 <TextBlock Text="&#xE896;" FontFamily="Segoe Fluent Icons" Foreground="#FFFFFF" 

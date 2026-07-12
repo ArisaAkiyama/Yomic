@@ -42,6 +42,8 @@ namespace Yomic.Core.Services
         public bool LibraryIsListView { get; set; } = false;
         public bool AutoDownloadNextChapter { get; set; } = false;
         public bool SkipFilteredChapters { get; set; } = false;
+        public string LastBackupTime { get; set; } = "";
+        public string LastBackupSize { get; set; } = "";
 
         public SettingsService()
         {
@@ -83,6 +85,8 @@ namespace Yomic.Core.Services
                         LibraryIsListView = settings.LibraryIsListView;
                         AutoDownloadNextChapter = settings.AutoDownloadNextChapter;
                         SkipFilteredChapters = settings.SkipFilteredChapters;
+                        LastBackupTime = settings.LastBackupTime ?? "";
+                        LastBackupSize = settings.LastBackupSize ?? "";
                     }
                 }
             }
@@ -113,7 +117,9 @@ namespace Yomic.Core.Services
                     UseSmartUpdate = UseSmartUpdate,
                     LibraryIsListView = LibraryIsListView,
                     AutoDownloadNextChapter = AutoDownloadNextChapter,
-                    SkipFilteredChapters = SkipFilteredChapters
+                    SkipFilteredChapters = SkipFilteredChapters,
+                    LastBackupTime = LastBackupTime,
+                    LastBackupSize = LastBackupSize
                 };
 
                 var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
@@ -151,6 +157,8 @@ namespace Yomic.Core.Services
                 LibraryIsListView = false;
                 AutoDownloadNextChapter = false;
                 SkipFilteredChapters = false;
+                LastBackupTime = "";
+                LastBackupSize = "";
             }
             catch (Exception ex)
             {
@@ -177,6 +185,8 @@ namespace Yomic.Core.Services
             public bool LibraryIsListView { get; set; } = false;
             public bool AutoDownloadNextChapter { get; set; } = false;
             public bool SkipFilteredChapters { get; set; } = false;
+            public string LastBackupTime { get; set; } = "";
+            public string LastBackupSize { get; set; } = "";
         }
     }
 }

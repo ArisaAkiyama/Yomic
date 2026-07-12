@@ -8,7 +8,7 @@ using Yomic.Core.Services;
 
 namespace Yomic.Core.Sources
 {
-    public abstract class HttpSource : IMangaSource, ICloudflareBypassable
+    public abstract class HttpSource : IMangaSource
     {
         /// <summary>
         /// Unique stable ID generated from the class name.
@@ -291,29 +291,6 @@ namespace Yomic.Core.Sources
               Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [HttpSource] FORCING HEADLESS BROWSER FETCH for: {url} (Wait: {waitForSelector ?? "None"})");
               return await CloudflareBypassService.Instance.GetContentAsync(url, waitForSelector);
          }
-
-        public virtual async Task InitializeBrowserAsync()
-        {
-            var result = await CloudflareBypassService.Instance.SolveInteractiveAsync(BaseUrl);
-            
-            // Inject the captured cookies into our HttpClient's CookieContainer
-            foreach (var entry in result.Cookies)
-            {
-                try
-                {
-                    var uri = new Uri(BaseUrl);
-                    var cookie = new System.Net.Cookie(entry.Key, entry.Value)
-                    {
-                        Domain = uri.Host
-                    };
-                    _cookieContainer.Add(cookie);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[HttpSource] Error injecting cookie {entry.Key}: {ex.Message}");
-                }
-            }
-        }
     }
 
     public class DpiBypassStream : Stream

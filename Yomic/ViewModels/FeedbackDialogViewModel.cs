@@ -8,9 +8,18 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using ReactiveUI;
+using Avalonia.Media.Imaging;
 
 namespace Yomic.ViewModels
 {
+    public enum FeedbackCategory
+    {
+        BugReport,
+        FeatureRequest,
+        General,
+        Question
+    }
+
     public class FeedbackDialogViewModel : ViewModelBase
     {
         private string _feedbackText = string.Empty;
@@ -21,10 +30,29 @@ namespace Yomic.ViewModels
             {
                 this.RaiseAndSetIfChanged(ref _feedbackText, value);
                 this.RaisePropertyChanged(nameof(CanSubmit));
+                this.RaisePropertyChanged(nameof(CharacterCountText));
             }
         }
 
-        public bool CanSubmit => !string.IsNullOrWhiteSpace(FeedbackText);
+        public string CharacterCountText => $"{FeedbackText.Length}/1000";
+
+        private FeedbackCategory _selectedCategory = FeedbackCategory.BugReport;
+        public FeedbackCategory SelectedCategory
+        {
+            get => _selectedCategory;
+            set => this.RaiseAndSetIfChanged(ref _selectedCategory, value);
+        }
+
+        public IReadOnlyList<FeedbackCategory> FeedbackCategories { get; } = Enum.GetValues<FeedbackCategory>();
+
+        private bool _isSending;
+        public bool IsSending
+        {
+            get => _isSending;
+            set => this.RaiseAndSetIfChanged(ref _isSending, value);
+        }
+
+        public bool CanSubmit => !string.IsNullOrWhiteSpace(FeedbackText) && FeedbackText.Length <= 1000 && !IsSending;
 
         public ReactiveCommand<Avalonia.Controls.Window, Unit> CancelCommand { get; }
         public ReactiveCommand<Avalonia.Controls.Window, Unit> SubmitCommand { get; }
@@ -52,10 +80,21 @@ namespace Yomic.ViewModels
 
             SubmitCommand = ReactiveCommand.CreateFromTask<Avalonia.Controls.Window>(async window =>
             {
-                var success = await SendEmailAsync(FeedbackText);
-                if (success)
+                IsSending = true;
+                this.RaisePropertyChanged(nameof(CanSubmit));
+                
+                try
                 {
-                    window?.Close();
+                    var success = await SendEmailAsync(FeedbackText);
+                    if (success)
+                    {
+                        window?.Close();
+                    }
+                }
+                finally
+                {
+                    IsSending = false;
+                    this.RaisePropertyChanged(nameof(CanSubmit));
                 }
             }, this.WhenAnyValue(x => x.CanSubmit));
 
@@ -134,6 +173,7 @@ namespace Yomic.ViewModels
                 var payload = new
                 {
                     message = text,
+                    category = SelectedCategory.ToString(),
                     hasScreenshot = attachments.Length > 0,
                     screenshot,
                     attachment = screenshot,
@@ -196,5 +236,6 @@ namespace Yomic.ViewModels
         public string FileName { get; set; } = string.Empty;
         public string ContentType { get; set; } = "image/png";
         public string Base64Data { get; set; } = string.Empty;
+        public Bitmap? Thumbnail { get; set; }
     }
 }

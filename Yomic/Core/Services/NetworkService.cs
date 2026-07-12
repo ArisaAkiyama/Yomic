@@ -181,128 +181,100 @@ namespace Yomic.Core.Services
                  throw new System.Net.WebException("Application is in Offline Mode.");
              }
 
-             // Check if sing-box proxy is running
-             bool useProxy = SingboxService.Instance.IsRunning;
-             
-             System.Net.Http.SocketsHttpHandler handler;
-             
-             if (useProxy)
+             System.Net.Http.SocketsHttpHandler handler = new System.Net.Http.SocketsHttpHandler
              {
-                 // When using SOCKS5 proxy, don't use custom ConnectCallback
-                 // The proxy handles all connections
-                 Console.WriteLine("[NetworkService] Creating HttpClient with SOCKS5 proxy");
-                 handler = new System.Net.Http.SocketsHttpHandler
-                 {
-                     Proxy = new System.Net.WebProxy($"socks5://{SingboxService.Instance.ProxyAddress}:{SingboxService.Instance.ProxyPort}"),
-                     UseProxy = true,
-                     SslOptions = new System.Net.Security.SslClientAuthenticationOptions
-                     {
-                         RemoteCertificateValidationCallback = delegate { return true; },
-                         EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
-                     },
-                     PooledConnectionLifetime = TimeSpan.FromMinutes(2),
-                     AutomaticDecompression = System.Net.DecompressionMethods.All,
-                     UseCookies = true
-                 };
-             }
-             else
-             {
-                 // When not using proxy, use custom DoH ConnectCallback
-                 handler = new System.Net.Http.SocketsHttpHandler
-                 {
-                    // Custom connection logic to use DoH resolved IP
-                    ConnectCallback = async (context, token) =>
+                // Custom connection logic to use DoH resolved IP
+                ConnectCallback = async (context, token) =>
+                {
+                    var host = context.DnsEndPoint.Host;
+                    System.Net.IPAddress? ipAddress = null;
+
+                    int dohProvider = _settingsService.DnsOverHttpsProvider;
+                    
+                    if (dohProvider == 0)
                     {
-                        var host = context.DnsEndPoint.Host;
-                        System.Net.IPAddress? ipAddress = null;
-
-                        int dohProvider = _settingsService.DnsOverHttpsProvider;
-                        
-                        if (dohProvider == 0)
+                        // If DoH is disabled, just fallback immediately
+                        var entry = await System.Net.Dns.GetHostEntryAsync(host, token);
+                        ipAddress = entry.AddressList.FirstOrDefault();
+                    }
+                    else
+                    {
+                        // List of DoH providers (IPv4)
+                        string[] dohQueries = dohProvider switch
                         {
-                            // If DoH is disabled, just fallback immediately
-                            var entry = await System.Net.Dns.GetHostEntryAsync(host, token);
-                            ipAddress = entry.AddressList.FirstOrDefault();
-                        }
-                        else
-                        {
-                            // List of DoH providers (IPv4)
-                            string[] dohQueries = dohProvider switch
-                            {
-                                1 => new[] { "https://1.1.1.1/dns-query?name={0}&type=A", "https://cloudflare-dns.com/dns-query?name={0}&type=A" }, // Cloudflare
-                                2 => new[] { "https://8.8.8.8/resolve?name={0}&type=A", "https://dns.google/resolve?name={0}&type=A" }, // Google
-                                3 => new[] { "https://dns.adguard-dns.com/resolve?name={0}&type=A", "https://94.140.14.14/resolve?name={0}&type=A" }, // AdGuard
-                                _ => new[] { "https://8.8.8.8/resolve?name={0}&type=A" } // Fallback
-                            };
-                        
-                        using var dohClient = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+                            1 => new[] { "https://1.1.1.1/dns-query?name={0}&type=A", "https://cloudflare-dns.com/dns-query?name={0}&type=A" }, // Cloudflare
+                            2 => new[] { "https://8.8.8.8/resolve?name={0}&type=A", "https://dns.google/resolve?name={0}&type=A" }, // Google
+                            3 => new[] { "https://dns.adguard-dns.com/resolve?name={0}&type=A", "https://94.140.14.14/resolve?name={0}&type=A" }, // AdGuard
+                            _ => new[] { "https://8.8.8.8/resolve?name={0}&type=A" } // Fallback
+                        };
+                    
+                    using var dohClient = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(2) };
 
-                        foreach (var template in dohQueries)
-                        {
-                            try
-                            {
-                                string dohUrl = string.Format(template, host);
-                                var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, dohUrl);
-                                request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/dns-json"));
-                                
-                                var response = await dohClient.SendAsync(request, token);
-                                if (response.IsSuccessStatusCode)
-                                {
-                                    var json = await response.Content.ReadAsStringAsync(token);
-                                    var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
-                                    var answers = obj["Answer"];
-                                    
-                                    if (answers != null)
-                                    {
-                                        foreach (var ans in answers)
-                                        {
-                                            var ipStr = ans["data"]?.ToString();
-                                            if (System.Net.IPAddress.TryParse(ipStr, out var parsedIp))
-                                            {
-                                                ipAddress = parsedIp;
-                                                break; 
-                                            }
-                                        }
-                                        
-                                        if (ipAddress != null) break;
-                                    }
-                                }
-                            }
-                            catch {}
-                        }
-                        }
-
-                        // Fallback to standard DNS
-                        if (ipAddress == null)
-                        {
-                            var entry = await System.Net.Dns.GetHostEntryAsync(host, token);
-                            ipAddress = entry.AddressList.FirstOrDefault();
-                        }
-                        
-                        if (ipAddress == null) throw new Exception($"Could not resolve host: {host}");
-
-                         var socket = new System.Net.Sockets.Socket(System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+                    foreach (var template in dohQueries)
+                    {
                         try
                         {
-                            await socket.ConnectAsync(ipAddress, context.DnsEndPoint.Port, token);
-                            return new System.Net.Sockets.NetworkStream(socket, ownsSocket: true);
+                            string dohUrl = string.Format(template, host);
+                            var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, dohUrl);
+                            request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/dns-json"));
+                            
+                            var response = await dohClient.SendAsync(request, token);
+                            if (response.IsSuccessStatusCode)
+                            {
+                                var json = await response.Content.ReadAsStringAsync(token);
+                                var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
+                                var answers = obj["Answer"];
+                                
+                                if (answers != null)
+                                {
+                                    foreach (var ans in answers)
+                                    {
+                                        var ipStr = ans["data"]?.ToString();
+                                        if (System.Net.IPAddress.TryParse(ipStr, out var parsedIp))
+                                        {
+                                            ipAddress = parsedIp;
+                                            break; 
+                                        }
+                                    }
+                                    
+                                    if (ipAddress != null) break;
+                                }
+                            }
                         }
-                        catch
-                        {
-                            socket.Dispose();
-                            throw;
-                        }
-                    },
-                    SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+                        catch {}
+                    }
+                    }
+
+                    // Fallback to standard DNS
+                    if (ipAddress == null)
                     {
-                        RemoteCertificateValidationCallback = delegate { return true; },
-                        EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
-                    },
-                    PooledConnectionLifetime = TimeSpan.FromMinutes(2),
-                    AutomaticDecompression = System.Net.DecompressionMethods.All,
-                    UseCookies = true
-                 };
-             }
+                        var entry = await System.Net.Dns.GetHostEntryAsync(host, token);
+                        ipAddress = entry.AddressList.FirstOrDefault();
+                    }
+                    
+                    if (ipAddress == null) throw new Exception($"Could not resolve host: {host}");
+
+                     var socket = new System.Net.Sockets.Socket(System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+                    try
+                    {
+                        await socket.ConnectAsync(ipAddress, context.DnsEndPoint.Port, token);
+                        return new System.Net.Sockets.NetworkStream(socket, ownsSocket: true);
+                    }
+                    catch
+                    {
+                        socket.Dispose();
+                        throw;
+                    }
+                },
+                SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+                {
+                    RemoteCertificateValidationCallback = delegate { return true; },
+                    EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
+                },
+                PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+                AutomaticDecompression = System.Net.DecompressionMethods.All,
+                UseCookies = true
+             };
             
             var client = new System.Net.Http.HttpClient(handler);
             client.Timeout = TimeSpan.FromSeconds(60);

@@ -26,6 +26,7 @@ namespace Yomic.ViewModels
         public float ChapterNumber { get; set; }
         public string Url { get; set; } = string.Empty;
         public string Date { get; set; } = string.Empty;
+        public string FullDateString { get; set; } = string.Empty;
         public long DateUpload { get; set; }
         private bool _isRead;
         public bool IsRead 
@@ -60,6 +61,19 @@ namespace Yomic.ViewModels
             set => this.RaiseAndSetIfChanged(ref _isLastRead, value); 
         }
         public Manga? MangaRef { get; set; }
+        
+        private int _additionalChaptersCount;
+        public int AdditionalChaptersCount
+        {
+            get => _additionalChaptersCount;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _additionalChaptersCount, value);
+                this.RaisePropertyChanged(nameof(HasAdditionalChapters));
+            }
+        }
+        
+        public bool HasAdditionalChapters => AdditionalChaptersCount > 0;
 
         private bool _isDownloaded;
         public bool IsDownloaded
@@ -327,49 +341,44 @@ namespace Yomic.ViewModels
 
         public int VisibleChaptersCount => FilteredChapters.Count();
 
-        public AvaloniaList<object> DisplayItems { get; } = new();
+        public AvaloniaList<ChapterItem> FilteredChaptersList { get; } = new();
 
         private void UpdateDisplayItems()
         {
-            if (DisplayItems.Count == 0)
-            {
-                DisplayItems.Add(new MangaDetailHeader(this));
-            }
-
             if (_chapters == null) return;
 
             var filteredChapters = FilteredChapters.ToList();
 
-            // Synchronize DisplayItems (starting at index 1) with filteredChapters
+            // Synchronize FilteredChaptersList with filteredChapters
             // This prevents scroll jumps by avoiding Clear() / Reset
             
-            int displayIdx = 1;
+            int displayIdx = 0;
             int chapterIdx = 0;
 
             while (chapterIdx < filteredChapters.Count)
             {
-                if (displayIdx < DisplayItems.Count)
+                if (displayIdx < FilteredChaptersList.Count)
                 {
                     // Existing slot: Replace if different
-                    if (DisplayItems[displayIdx] != filteredChapters[chapterIdx])
+                    if (FilteredChaptersList[displayIdx] != filteredChapters[chapterIdx])
                     {
-                        DisplayItems[displayIdx] = filteredChapters[chapterIdx];
+                        FilteredChaptersList[displayIdx] = filteredChapters[chapterIdx];
                     }
                     displayIdx++;
                 }
                 else
                 {
                     // Append remaining
-                    DisplayItems.Add(filteredChapters[chapterIdx]);
+                    FilteredChaptersList.Add(filteredChapters[chapterIdx]);
                     displayIdx++;
                 }
                 chapterIdx++;
             }
 
-            // Remove excess items if DisplayItems is longer than needed
-            if (displayIdx < DisplayItems.Count)
+            // Remove excess items if FilteredChaptersList is longer than needed
+            if (displayIdx < FilteredChaptersList.Count)
             {
-                DisplayItems.RemoveRange(displayIdx, DisplayItems.Count - displayIdx);
+                FilteredChaptersList.RemoveRange(displayIdx, FilteredChaptersList.Count - displayIdx);
             }
             
             this.RaisePropertyChanged(nameof(VisibleChaptersCount));
@@ -899,6 +908,11 @@ namespace Yomic.ViewModels
                 // Force update history with the FRESH details (including new Cover)
                 // This ensures the DB gets the new high-quality cover if it was using the fallback
                 await _libraryService.UpdateHistoryAsync(manga);
+                
+                if (_model.Id == 0 && manga.Id > 0)
+                {
+                    _model.Id = manga.Id; // Sync ID so chapters can be saved!
+                }
 
                 // Auto-update DB if in library (NOW we have chapter count)
                 if (InLibrary)
@@ -1182,7 +1196,7 @@ namespace Yomic.ViewModels
 
             System.Diagnostics.Debug.WriteLine($"[MangaDetailVM] StartReading: Opening first chapter '{firstChapter.Title}'");
             var chaptersToPass = _mainVM.SettingsService?.SkipFilteredChapters == true ? FilteredChapters.ToList() : Chapters;
-            _mainVM.GoToReader(firstChapter, chaptersToPass, SourceId, Title, Url, IsExplicitContent);
+            _mainVM.GoToReader(firstChapter, chaptersToPass, SourceId, Title, Url, IsExplicitContent, ThumbnailUrl ?? "");
         }
 
         private void SetChapterFilter(string filter)
@@ -1217,7 +1231,7 @@ namespace Yomic.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"[MangaDetailVM] ResumeReading: Opening chapter '{targetChapter.Title}'");
                 var chaptersToPass = _mainVM.SettingsService?.SkipFilteredChapters == true ? FilteredChapters.ToList() : Chapters;
-                _mainVM.GoToReader(targetChapter, chaptersToPass, SourceId, Title, Url, IsExplicitContent);
+                _mainVM.GoToReader(targetChapter, chaptersToPass, SourceId, Title, Url, IsExplicitContent, ThumbnailUrl ?? "");
             }
         }
 
@@ -1422,8 +1436,7 @@ namespace Yomic.ViewModels
                 _chapters.Clear();
             }
 
-            DisplayItems?.Clear();
-            
+            FilteredChaptersList?.Clear();            
             System.Diagnostics.Debug.WriteLine("[MangaDetailVM] Disposed and memory references cleared.");
         }
     }

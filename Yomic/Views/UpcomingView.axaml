@@ -98,25 +98,31 @@
                                                         </ControlTemplate>
                                                     </Button.Template>
                                                     
-                                                    <Border Classes="UpdateCard" CornerRadius="12" Padding="12,10" Margin="0,0,0,6">
-                                                        <Grid ColumnDefinitions="56, *, Auto">
-                                                            <!-- Col 1: Cover (Portrait 56x80) -->
-                                                            <Border Grid.Column="0" Width="56" Height="80" CornerRadius="6" ClipToBounds="True" Background="#181825" VerticalAlignment="Center">
-                                                                <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}"
-                                                                       Stretch="UniformToFill" />
-                                                            </Border>
+                                                    <Border Classes="UpdateCard" CornerRadius="12" Margin="0,0,0,6" ClipToBounds="True">
+                                                        <Panel>
+                                                            <Border Background="#1AEF4444" IsVisible="{Binding IsSeverelyOverdue}"/>
+                                                            <Grid ColumnDefinitions="56, *, Auto" Margin="12,10">
+                                                                <!-- Col 1: Cover (Portrait 56x80) -->
+                                                                <Border Grid.Column="0" Width="56" Height="80" CornerRadius="6" ClipToBounds="True" Background="#181825" VerticalAlignment="Center">
+                                                                    <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}"
+                                                                           helpers:SecureImageLoader.DecodeWidth="300"
+                                                                           Stretch="UniformToFill" />
+                                                                </Border>
 
-                                                            <!-- Col 2: Info -->
-                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0" Spacing="6">
-                                                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                    <TextBlock Text="{Binding Title}" 
-                                                                               Foreground="{DynamicResource PrimaryText}" FontWeight="Bold" FontSize="15"
-                                                                               TextTrimming="CharacterEllipsis" MaxLines="1"
-                                                                               VerticalAlignment="Center" MaxWidth="280"/>
-                                                                    <Border Background="#2A2A35" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
-                                                                        <TextBlock Text="{Binding ReleaseFrequency}" Foreground="#A0A0B0" FontSize="10" FontWeight="SemiBold"/>
-                                                                    </Border>
-                                                                </StackPanel>
+                                                                <!-- Col 2: Info -->
+                                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0" Spacing="6">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                        <TextBlock Text="{Binding Title}" 
+                                                                                   Foreground="{DynamicResource PrimaryText}" FontWeight="Bold" FontSize="15"
+                                                                                   TextTrimming="CharacterEllipsis" MaxLines="1"
+                                                                                   VerticalAlignment="Center" MaxWidth="280"/>
+                                                                        <Border Background="#2A2A35" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                                                            <TextBlock Text="{Binding ReleaseFrequency}" Foreground="#A0A0B0" FontSize="10" FontWeight="SemiBold"/>
+                                                                        </Border>
+                                                                        <Border IsVisible="{Binding IsOverdue}" Background="#1AEF4444" BorderBrush="#80EF4444" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                                                            <TextBlock Text="OVERDUE" Foreground="#EF4444" FontSize="10" FontWeight="Bold"/>
+                                                                        </Border>
+                                                                    </StackPanel>
 
                                                                 <TextBlock Text="{Binding WaitingForChapter}" 
                                                                            Foreground="{DynamicResource SecondaryText}" FontSize="12" Opacity="0.7"
@@ -143,6 +149,7 @@
                                                                        VerticalAlignment="Center" HorizontalAlignment="Right" Margin="10,0,5,0"
                                                                        Opacity="0.5"/>
                                                         </Grid>
+                                                        </Panel>
                                                     </Border>
                                                 </Button>
                                             </DataTemplate>

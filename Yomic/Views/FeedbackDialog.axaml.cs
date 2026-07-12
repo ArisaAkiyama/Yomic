@@ -72,11 +72,23 @@ namespace Yomic.Views
                     continue;
                 }
 
+                memory.Position = 0;
+                Avalonia.Media.Imaging.Bitmap? thumbnail = null;
+                try
+                {
+                    thumbnail = Avalonia.Media.Imaging.Bitmap.DecodeToWidth(memory, 60);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Feedback] Failed to decode thumbnail: {ex.Message}");
+                }
+
                 attachments.Add(new FeedbackScreenshotAttachment
                 {
                     FileName = file.Name,
                     ContentType = GetContentType(file.Name),
-                    Base64Data = Convert.ToBase64String(memory.ToArray())
+                    Base64Data = Convert.ToBase64String(memory.ToArray()),
+                    Thumbnail = thumbnail
                 });
             }
 

@@ -450,7 +450,7 @@
 
                 <Grid ColumnDefinitions="Auto, *, Auto">
                     <!-- Back Button (Left) -->
-                    <Button Grid.Column="0" Classes="NavBtn" 
+                    <Button Grid.Column="0" Classes="NavBtn" HotKey="Escape"
                             Command="{Binding BackCommand}"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center">

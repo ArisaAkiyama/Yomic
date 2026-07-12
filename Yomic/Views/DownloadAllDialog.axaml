@@ -68,7 +68,7 @@
                 <Border x:Name="BulkWarningBorder" Background="#1AFFB900" BorderBrush="#FFB900" BorderThickness="1" CornerRadius="8" Padding="14,12" IsVisible="False" Margin="0,12,0,0">
                     <Grid ColumnDefinitions="Auto, *">
                         <TextBlock Grid.Column="0" Text="&#xE7BA;" FontFamily="Segoe Fluent Icons" Foreground="#FFB900" FontSize="16" VerticalAlignment="Top" Margin="0,2,10,0"/>
-                        <TextBlock Grid.Column="1" Text="Peringatan Unduhan Massal:&#x0a;Mengunduh lebih dari 20 bab secara bersamaan dapat memicu proteksi Anti-Bot (seperti Cloudflare) pada server sumber. Jika IP Anda diblokir, Anda tidak akan bisa membaca komik dari sumber ini untuk sementara waktu."
+                        <TextBlock Grid.Column="1" Text="Mass Download Warning:&#x0a;Downloading more than 20 chapters at once may trigger Anti-Bot protection (like Cloudflare) on the source server. If your IP is blocked, you will be unable to read from this source temporarily."
                                    Foreground="{DynamicResource PrimaryText}"
                                    FontSize="12"
                                    TextWrapping="Wrap"

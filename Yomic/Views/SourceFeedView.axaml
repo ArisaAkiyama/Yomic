@@ -36,31 +36,46 @@
              <Setter Property="ZIndex" Value="1"/>
              <Setter Property="Transitions">
                  <Transitions>
-                     <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="CubicEaseOut"/>
                      <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2"/>
                  </Transitions>
              </Setter>
          </Style>
          <Style Selector="Border.MangaCard:pointerover">
-             <Setter Property="RenderTransform" Value="scale(1.02) translateY(-4px)"/>
              <Setter Property="ZIndex" Value="10"/>
              <Setter Property="BoxShadow" Value="0 10 20 0 #60000000"/>
              <Setter Property="Cursor" Value="Hand"/>
          </Style>
+
+         <Style Selector="Border.MangaCard Image">
+             <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+             <Setter Property="Transitions">
+                 <Transitions>
+                     <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.35" Easing="CubicEaseOut"/>
+                 </Transitions>
+             </Setter>
+         </Style>
+         <Style Selector="Border.MangaCard:pointerover Image">
+             <Setter Property="RenderTransform" Value="scale(1.08)"/>
+         </Style>
          
          <!-- Pagination Button Style -->
          <Style Selector="Button.PageBtn">
-             <Setter Property="Background" Value="{DynamicResource SidebarBackground}"/>
+             <Setter Property="Background" Value="Transparent"/>
              <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
-             <Setter Property="CornerRadius" Value="8"/>
-             <Setter Property="Padding" Value="15,8"/>
+             <Setter Property="CornerRadius" Value="15"/>
+             <Setter Property="Padding" Value="15,6"/>
+             <Setter Property="Transitions">
+                 <Transitions>
+                     <BrushTransition Property="Background" Duration="0:0:0.2"/>
+                 </Transitions>
+             </Setter>
          </Style>
           <Style Selector="Button.PageBtn:pointerover /template/ ContentPresenter">
-             <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+             <Setter Property="Background" Value="#15FFFFFF"/>
              <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
          </Style>
          <Style Selector="Button.PageBtn:disabled /template/ ContentPresenter">
-             <Setter Property="Background" Value="{DynamicResource SidebarBackground}"/>
+             <Setter Property="Background" Value="Transparent"/>
               <Setter Property="Foreground" Value="{DynamicResource SecondaryText}"/>
          </Style>
 
@@ -103,7 +118,7 @@
              <StackPanel>
                   <!-- Title Row -->
                  <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,15">
-                     <Button Command="{Binding BackCommand}" Classes="BackBtn">
+                     <Button Command="{Binding BackCommand}" HotKey="Escape" Classes="BackBtn">
                          <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons" FontSize="20" VerticalAlignment="Center"/>
                      </Button>
                      <StackPanel Orientation="Horizontal" Spacing="10">
@@ -123,162 +138,267 @@
                  </StackPanel>
 
                   <!-- Search & Filter Row (Similar to Library) -->
-                 <Grid ColumnDefinitions="*, Auto, Auto">
-                     <!-- Modern Enhanced Search Bar (Library Style) -->
-                      <TextBox Grid.Column="0" Width="350" HorizontalAlignment="Left"
-                               x:Name="SearchBox"
-                               Watermark="Search manga..." CornerRadius="20"
-                               Text="{Binding SearchText}"
-                               Background="{DynamicResource SidebarBackground}" Foreground="{DynamicResource PrimaryText}" BorderThickness="0"
-                               Padding="15,10" VerticalContentAlignment="Center">
-                         <TextBox.KeyBindings>
-                             <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}"/>
-                         </TextBox.KeyBindings>
-                         <TextBox.Styles>
-                             <!-- Match Library View Focus Styles -->
-                             <Style Selector="TextBox:focus">
-                                 <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
-                                 <Setter Property="CaretBrush" Value="{DynamicResource PrimaryText}"/>
-                             </Style>
-                             <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
-                                 <Setter Property="Background" Value="{DynamicResource SidebarBackground}"/>
-                                 <Setter Property="BorderThickness" Value="0"/>
-                             </Style>
-                             <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
-                                 <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
-                                 <Setter Property="BorderThickness" Value="0"/>
-                             </Style>
-                              <Style Selector="TextBox:pointerover">
-                                  <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
-                              </Style>
-                              
-                              <!-- Watermark -->
-                              <Style Selector="TextBox /template/ TextBlock#PART_Watermark">
-                                  <Setter Property="Foreground" Value="{DynamicResource SecondaryText}"/>
-                              </Style>
-                              <Style Selector="TextBox:focus /template/ TextBlock#PART_Watermark">
-                                  <Setter Property="Foreground" Value="{DynamicResource SecondaryText}"/>
-                              </Style>
-                              <Style Selector="TextBox:pointerover /template/ TextBlock#PART_Watermark">
-                                  <Setter Property="Foreground" Value="{DynamicResource SecondaryText}"/>
-                              </Style>
-                         </TextBox.Styles>
+                 <Grid>
+                     <!-- Actual Search Box & Buttons -->
+                     <Grid ColumnDefinitions="*, Auto, Auto" IsVisible="{Binding !IsBusy}">
+                         <!-- Modern Enhanced Search Bar (Library Style) -->
+                          <TextBox Grid.Column="0" HorizontalAlignment="Stretch"
+                                   x:Name="SearchBox"
+                                   Watermark="Search manga..." CornerRadius="20"
+                                   Text="{Binding SearchText}"
+                                   Background="{DynamicResource SidebarBackground}" Foreground="{DynamicResource PrimaryText}" BorderThickness="0"
+                                   Padding="8,8,15,8" VerticalContentAlignment="Center" FontSize="13">
+                             <TextBox.KeyBindings>
+                                 <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}"/>
+                             </TextBox.KeyBindings>
+                             <TextBox.Styles>
+                                 <!-- Match Library View Focus Styles -->
+                                 <Style Selector="TextBox:focus">
+                                     <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+                                     <Setter Property="CaretBrush" Value="{DynamicResource PrimaryText}"/>
+                                 </Style>
+                                 <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                                     <Setter Property="Background" Value="{DynamicResource SidebarBackground}"/>
+                                     <Setter Property="BorderThickness" Value="0"/>
+                                 </Style>
+                                 <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                                     <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+                                     <Setter Property="BorderThickness" Value="0"/>
+                                 </Style>
+                                  <Style Selector="TextBox:pointerover">
+                                      <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+                                  </Style>
+                                  
+                                  <!-- Watermark -->
+                                  <Style Selector="TextBox /template/ TextBlock#PART_Watermark">
+                                      <Setter Property="Foreground" Value="{DynamicResource SecondaryText}"/>
+                                  </Style>
+                                  <Style Selector="TextBox:focus /template/ TextBlock#PART_Watermark">
+                                      <Setter Property="Foreground" Value="{DynamicResource SecondaryText}"/>
+                                  </Style>
+                                  <Style Selector="TextBox:pointerover /template/ TextBlock#PART_Watermark">
+                                      <Setter Property="Foreground" Value="{DynamicResource SecondaryText}"/>
+                                  </Style>
+                             </TextBox.Styles>
+                             
+                             <TextBox.InnerLeftContent>
+                                 <Button Command="{Binding SearchCommand}" 
+                                         Background="Transparent" BorderThickness="0" 
+                                         Padding="0" Margin="12,0,0,0" Cursor="Hand">
+                                     <Button.Styles>
+                                         <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                             <Setter Property="Background" Value="Transparent"/>
+                                         </Style>
+                                         <Style Selector="Button:pressed /template/ ContentPresenter">
+                                             <Setter Property="Background" Value="Transparent"/>
+                                         </Style>
+                                         <Style Selector="Button:pressed TextBlock">
+                                             <Setter Property="Opacity" Value="0.7"/>
+                                         </Style>
+                                     </Button.Styles>
+                                     <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource SecondaryText}" 
+                                                VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="14">
+                                         <TextBlock.Transitions>
+                                             <Transitions>
+                                                 <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+                                             </Transitions>
+                                         </TextBlock.Transitions>
+                                     </TextBlock>
+                                 </Button>
+                             </TextBox.InnerLeftContent>
+                         </TextBox>
                          
-                         <TextBox.InnerRightContent>
-                             <Button Command="{Binding SearchCommand}" 
-                                     Background="Transparent" BorderThickness="0" 
-                                     Padding="0" Margin="0,0,10,0" Cursor="Hand">
+                         <!-- Buttons -->
+                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,0,0">
+                             <!-- List View Toggle -->
+                             <Button Command="{Binding ToggleViewModeCommand}" 
+                                     Classes="header-action"
+                                     ToolTip.Tip="Toggle View Mode (Grid/List)">
+                                     <Panel>
+                                         <TextBlock Text="&#xE8FD;" FontFamily="Segoe Fluent Icons" 
+                                                    FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                    IsVisible="{Binding !IsListView}"/>
+                                         <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons" 
+                                                    FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                    IsVisible="{Binding IsListView}"/>
+                                     </Panel>
+                             </Button>
+
+                             <!-- Refresh Button -->
+                             <Button Command="{Binding RefreshCommand}" 
+                                     Classes="header-action"
+                                     ToolTip.Tip="Refresh (Bypass Cache)">
+                                     <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                             </Button>
+
+                             <!-- Language Toggle (Flag Only) - MangaDex Only -->
+                             <Button Command="{Binding ToggleLanguageCommand}" 
+                                     IsVisible="{Binding IsMangaDex}"
+                                     Background="Transparent" Padding="4"
+                                     CornerRadius="4"
+                                     ToolTip.Tip="Toggle Language: English / Indonesian">
                                  <Button.Styles>
                                      <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                         <Setter Property="Background" Value="Transparent"/>
-                                     </Style>
-                                     <Style Selector="Button:pressed /template/ ContentPresenter">
-                                         <Setter Property="Background" Value="Transparent"/>
-                                     </Style>
-                                     <Style Selector="Button:pressed TextBlock">
-                                         <Setter Property="Opacity" Value="0.7"/>
+                                         <Setter Property="Background" Value="#15FFFFFF"/>
                                      </Style>
                                  </Button.Styles>
-                                 <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource SecondaryText}" 
-                                            VerticalAlignment="Center" HorizontalAlignment="Center">
-                                     <TextBlock.Transitions>
-                                         <Transitions>
-                                             <DoubleTransition Property="Opacity" Duration="0:0:0.1" />
-                                         </Transitions>
-                                     </TextBlock.Transitions>
-                                 </TextBlock>
+                                 <Image Source="{Binding LanguageFlagBitmap}" Width="24" Height="16" Stretch="Uniform"/>
                              </Button>
-                         </TextBox.InnerRightContent>
-                     </TextBox>
+
+                             <!-- Unified Filter Button -->
+                             <Button Classes="header-action"
+                                     Classes.accent="{Binding IsAnyFilterActive}"
+                                     IsVisible="{Binding !IsLatestMode}"
+                                     ToolTip.Tip="Filter options">
+                                 <Button.Flyout>
+                                     <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                         <!-- Filter by Status -->
+                                         <MenuItem Header="Filter by Status" IsVisible="{Binding IsStatusFilterVisible}">
+                                             <MenuItem.Icon>
+                                                 <TextBlock Text="&#xE71C;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
+                                             </MenuItem.Icon>
+                                             <MenuItem Header="All Statuses" Command="{Binding SetStatusFilterCommand}" CommandParameter="{x:Static vm:SourceStatusFilterMode.All}">
+                                                 <MenuItem.Icon>
+                                                     <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource AccentColor}"
+                                                                IsVisible="{Binding IsStatusAllSelected}"/>
+                                                 </MenuItem.Icon>
+                                             </MenuItem>
+                                             <MenuItem Header="Ongoing" Command="{Binding SetStatusFilterCommand}" CommandParameter="{x:Static vm:SourceStatusFilterMode.Ongoing}">
+                                                 <MenuItem.Icon>
+                                                     <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource AccentColor}"
+                                                                IsVisible="{Binding IsStatusOngoingSelected}"/>
+                                                 </MenuItem.Icon>
+                                             </MenuItem>
+                                             <MenuItem Header="Completed" Command="{Binding SetStatusFilterCommand}" CommandParameter="{x:Static vm:SourceStatusFilterMode.Completed}">
+                                                 <MenuItem.Icon>
+                                                     <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource AccentColor}"
+                                                                IsVisible="{Binding IsStatusCompletedSelected}"/>
+                                                 </MenuItem.Icon>
+                                             </MenuItem>
+                                         </MenuItem>
+
+                                         <!-- Filter by Genre -->
+                                         <MenuItem Header="Filter by Genre" StaysOpenOnClick="True" IsVisible="{Binding IsGenreFilterVisible}">
+                                             <MenuItem.Icon>
+                                                 <TextBlock Text="&#xE8EC;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
+                                             </MenuItem.Icon>
+                                             <MenuItem.Styles>
+                                                 <Style Selector="MenuItem > MenuItem">
+                                                     <Setter Property="Template">
+                                                         <ControlTemplate>
+                                                             <ContentPresenter Content="{TemplateBinding Header}"
+                                                                               ContentTemplate="{TemplateBinding HeaderTemplate}"/>
+                                                         </ControlTemplate>
+                                                     </Setter>
+                                                 </Style>
+                                             </MenuItem.Styles>
+                                             <Grid RowDefinitions="Auto, *" Width="180" Margin="12,8,12,8">
+                                                 <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,8">
+                                                     <TextBlock Text="Filter by Genre" FontWeight="Bold" VerticalAlignment="Center" FontSize="13"/>
+                                                     <Button Grid.Column="1" Content="Clear" 
+                                                             Background="Transparent" BorderThickness="0" Foreground="{DynamicResource AccentColor}"
+                                                             Command="{Binding ClearGenreFilterCommand}" 
+                                                             Padding="4,2" FontSize="12"/>
+                                                 </Grid>
+                                                 
+                                                 <ScrollViewer Grid.Row="1" MaxHeight="250" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                                     <ItemsControl ItemsSource="{Binding AvailableGenres}">
+                                                         <ItemsControl.ItemTemplate>
+                                                             <DataTemplate DataType="vm:SourceFeedViewModel+GenreFilterItem" x:CompileBindings="False">
+                                                                 <CheckBox Content="{Binding Name}" 
+                                                                           IsChecked="{Binding IsSelected}" 
+                                                                           Margin="0"
+                                                                           Padding="8,0,0,0" MinHeight="28"
+                                                                           HorizontalAlignment="Stretch"/>
+                                                             </DataTemplate>
+                                                         </ItemsControl.ItemTemplate>
+                                                     </ItemsControl>
+                                                 </ScrollViewer>
+                                             </Grid>
+                                         </MenuItem>
+
+                                         <!-- Filter by Format -->
+                                         <MenuItem Header="Filter by Format" StaysOpenOnClick="True" IsVisible="{Binding IsFormatFilterVisible}">
+                                             <MenuItem.Icon>
+                                                 <TextBlock Text="&#xE8F1;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
+                                             </MenuItem.Icon>
+                                             <MenuItem.Styles>
+                                                 <Style Selector="MenuItem > MenuItem">
+                                                     <Setter Property="Template">
+                                                         <ControlTemplate>
+                                                             <ContentPresenter Content="{TemplateBinding Header}"
+                                                                               ContentTemplate="{TemplateBinding HeaderTemplate}"/>
+                                                         </ControlTemplate>
+                                                     </Setter>
+                                                 </Style>
+                                             </MenuItem.Styles>
+                                             <Grid RowDefinitions="Auto, *" Width="180" Margin="12,8,12,8">
+                                                 <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,8">
+                                                     <TextBlock Text="Filter by Format" FontWeight="Bold" VerticalAlignment="Center" FontSize="13"/>
+                                                     <Button Grid.Column="1" Content="Clear" 
+                                                             Background="Transparent" BorderThickness="0" Foreground="{DynamicResource AccentColor}"
+                                                             Command="{Binding ClearFormatFilterCommand}" 
+                                                             Padding="4,2" FontSize="12"/>
+                                                 </Grid>
+                                                 
+                                                 <ScrollViewer Grid.Row="1" MaxHeight="250" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                                     <ItemsControl ItemsSource="{Binding AvailableFormats}">
+                                                         <ItemsControl.ItemTemplate>
+                                                             <DataTemplate DataType="vm:SourceFeedViewModel+FormatFilterItem" x:CompileBindings="False">
+                                                                 <CheckBox Content="{Binding Name}" 
+                                                                           IsChecked="{Binding IsSelected}" 
+                                                                           Margin="0"
+                                                                           Padding="8,0,0,0" MinHeight="28"
+                                                                           HorizontalAlignment="Stretch"/>
+                                                             </DataTemplate>
+                                                         </ItemsControl.ItemTemplate>
+                                                     </ItemsControl>
+                                                 </ScrollViewer>
+                                             </Grid>
+                                         </MenuItem>
+                                     </MenuFlyout>
+                                 </Button.Flyout>
+                                 <StackPanel Orientation="Horizontal" Spacing="8">
+                                     <TextBlock Text="&#xE71C;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
+                                     <TextBlock Text="Filter" FontWeight="Medium" VerticalAlignment="Center" FontSize="13"/>
+                                 </StackPanel>
+                             </Button>
+
+                             <!-- Latest Updates Toggle -->
+                             <Button Command="{Binding LatestModeCommand}" 
+                                     Classes="header-action"
+                                     Classes.accent="{Binding IsLatestMode}"
+                                     ToolTip.Tip="Toggle Latest Updates">
+                                 <StackPanel Orientation="Horizontal" Spacing="8">
+                                     <TextBlock Text="&#xE823;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
+                                     <TextBlock Text="Latest" FontWeight="Medium" VerticalAlignment="Center" FontSize="13"/>
+                                 </StackPanel>
+                             </Button>
+                         </StackPanel>
+                     </Grid>
                      
-                     <!-- Buttons -->
-                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,0,0">
-                         <!-- List View Toggle -->
-                         <Button Command="{Binding ToggleViewModeCommand}" 
-                                 Classes="header-action"
-                                 ToolTip.Tip="Toggle View Mode (Grid/List)">
-                                 <Panel>
-                                     <TextBlock Text="&#xE8FD;" FontFamily="Segoe Fluent Icons" 
-                                                FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                IsVisible="{Binding !IsListView}"/>
-                                     <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons" 
-                                                FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                IsVisible="{Binding IsListView}"/>
-                                 </Panel>
-                         </Button>
-
-                         <!-- Refresh Button -->
-                         <Button Command="{Binding RefreshCommand}" 
-                                 Classes="header-action"
-                                 ToolTip.Tip="Refresh (Bypass Cache)">
-                                 <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="18" VerticalAlignment="Center"/>
-                         </Button>
-
-                         <!-- Language Toggle (Flag Only) - MangaDex Only -->
-                         <Button Command="{Binding ToggleLanguageCommand}" 
-                                 IsVisible="{Binding IsMangaDex}"
-                                 Background="Transparent" Padding="4"
-                                 CornerRadius="4"
-                                 ToolTip.Tip="Toggle Language: English / Indonesian">
-                             <Button.Styles>
-                                 <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                     <Setter Property="Background" Value="#15FFFFFF"/>
-                                 </Style>
-                             </Button.Styles>
-                             <Image Source="{Binding LanguageFlagBitmap}" Width="24" Height="16" Stretch="Uniform"/>
-                         </Button>
-
-                         <!-- Status Filter -->
-                         <Button Classes="header-action"
-                                 Classes.accent="{Binding IsStatusFilterActive}"
-                                 ToolTip.Tip="Filter by status"
-                                 IsVisible="{Binding IsStatusFilterVisible}">
-                             <Button.Flyout>
-                                 <MenuFlyout Placement="BottomEdgeAlignedRight">
-                                     <MenuItem Header="Filter by Status" IsEnabled="False" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource SecondaryText}"/>
-                                     <MenuItem Header="All Statuses" Command="{Binding SetStatusFilterCommand}" CommandParameter="{x:Static vm:SourceStatusFilterMode.All}">
-                                         <MenuItem.Icon>
-                                             <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource AccentColor}"
-                                                        IsVisible="{Binding IsStatusAllSelected}"/>
-                                         </MenuItem.Icon>
-                                     </MenuItem>
-                                     <MenuItem Header="Ongoing" Command="{Binding SetStatusFilterCommand}" CommandParameter="{x:Static vm:SourceStatusFilterMode.Ongoing}">
-                                         <MenuItem.Icon>
-                                             <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource AccentColor}"
-                                                        IsVisible="{Binding IsStatusOngoingSelected}"/>
-                                         </MenuItem.Icon>
-                                     </MenuItem>
-                                     <MenuItem Header="Completed" Command="{Binding SetStatusFilterCommand}" CommandParameter="{x:Static vm:SourceStatusFilterMode.Completed}">
-                                         <MenuItem.Icon>
-                                             <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource AccentColor}"
-                                                        IsVisible="{Binding IsStatusCompletedSelected}"/>
-                                         </MenuItem.Icon>
-                                     </MenuItem>
-                                 </MenuFlyout>
-                             </Button.Flyout>
-                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                 <TextBlock Text="&#xE71C;" FontFamily="Segoe Fluent Icons" FontSize="18" VerticalAlignment="Center"/>
-                                 <TextBlock Text="{Binding StatusFilterText}" FontWeight="SemiBold" VerticalAlignment="Center" FontSize="14"/>
-                             </StackPanel>
-                         </Button>
-
-                         <!-- Latest Updates Toggle -->
-                         <Button Command="{Binding LatestModeCommand}" 
-                                 Classes="header-action"
-                                 Classes.accent="{Binding IsLatestMode}"
-                                 ToolTip.Tip="Toggle Latest Updates">
-                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                 <TextBlock Text="&#xE823;" FontFamily="Segoe Fluent Icons" FontSize="18" VerticalAlignment="Center"/>
-                                 <TextBlock Text="Latest" FontWeight="SemiBold" VerticalAlignment="Center" FontSize="14"/>
-                             </StackPanel>
-                         </Button>
-                     </StackPanel>
+                     <!-- Skeletons (Visible when busy) -->
+                     <Grid ColumnDefinitions="*, Auto" IsVisible="{Binding IsBusy}">
+                         <Border Grid.Column="0" Classes="SkeletonCard" Height="36" CornerRadius="18" HorizontalAlignment="Stretch"/>
+                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,0,0">
+                             <!-- List View Toggle skeleton -->
+                             <Border Classes="SkeletonCard" Width="38" Height="36" CornerRadius="8"/>
+                             <!-- Refresh Button skeleton -->
+                             <Border Classes="SkeletonCard" Width="38" Height="36" CornerRadius="8"/>
+                             <!-- Language Toggle skeleton -->
+                             <Border Classes="SkeletonCard" Width="32" Height="24" CornerRadius="4" VerticalAlignment="Center" IsVisible="{Binding IsMangaDex}"/>
+                             <!-- Filter Button skeleton -->
+                             <Border Classes="SkeletonCard" Width="70" Height="36" CornerRadius="8"/>
+                             <!-- Latest Updates skeleton -->
+                             <Border Classes="SkeletonCard" Width="75" Height="36" CornerRadius="8"/>
+                         </StackPanel>
+                     </Grid>
                  </Grid>
              </StackPanel>
          </Border>
 
          <!-- Content -->
-         <Panel Grid.Row="1">
+         <Panel Grid.Row="1" IsVisible="{Binding !IsBusy}">
 
              <!-- content wrapper -->
               <!-- Removed ScrollViewer to allow virtualized ListBox to handle scrolling -->
@@ -329,15 +449,16 @@
                       </StackPanel.IsVisible>
 
                      <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons" FontSize="48" Foreground="#45475A" HorizontalAlignment="Center"/>
-                     <TextBlock Text="Manga Tidak Ditemukan" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
-                     <TextBlock Text="Sepertinya koneksi jaringan sedang tidak baik (Cloudflare/Error). Silakan refresh." FontSize="16" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                     <TextBlock Text="Manga Not Found" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
+                     <TextBlock Text="It seems the network connection is poor or blocked (Cloudflare/Error). Please refresh." FontSize="16" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
                   </StackPanel>
 
                   <!-- Virtualized Items List -->
                   <!-- Use ListBox for virtualization support -->
                   <ListBox x:Name="MangaListBox" Grid.Row="1" ItemsSource="{Binding MangaList}" Background="Transparent" 
                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                           ScrollViewer.VerticalScrollBarVisibility="Auto"
+                           ScrollViewer.VerticalScrollBarVisibility="Visible"
+                           ScrollViewer.AllowAutoHide="False"
                            Padding="0,0,0,20"
                            IsVisible="{Binding !IsListView}">
                       <ListBox.ItemsPanel>
@@ -366,8 +487,9 @@
                                        Command="{Binding DataContext.OpenMangaCommand, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}"
                                        CommandParameter="{Binding}">
                                    <Button.Styles>
-                                      <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                      <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
                                           <Setter Property="Background" Value="Transparent"/>
+                                          <Setter Property="Opacity" Value="1.0"/>
                                       </Style>
                                    </Button.Styles>
                                    
@@ -377,15 +499,22 @@
                                               Background="{DynamicResource SidebarBackground}" ClipToBounds="True"
                                               BoxShadow="0 4 10 0 #40000000">
                                           <Grid>
-                                              <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}" Stretch="UniformToFill"/>
+                                              <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}" 
+                                                     helpers:SecureImageLoader.DecodeWidth="300"
+                                                     Stretch="UniformToFill"/>
                                               
-                                              <!-- Status Badge (Top-Left) -->
-                                              <Border VerticalAlignment="Top" HorizontalAlignment="Left" 
-                                                      Margin="8" Padding="6,2" CornerRadius="6"
-                                                      Background="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.Instance}}"
-                                                      IsVisible="{Binding Status, Converter={x:Static vm:StatusToColorConverter.StatusToVisibility}}">
-                                                  <TextBlock Text="{Binding StatusString}" FontSize="10" FontWeight="Bold" Foreground="White"/>
-                                              </Border>
+                                               <!-- Status Ribbon (Top-Left) -->
+                                               <Border HorizontalAlignment="Left" VerticalAlignment="Top" 
+                                                       Width="100" Height="18" Margin="-32,9,0,0"
+                                                       Background="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.Instance}}"
+                                                       IsVisible="{Binding Status, Converter={x:Static vm:StatusToColorConverter.StatusToVisibility}}">
+                                                   <Border.RenderTransform>
+                                                       <RotateTransform Angle="-45"/>
+                                                   </Border.RenderTransform>
+                                                   <TextBlock Text="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.ToUpperConverter}}" 
+                                                              FontSize="8" FontWeight="900" Foreground="White"
+                                                              HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                                               </Border>
 
                                               <!-- Time Overlay (Bottom) -->
                                               <Panel VerticalAlignment="Bottom" IsVisible="{Binding LastUpdateString, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
@@ -412,7 +541,7 @@
                                       <!-- Title Below Image -->
                                       <TextBlock Text="{Binding Title}" Foreground="{DynamicResource PrimaryText}" 
                                                  TextAlignment="Left" TextTrimming="CharacterEllipsis"
-                                                 FontSize="14" FontWeight="Medium" MaxLines="2" Height="40"/>
+                                                 FontSize="14" FontWeight="Medium" MaxLines="2"/>
                                   </StackPanel>
                                </Button>
                           </DataTemplate>
@@ -456,9 +585,11 @@
                                     </Button.Styles>
                                     
                                     <Border CornerRadius="8" Padding="8" Background="Transparent">
-                                       <Grid ColumnDefinitions="40, 16, *, Auto">
-                                           <Border Grid.Column="0" Height="55" Width="40" CornerRadius="4" ClipToBounds="True" Background="{DynamicResource SidebarBackground}">
-                                               <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}" Stretch="UniformToFill"/>
+                                       <Grid ColumnDefinitions="60, 16, *, Auto">
+                                           <Border Grid.Column="0" Height="80" Width="60" CornerRadius="4" ClipToBounds="True" Background="{DynamicResource SidebarBackground}">
+                                               <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}" 
+                                                      helpers:SecureImageLoader.DecodeWidth="300"
+                                                      Stretch="UniformToFill"/>
                                            </Border>
                                            
                                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="4">
@@ -482,10 +613,13 @@
                                                        IsVisible="{Binding IsNewBadgeVisible}">
                                                    <TextBlock Text="NEW" Foreground="#1E1E2E" FontSize="10" FontWeight="Bold"/>
                                                </Border>
-                                               <Border Background="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.Instance}}" 
-                                                       Opacity="0.95" CornerRadius="4" Padding="6,3"
+                                               <!-- Status Ribbon (Top-Left) -->
+                                               <Border HorizontalAlignment="Right"
+                                                       Padding="6,2" CornerRadius="4"
+                                                       Background="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.Instance}}"
                                                        IsVisible="{Binding Status, Converter={x:Static vm:StatusToColorConverter.StatusToVisibility}}">
-                                                   <TextBlock Text="{Binding StatusString}" Foreground="White" FontSize="9" FontWeight="Bold"/>
+                                                   <TextBlock Text="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.ToUpperConverter}}" 
+                                                              FontSize="10" FontWeight="Bold" Foreground="White"/>
                                                </Border>
                                            </StackPanel>
                                        </Grid>
@@ -496,72 +630,77 @@
                   </ListBox>
                      
                     <!-- Pagination Controls (Footer) -->
-                    <!-- Moved here so it scrolls with content -->
+                    <!-- Modern Pill Pagination -->
                     <Border Grid.Row="2" IsVisible="{Binding IsPaginationVisible}"
-                            Background="Transparent" 
-                            Padding="10,10" Margin="0,5,0,10" HorizontalAlignment="Stretch">
-                        <Grid ColumnDefinitions="Auto, *, Auto" MaxWidth="800" HorizontalAlignment="Center">
+                            HorizontalAlignment="Center" Margin="0,15,0,25"
+                            Background="{DynamicResource SidebarBackground}"
+                            CornerRadius="25"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            Padding="2"
+                            BoxShadow="0 4 15 0 #30000000">
+                        <StackPanel Orientation="Horizontal" Spacing="2">
                             <!-- Prev Button -->
-                            <Button Grid.Column="0" 
-                                    Command="{Binding PrevPageCommand}" 
+                            <Button Command="{Binding PrevPageCommand}" 
                                     Classes="PageBtn"
                                     IsEnabled="{Binding HasPrevPage}">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="&#xE892;" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="&#xE892;" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center" FontSize="16"/>
                                     <TextBlock Text="Previous" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
     
                             <!-- Page Info Button with Flyout -->
-                            <Button Grid.Column="1" 
-                                    Content="{Binding PageInfo}" 
-                                    Foreground="#0078D7" 
+                            <Button Content="{Binding PageInfo}" 
+                                    Classes="PageBtn"
+                                    Foreground="{DynamicResource PrimaryAccent}" 
                                     FontWeight="Bold" 
                                     FontSize="14"
-                                    Background="Transparent"
-                                    BorderThickness="0"
-                                    HorizontalAlignment="Center" 
-                                    VerticalAlignment="Center"
-                                    Margin="20,0"
                                     Cursor="Hand"
                                     ToolTip.Tip="Jump to a specific page">
                                 <Button.Styles>
                                     <Style Selector="Button:pointerover /template/ ContentPresenter">
                                         <Setter Property="Background" Value="#15FFFFFF"/>
-                                        <Setter Property="Foreground" Value="#3395FF"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryAccent}"/>
                                     </Style>
                                 </Button.Styles>
                                 <Button.Flyout>
                                     <Flyout Placement="Top">
-                                        <Border Background="#1E1E2E" CornerRadius="8" Padding="15" BorderBrush="#313244" BorderThickness="1" BoxShadow="0 8 20 0 #60000000">
-                                            <StackPanel Spacing="12">
-                                                <TextBlock Text="Go to page:" Foreground="{DynamicResource PrimaryText}" FontWeight="SemiBold" FontSize="14"/>
-                                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                                    <TextBox Width="100" 
-                                                             Text="{Binding TargetPageInput}" 
-                                                             Watermark="Page #"
-                                                             CornerRadius="6"
-                                                             Background="#313244"
-                                                             Foreground="{DynamicResource PrimaryText}"
-                                                             BorderThickness="1" BorderBrush="#45475A">
-                                                        <TextBox.KeyBindings>
-                                                            <KeyBinding Gesture="Enter" Command="{Binding GoToPageCommand}"/>
-                                                        </TextBox.KeyBindings>
-                                                    </TextBox>
-                                                    <Button Content="Go" 
-                                                            Command="{Binding GoToPageCommand}"
-                                                            Background="#0078D7" 
-                                                            Foreground="White" 
-                                                            FontWeight="Bold" 
-                                                            CornerRadius="6" 
-                                                            Padding="12,6">
-                                                        <Button.Styles>
-                                                            <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                                                <Setter Property="Background" Value="#3395FF"/>
-                                                            </Style>
-                                                        </Button.Styles>
-                                                    </Button>
-                                                </StackPanel>
+                                        <Border Background="{DynamicResource SidebarBackground}" CornerRadius="12" Padding="16" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" BoxShadow="0 10 30 0 #80000000">
+                                            <StackPanel Spacing="16">
+                                                <TextBlock Text="Jump to Page" Foreground="{DynamicResource PrimaryText}" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center"/>
+                                                
+                                                <TextBox Width="180" 
+                                                         Text="{Binding TargetPageInput}" 
+                                                         Watermark="Enter page #..."
+                                                         CornerRadius="8"
+                                                         Padding="10,6"
+                                                         Background="{DynamicResource PrimaryBackground}"
+                                                         Foreground="{DynamicResource PrimaryText}"
+                                                         BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}">
+                                                    <TextBox.KeyBindings>
+                                                        <KeyBinding Gesture="Enter" Command="{Binding GoToPageCommand}"/>
+                                                    </TextBox.KeyBindings>
+                                                    <TextBox.InnerRightContent>
+                                                        <Button Command="{Binding GoToPageCommand}"
+                                                                Background="{DynamicResource PrimaryAccent}" 
+                                                                Foreground="White" 
+                                                                FontWeight="Bold" 
+                                                                CornerRadius="6" 
+                                                                Padding="12,4"
+                                                                Margin="2">
+                                                            <Button.Styles>
+                                                                <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                                                    <Setter Property="Background" Value="#3395FF"/>
+                                                                </Style>
+                                                            </Button.Styles>
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <TextBlock Text="Go" VerticalAlignment="Center"/>
+                                                                <TextBlock Text="&#xE893;" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center" FontSize="12"/>
+                                                            </StackPanel>
+                                                        </Button>
+                                                    </TextBox.InnerRightContent>
+                                                </TextBox>
                                             </StackPanel>
                                         </Border>
                                     </Flyout>
@@ -569,16 +708,15 @@
                             </Button>
     
                             <!-- Next Button -->
-                            <Button Grid.Column="2" 
-                                    Command="{Binding NextPageCommand}" 
+                            <Button Command="{Binding NextPageCommand}" 
                                     Classes="PageBtn"
                                     IsEnabled="{Binding HasNextPage}">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
                                     <TextBlock Text="Next" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    <TextBlock Text="&#xE893;" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center"/>
+                                    <TextBlock Text="&#xE893;" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center" FontSize="16"/>
                                 </StackPanel>
                             </Button>
-                        </Grid>
+                        </StackPanel>
                      </Border>
                  </Grid>
              <!-- </StackPanel> -->

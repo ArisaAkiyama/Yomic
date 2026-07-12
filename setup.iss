@@ -63,8 +63,7 @@ Type: filesandordirs; Name: "{localappdata}\Yomic"
 Source: "d:\Project\DesktopKomik\bin\Publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Bundled Plugins (from PackedExtensions folder)
 Source: "d:\Project\DesktopKomik\PackedExtensions\*"; DestDir: "{app}\Plugins"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
-; Bundled Tools (Sing-box)
-Source: "d:\Project\DesktopKomik\Yomic\bin_tool\*"; DestDir: "{app}\bin_tool"; Flags: ignoreversion recursesubdirs createallsubdirs
+
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
@@ -72,16 +71,14 @@ Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-; Add Firewall Exception for Sing-box
-Filename: "netsh"; Parameters: "advfirewall firewall add rule name=""Yomic VPN (sing-box)"" dir=in action=allow program=""{app}\bin_tool\sing-box.exe"" enable=yes"; Flags: runhidden
+
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; Flags: nowait postinstall skipifsilent
 
 ; Auto-launch when running in silent mode (Update Update)
 Filename: "{app}\{#MyAppExeName}"; Flags: nowait skipifnotsilent
 
 [UninstallRun]
-; Remove Firewall Exception
-Filename: "netsh"; Parameters: "advfirewall firewall delete rule name=""Yomic VPN (sing-box)"""; Flags: runhidden; RunOnceId: "RemoveFirewallRule"
+
 
 [Code]
 // Helper function to check and remove legacy AppData install

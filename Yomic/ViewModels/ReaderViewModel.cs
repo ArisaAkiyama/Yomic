@@ -191,6 +191,13 @@ namespace Yomic.ViewModels
                     }
                 }
                 
+                // Avalonia Bitmap does not natively support AVIF on all platforms.
+                // Transparently proxy AVIF images through wsrv.nl to convert them to webp.
+                if (requestUrl.Contains(".avif", StringComparison.OrdinalIgnoreCase))
+                {
+                    requestUrl = $"https://wsrv.nl/?url={Uri.EscapeDataString(requestUrl)}&output=webp";
+                }
+                
                 Console.WriteLine($"[PageVM] Fetching: {requestUrl}");
                 Console.WriteLine($"[PageVM] Headers: {string.Join(", ", customHeaders.Select(kv => $"{kv.Key}={kv.Value}"))}");
                 
@@ -387,6 +394,7 @@ namespace Yomic.ViewModels
         private readonly long _sourceId;
         private readonly string _mangaTitle;
         private readonly string _mangaUrl;
+        private readonly string? _mangaThumbnail;
         private readonly bool _isNsfwContent;
 
         public ReaderViewModel(MainWindowViewModel mainViewModel, Core.Services.SourceManager? sourceManager, 
@@ -394,7 +402,7 @@ namespace Yomic.ViewModels
                                Core.Services.NetworkService? networkService,
                 Core.Services.LibraryService? libraryService = null,
                 Core.Services.SettingsService? settingsService = null,
-                long sourceId = 3, string mangaTitle = "", string mangaUrl = "", bool isNsfw = false)
+                long sourceId = 3, string mangaTitle = "", string mangaUrl = "", bool isNsfw = false, string mangaThumbnail = "")
         {
             _mainViewModel = mainViewModel;
             _sourceManager = sourceManager;
@@ -406,6 +414,7 @@ namespace Yomic.ViewModels
             _sourceId = sourceId;
             _mangaTitle = mangaTitle;
             _mangaUrl = mangaUrl;
+            _mangaThumbnail = mangaThumbnail;
             _isNsfwContent = isNsfw;
 
             // Find current chapter index in the list
@@ -771,13 +780,24 @@ namespace Yomic.ViewModels
             }
             Pages.Clear();
 
-            // Force Garbage Collection to aggressively free up RAM
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
+            // Force Garbage Collection to aggressively free up RAM asynchronously
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    GC.Collect();
+                    System.Diagnostics.Debug.WriteLine("[ReaderVM] Asynchronous GC completed.");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ReaderVM] GC error: {ex.Message}");
+                }
+            });
             
             _cts.Dispose();
-            System.Diagnostics.Debug.WriteLine("[ReaderVM] Disposed and GC Collected.");
+            System.Diagnostics.Debug.WriteLine("[ReaderVM] Disposed.");
 
             // Run cache cleanup asynchronously when leaving reader
             if (_settingsService != null)
@@ -838,7 +858,8 @@ namespace Yomic.ViewModels
                     {
                         Title = _mangaTitle,
                         Url = _mangaUrl,
-                        Source = _sourceId
+                        Source = _sourceId,
+                        ThumbnailUrl = _mangaThumbnail
                     };
                     var chapter = new Core.Models.Chapter
                     {
@@ -978,7 +999,8 @@ namespace Yomic.ViewModels
                 {
                     Title = _mangaTitle,
                     Url = _mangaUrl,
-                    Source = _sourceId
+                    Source = _sourceId,
+                    ThumbnailUrl = _mangaThumbnail
                 };
                 var nextChapterModel = new Core.Models.Chapter
                 {

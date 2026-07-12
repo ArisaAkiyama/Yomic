@@ -156,7 +156,41 @@ namespace Yomic.ViewModels
             }
         }
 
+        public class GenreFilterItem : ReactiveObject
+        {
+            public string Name { get; set; } = string.Empty;
+            
+            private bool _isSelected;
+            public bool IsSelected
+            {
+                get => _isSelected;
+                set => this.RaiseAndSetIfChanged(ref _isSelected, value);
+            }
+        }
+
+        public class FormatFilterItem : ReactiveObject
+        {
+            public string Name { get; set; } = string.Empty;
+            
+            private bool _isSelected;
+            public bool IsSelected
+            {
+                get => _isSelected;
+                set => this.RaiseAndSetIfChanged(ref _isSelected, value);
+            }
+        }
+        
+        public ObservableCollection<GenreFilterItem> AvailableGenres { get; } = new();
+        public bool IsGenreFilterVisible => AvailableGenres.Count > 0;
+        public ReactiveCommand<Unit, Unit> ClearGenreFilterCommand { get; }
+
+        public ObservableCollection<FormatFilterItem> AvailableFormats { get; } = new();
+        public bool IsFormatFilterVisible => AvailableFormats.Count > 0;
+        public ReactiveCommand<Unit, Unit> ClearFormatFilterCommand { get; }
+
         public bool IsStatusFilterActive => SelectedStatusFilter != SourceStatusFilterMode.All;
+        public bool IsAnyFilterActive => IsStatusFilterActive || AvailableGenres.Any(g => g.IsSelected) || AvailableFormats.Any(f => f.IsSelected);
+        
         public string StatusFilterText => SelectedStatusFilter switch
         {
             SourceStatusFilterMode.Ongoing => "Ongoing",
@@ -251,6 +285,63 @@ namespace Yomic.ViewModels
             SearchCommand = ReactiveCommand.CreateFromTask(async () => await PerformSearch());
             OpenMangaCommand = ReactiveCommand.Create<MangaItem>(OpenManga);
             
+            ClearGenreFilterCommand = ReactiveCommand.Create(() =>
+            {
+                foreach (var g in AvailableGenres)
+                    g.IsSelected = false;
+                this.RaisePropertyChanged(nameof(IsAnyFilterActive));
+                CurrentPage = 1;
+                _ = LoadMangaList(append: false, forceRefresh: true);
+            });
+
+            ClearFormatFilterCommand = ReactiveCommand.Create(() =>
+            {
+                foreach (var f in AvailableFormats)
+                    f.IsSelected = false;
+                this.RaisePropertyChanged(nameof(IsAnyFilterActive));
+                CurrentPage = 1;
+                _ = LoadMangaList(append: false, forceRefresh: true);
+            });
+
+            if (_source is IFilterableMangaSource filterable)
+            {
+                if (filterable.SupportsGenreFilter)
+                {
+                    foreach (var genre in filterable.AvailableGenres)
+                    {
+                        var genreItem = new GenreFilterItem { Name = genre };
+                        genreItem.PropertyChanged += (s, e) =>
+                        {
+                            if (e.PropertyName == nameof(GenreFilterItem.IsSelected))
+                            {
+                                this.RaisePropertyChanged(nameof(IsAnyFilterActive));
+                                CurrentPage = 1;
+                                _ = LoadMangaList(append: false, forceRefresh: true);
+                            }
+                        };
+                        AvailableGenres.Add(genreItem);
+                    }
+                }
+
+                if (filterable.SupportsFormatFilter)
+                {
+                    foreach (var format in filterable.AvailableFormats)
+                    {
+                        var formatItem = new FormatFilterItem { Name = format };
+                        formatItem.PropertyChanged += (s, e) =>
+                        {
+                            if (e.PropertyName == nameof(FormatFilterItem.IsSelected))
+                            {
+                                this.RaisePropertyChanged(nameof(IsAnyFilterActive));
+                                CurrentPage = 1;
+                                _ = LoadMangaList(append: false, forceRefresh: true);
+                            }
+                        };
+                        AvailableFormats.Add(formatItem);
+                    }
+                }
+            }
+            
             MangaList.CollectionChanged += (s, e) => this.RaisePropertyChanged(nameof(IsSourceEmpty));
 
             BackCommand = ReactiveCommand.Create(() => 
@@ -262,16 +353,20 @@ namespace Yomic.ViewModels
             OpenSettingsCommand = ReactiveCommand.Create(() => { _mainVm.GoToSettings(); });
 
 
-            // Refresh: Force reload ignoring cache (except for Latest mode where API is inconsistent)
+            // Refresh: Force reload ignoring cache
             RefreshCommand = ReactiveCommand.CreateFromTask(async () => 
             {
-                
                 IsRefreshing = true;
                 try 
                 {
-                    // Directory mode: normal refresh behavior
-                    string cacheKey = GetCacheKey();
-                    _sourceManager.InvalidateCache(cacheKey); 
+                    // In Latest mode, always reset to page 1 so refresh shows the newest content
+                    if (_isLatestMode)
+                    {
+                        CurrentPage = 1;
+                    }
+                    // Invalidate all pages for this source+mode to avoid stale cached pages on scroll
+                    string cachePrefix = $"{_source.Id}:v14:";
+                    _sourceManager.InvalidateCache(cachePrefix);
                     await LoadMangaList(append: false, forceRefresh: true);
                 }
                 finally
@@ -505,7 +600,9 @@ namespace Yomic.ViewModels
         {
             if (IsLoading) return; // Prevent double trigger
 
-            if (SelectedStatusFilter != SourceStatusFilterMode.All && !append && !_isLatestMode)
+            var selectedGenres = AvailableGenres.Where(g => g.IsSelected).Select(g => g.Name).ToList();
+            var selectedFormats = AvailableFormats.Where(f => f.IsSelected).Select(f => f.Name).ToList();
+            if ((SelectedStatusFilter != SourceStatusFilterMode.All || selectedGenres.Count > 0 || selectedFormats.Count > 0) && !append && !_isLatestMode)
             {
                 await LoadFilteredMangaList(forceRefresh);
                 return;
@@ -636,8 +733,7 @@ namespace Yomic.ViewModels
                 HasError = true;
 
                 // 2. Detection Logic (Error Case)
-                // Only treat as blocked if VPN is NOT running. If VPN is running, it's a genuine error/timeout.
-                if (IsMangaDex && _networkService.IsOnline && !SingboxService.Instance.IsRunning)
+                if (IsMangaDex && _networkService.IsOnline)
                 {
                     IsMangaDexBlocked = true;
                 }
@@ -691,12 +787,15 @@ namespace Yomic.ViewModels
 
             try
             {
-                if (_source is IFilterableMangaSource { SupportsStatusFilter: true } serverFilterable)
+                var selectedGenres = AvailableGenres.Where(g => g.IsSelected).Select(g => g.Name).ToList();
+                var selectedFormats = AvailableFormats.Where(f => f.IsSelected).Select(f => f.Name).ToList();
+
+                if (_source is IFilterableMangaSource serverFilterable)
                 {
-                    var status = GetStatusValue(filter);
-                    if (status != Manga.UNKNOWN)
+                    if (serverFilterable.SupportsStatusFilter || serverFilterable.SupportsGenreFilter || serverFilterable.SupportsFormatFilter)
                     {
-                        var cacheKey = $"{_source.Id}:STATUS:v14:{status}:{targetPage}:{IsLatestMode}";
+                        var status = GetStatusValue(filter);
+                        var cacheKey = $"{_source.Id}:v14:{targetPage}:{filter}:{string.Join(",", selectedGenres)}:{string.Join(",", selectedFormats)}";
                         List<Manga> sourceItems;
                         int totalPages;
 
@@ -708,7 +807,9 @@ namespace Yomic.ViewModels
                         }
                         else
                         {
-                            (sourceItems, totalPages) = await serverFilterable.GetMangaListAsync(targetPage, status);
+                            (sourceItems, totalPages) = await serverFilterable.GetMangaListAsync(targetPage, status, 
+                                selectedGenres.Count > 0 ? selectedGenres : null,
+                                selectedFormats.Count > 0 ? selectedFormats : null);
                             _sourceManager.SetCachedResult(cacheKey, sourceItems, totalPages);
                         }
 
@@ -789,7 +890,10 @@ namespace Yomic.ViewModels
 
                     var pageItems = sourceItems.Select(m => ConvertToVm(m, token)).ToList();
                     await EnsureStatusesAsync(pageItems);
-                    matched.AddRange(pageItems.Where(item => MatchesStatusFilter(item, filter)));
+                    matched.AddRange(pageItems.Where(item => 
+                        MatchesStatusFilter(item, filter) && 
+                        (selectedGenres.Count == 0 || selectedGenres.All(g => item.Genres != null && item.Genres.Any(x => string.Equals(x, g, StringComparison.OrdinalIgnoreCase))))
+                    ));
 
                     sourcePage++;
                 }
@@ -1010,7 +1114,7 @@ namespace Yomic.ViewModels
 
         private void MonitorLoadingSpeed()
         {
-            if (_hasShownVpnTip || !IsMangaDex || Core.Services.SingboxService.Instance.IsRunning) return;
+            if (_hasShownVpnTip || !IsMangaDex) return;
 
             Task.Delay(8000).ContinueWith(t => 
             {

@@ -199,6 +199,7 @@ namespace Yomic.ViewModels
         private readonly Core.Services.LibraryService _libraryService;
         private readonly Core.Services.NetworkService _networkService;
         private readonly Core.Services.DownloadService _downloadService;
+        private System.Threading.CancellationTokenSource? _cleanupCts;
 
         public Core.Services.NetworkService NetworkService => _networkService;
 
@@ -299,13 +300,23 @@ namespace Yomic.ViewModels
                 // Refresh library when navigating back to it
                 if (CurrentPage == LibraryVM)
                 {
-                    _ = LibraryVM.RefreshLibrary();
+                    // Delay refresh to allow page transition animation to finish smoothly
+                    _ = System.Threading.Tasks.Task.Run(async () => 
+                    {
+                        await System.Threading.Tasks.Task.Delay(400);
+                        await LibraryVM.RefreshLibrary();
+                    });
                 }
                 
                 // Refresh read state when returning to manga detail
                 if (CurrentPage is MangaDetailViewModel detailVM)
                 {
-                    detailVM.RefreshReadState();
+                    // Delay refresh to allow page transition animation to finish smoothly
+                    _ = System.Threading.Tasks.Task.Run(async () => 
+                    {
+                        await System.Threading.Tasks.Task.Delay(400);
+                        detailVM.RefreshReadState();
+                    });
                 }
             }
             else
@@ -341,10 +352,10 @@ namespace Yomic.ViewModels
             _ = LibraryVM.RefreshLibrary();
         }
 
-        public void GoToReader(ChapterItem? chapter = null, System.Collections.Generic.List<ChapterItem>? allChapters = null, long sourceId = 3, string mangaTitle = "", string mangaUrl = "", bool isNsfw = false)
+        public void GoToReader(ChapterItem? chapter = null, System.Collections.Generic.List<ChapterItem>? allChapters = null, long sourceId = 3, string mangaTitle = "", string mangaUrl = "", bool isNsfw = false, string mangaThumbnail = "")
         {
             if (CurrentPage != null) _navigationStack.Push(CurrentPage);
-            CurrentPage = new ReaderViewModel(this, _sourceManager, chapter, allChapters, _networkService, _libraryService, _settingsService, sourceId, mangaTitle, mangaUrl, isNsfw);
+            CurrentPage = new ReaderViewModel(this, _sourceManager, chapter, allChapters, _networkService, _libraryService, _settingsService, sourceId, mangaTitle, mangaUrl, isNsfw, mangaThumbnail);
         }
 
         private BrowseViewModel? _browseVM;
@@ -544,12 +555,20 @@ namespace Yomic.ViewModels
             if (_settingsService.UpdateOnStart)
             {
                 ShowNotification("Updating library...");
-                int count = await _libraryService.UpdateAllLibraryMangaAsync(_sourceManager);
-                if (count > 0)
+                LibraryVM.IsRefreshing = true;
+                try
                 {
-                    ShowNotification($"Library updated: {count} manga refreshed.");
-                    // Refresh library view
-                    _ = LibraryVM.RefreshLibrary();
+                    int count = await _libraryService.UpdateAllLibraryMangaAsync(_sourceManager);
+                    if (count > 0)
+                    {
+                        ShowNotification($"Library updated: {count} manga refreshed.");
+                        // Refresh library view
+                        _ = LibraryVM.RefreshLibrary();
+                    }
+                }
+                finally
+                {
+                    LibraryVM.IsRefreshing = false;
                 }
             }
         }
@@ -584,7 +603,25 @@ namespace Yomic.ViewModels
             try 
             {
                 disposable.Dispose();
-                CleanupMemory();
+                
+                // Debounce memory cleanup
+                _cleanupCts?.Cancel();
+                _cleanupCts = new System.Threading.CancellationTokenSource();
+                var token = _cleanupCts.Token;
+
+                System.Diagnostics.Debug.WriteLine("[MainWindowVM] RAM Optimization scheduled...");
+                
+                // Run cleanup asynchronously after 1.5 seconds of inactivity
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(1500, token);
+                        if (token.IsCancellationRequested) return;
+                        CleanupMemory();
+                    }
+                    catch (TaskCanceledException) {}
+                }, token);
             }
             catch (Exception ex)
             {
@@ -605,16 +642,38 @@ namespace Yomic.ViewModels
         {
             try
             {
-                // 1. Clear memory caches
-                _imageCacheService.Clear();
-                
-                // 2. Force Aggressive Garbage Collection
-                // We call it multiple times to ensure all generations are collected and finalizers run.
-                GC.Collect(2, GCCollectionMode.Forced, true);
-                GC.WaitForPendingFinalizers();
-                GC.Collect(2, GCCollectionMode.Forced, true);
-                
-                System.Diagnostics.Debug.WriteLine("[MainWindowVM] RAM Optimization triggered: Cache cleared and GC collected.");
+                // Use WorkingSet64 to measure ACTUAL process RAM usage as shown in Task Manager.
+                // GC.GetTotalMemory() only measures managed heap (~34MB) and is blind to the 
+                // hundreds of MB of unmanaged native memory used by Skia/Avalonia bitmap buffers.
+                long memoryUsed = System.Diagnostics.Process.GetCurrentProcess().WorkingSet64;
+                if (memoryUsed > 200 * 1024 * 1024) // Trigger cleanup if RAM > 200MB
+                {
+                    // 1. Clear memory caches (Thread-safe ConcurrentDictionary)
+                    _imageCacheService.Clear();
+                    
+                    // 2. Force Aggressive Garbage Collection asynchronously on a background thread
+                    // to prevent UI freezing during navigation transitions.
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            GC.Collect(2, GCCollectionMode.Forced, true);
+                            GC.WaitForPendingFinalizers();
+                            GC.Collect(2, GCCollectionMode.Forced, true);
+                            System.Diagnostics.Debug.WriteLine("[MainWindowVM] Asynchronous GC completed.");
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[MainWindowVM] GC error: {ex.Message}");
+                        }
+                    });
+                    
+                    System.Diagnostics.Debug.WriteLine($"[MainWindowVM] RAM Optimization triggered (WorkingSet: {memoryUsed / 1024 / 1024}MB): Cache cleared and async GC scheduled.");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MainWindowVM] RAM Optimization skipped (WorkingSet: {memoryUsed / 1024 / 1024}MB is below threshold).");
+                }
             }
             catch (Exception ex)
             {

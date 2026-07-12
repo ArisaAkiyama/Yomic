@@ -1,15 +1,36 @@
 using System;
+using System.IO;
 
 namespace Yomic.Core.Services
 {
     /// <summary>
-    /// Centralized logging service with colored console output.
+    /// Centralized logging service with colored console output and file output.
     /// Yellow = Warning, Red = Error, Cyan = Info, White = Debug
     /// </summary>
     public static class LogService
     {
         private static readonly object _lock = new();
-        
+
+        public static string LogFilePath { get; } = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Yomic", "yomic.log");
+
+        static LogService()
+        {
+            // Ensure log directory exists
+            var dir = Path.GetDirectoryName(LogFilePath);
+            if (dir != null && !Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            // Rotate log: keep only the last 2 MB
+            try
+            {
+                if (File.Exists(LogFilePath) && new FileInfo(LogFilePath).Length > 2 * 1024 * 1024)
+                    File.WriteAllText(LogFilePath, string.Empty);
+            }
+            catch { /* ignore rotation errors */ }
+        }
+
         public static void Debug(string tag, string message)
         {
             WriteLog(ConsoleColor.Gray, "DEBUG", tag, message);
@@ -49,29 +70,29 @@ namespace Yomic.Core.Services
             lock (_lock)
             {
                 var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+                var logLine   = $"[{timestamp}] [{level}] [{tag}] {message}";
+
+                // ── Console output ────────────────────────────────────────────
                 var originalColor = Console.ForegroundColor;
-                
-                // Timestamp in gray
                 Console.ForegroundColor = ConsoleColor.DarkGray;
                 Console.Write($"[{timestamp}] ");
-                
-                // Level with color
                 Console.ForegroundColor = color;
                 Console.Write($"[{level}] ");
-                
-                // Tag in white
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.Write($"[{tag}] ");
-                
-                // Message with level color
                 Console.ForegroundColor = color;
                 Console.WriteLine(message);
-                
-                // Reset
                 Console.ForegroundColor = originalColor;
-                
-                // Also write to Debug output for IDE visibility
-                System.Diagnostics.Debug.WriteLine($"[{timestamp}] [{level}] [{tag}] {message}");
+
+                // ── IDE Debug output ──────────────────────────────────────────
+                System.Diagnostics.Debug.WriteLine(logLine);
+
+                // ── File output ───────────────────────────────────────────────
+                try
+                {
+                    File.AppendAllText(LogFilePath, logLine + Environment.NewLine);
+                }
+                catch { /* ignore file write errors */ }
             }
         }
     }

@@ -14,7 +14,6 @@ namespace Yomic.Views
         {
             if (DataContext is Yomic.ViewModels.SettingsViewModel vm)
             {
-
                 vm.RequestBackupDialog -= OpenBackupDialog;
                 vm.RequestBackupDialog += OpenBackupDialog;
 
@@ -26,6 +25,9 @@ namespace Yomic.Views
 
                 vm.RequestClearHistoryDialog -= OpenClearHistoryDialog;
                 vm.RequestClearHistoryDialog += OpenClearHistoryDialog;
+
+                vm.RequestExportLogsDialog -= OpenExportLogsDialog;
+                vm.RequestExportLogsDialog += OpenExportLogsDialog;
             }
         }
 
@@ -57,6 +59,20 @@ namespace Yomic.Views
 
         private async void OpenRestoreDialog()
         {
+            if (this.VisualRoot is Window parentWindow)
+            {
+                var dialog = new ConfirmDialog("Restore Backup", "Restoring a backup will replace all your current database, library, and settings. Make sure you have a recent backup if needed. Do you want to continue?");
+                
+                var mainVM = parentWindow.DataContext as Yomic.ViewModels.MainWindowViewModel;
+                if (mainVM != null) mainVM.IsDialogOverlayVisible = true;
+
+                var result = await dialog.ShowDialog<bool>(parentWindow);
+
+                if (mainVM != null) mainVM.IsDialogOverlayVisible = false;
+
+                if (!result) return;
+            }
+
             var topLevel = TopLevel.GetTopLevel(this);
             if (topLevel == null) return;
 
@@ -119,6 +135,28 @@ namespace Yomic.Views
                 {
                     await vm.ProcessClearHistoryAsync();
                 }
+            }
+        }
+        private async void OpenExportLogsDialog()
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null) return;
+
+            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
+            {
+                Title = "Export Yomic Logs",
+                SuggestedFileName = $"yomic-log-{System.DateTime.Now:yyyyMMdd-HHmmss}.log",
+                DefaultExtension = "log",
+                FileTypeChoices = new[]
+                {
+                    new Avalonia.Platform.Storage.FilePickerFileType("Log File") { Patterns = new[] { "*.log", "*.txt" } },
+                    new Avalonia.Platform.Storage.FilePickerFileType("All Files") { Patterns = new[] { "*.*" } }
+                }
+            });
+
+            if (file != null && DataContext is Yomic.ViewModels.SettingsViewModel vm)
+            {
+                await vm.ProcessExportLogsAsync(file.Path.LocalPath);
             }
         }
     }

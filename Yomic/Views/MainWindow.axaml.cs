@@ -65,50 +65,92 @@ namespace Yomic.Views
 
             try
             {
-                // 1. Capture screenshot
+                // 1. Capture screenshot of old theme
                 var pixelSize = new Avalonia.PixelSize((int)Bounds.Width, (int)Bounds.Height);
                 using var bitmap = new RenderTargetBitmap(pixelSize, new Avalonia.Vector(96, 96));
                 bitmap.Render(this);
 
-                // 2. Set the image and make it visible
+                // 2. Set the image overlay and make it visible
                 ThemeTransitionOverlay.Source = bitmap;
                 ThemeTransitionOverlay.Opacity = 1;
                 ThemeTransitionOverlay.IsVisible = true;
 
+                // Reset scale
+                var scaleTransform = ThemeTransitionOverlay.RenderTransform as Avalonia.Media.ScaleTransform;
+                if (scaleTransform == null)
+                {
+                    scaleTransform = new Avalonia.Media.ScaleTransform(1, 1);
+                    ThemeTransitionOverlay.RenderTransform = scaleTransform;
+                }
+                scaleTransform.ScaleX = 1.0;
+                scaleTransform.ScaleY = 1.0;
+
                 // 3. Change theme underneath
                 Avalonia.Application.Current.RequestedThemeVariant = themeVariant;
 
-                // 4. Wait a tiny bit for Avalonia to apply resources
-                await Task.Delay(50);
+                // 4. Wait for Avalonia to apply resources and render the new theme
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { }, Avalonia.Threading.DispatcherPriority.Render);
 
-                // 5. Animate fade out
-                var animation = new Animation
+                // 5. Animate fade out and scale
+                var easing = new ExponentialEaseOut();
+                var duration = TimeSpan.FromMilliseconds(500);
+                
+                // If transitioning to Light (isDark = false), overlay expands (simulating light revealing)
+                // If transitioning to Dark (isDark = true), overlay shrinks (simulating dark engulfing)
+                double targetScale = isDark ? 0.96 : 1.04;
+
+                var opacityAnimation = new Animation
                 {
-                    Duration = TimeSpan.FromMilliseconds(400),
-                    Easing = new SineEaseInOut(),
+                    Duration = duration,
+                    Easing = easing,
                     FillMode = FillMode.Forward,
                     Children =
                     {
-                        new KeyFrame
-                        {
-                            Cue = new Cue(0d),
-                            Setters = { new Setter(Image.OpacityProperty, 1.0d) }
-                        },
-                        new KeyFrame
-                        {
-                            Cue = new Cue(1d),
-                            Setters = { new Setter(Image.OpacityProperty, 0.0d) }
-                        }
+                        new KeyFrame { Cue = new Cue(0d), Setters = { new Setter(Image.OpacityProperty, 1.0d) } },
+                        new KeyFrame { Cue = new Cue(1d), Setters = { new Setter(Image.OpacityProperty, 0.0d) } }
                     }
                 };
 
-                await animation.RunAsync(ThemeTransitionOverlay);
+                var scaleXAnimation = new Animation
+                {
+                    Duration = duration,
+                    Easing = easing,
+                    FillMode = FillMode.Forward,
+                    Children =
+                    {
+                        new KeyFrame { Cue = new Cue(0d), Setters = { new Setter(Avalonia.Media.ScaleTransform.ScaleXProperty, 1.0d) } },
+                        new KeyFrame { Cue = new Cue(1d), Setters = { new Setter(Avalonia.Media.ScaleTransform.ScaleXProperty, targetScale) } }
+                    }
+                };
+
+                var scaleYAnimation = new Animation
+                {
+                    Duration = duration,
+                    Easing = easing,
+                    FillMode = FillMode.Forward,
+                    Children =
+                    {
+                        new KeyFrame { Cue = new Cue(0d), Setters = { new Setter(Avalonia.Media.ScaleTransform.ScaleYProperty, 1.0d) } },
+                        new KeyFrame { Cue = new Cue(1d), Setters = { new Setter(Avalonia.Media.ScaleTransform.ScaleYProperty, targetScale) } }
+                    }
+                };
+
+                await Task.WhenAll(
+                    opacityAnimation.RunAsync(ThemeTransitionOverlay),
+                    scaleXAnimation.RunAsync(ThemeTransitionOverlay),
+                    scaleYAnimation.RunAsync(ThemeTransitionOverlay)
+                );
             }
             finally
             {
                 // 6. Cleanup
                 ThemeTransitionOverlay.IsVisible = false;
                 ThemeTransitionOverlay.Source = null;
+                if (ThemeTransitionOverlay.RenderTransform is Avalonia.Media.ScaleTransform st)
+                {
+                    st.ScaleX = 1.0;
+                    st.ScaleY = 1.0;
+                }
             }
         }
 

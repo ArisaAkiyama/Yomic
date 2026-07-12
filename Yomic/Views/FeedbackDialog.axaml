@@ -5,49 +5,75 @@
         xmlns:vm="using:Yomic.ViewModels"
         mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="350"
         x:Class="Yomic.Views.FeedbackDialog"
-        Width="480" Height="400"
+        Width="480" SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         SystemDecorations="None"
         ShowInTaskbar="False"
         CanResize="False"
         Background="Transparent"
         TransparencyLevelHint="Transparent"
+
         x:DataType="vm:FeedbackDialogViewModel"
         x:Name="FeedbackWindow">
 
     <Border Background="{DynamicResource PrimaryBackground}" CornerRadius="16" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" Padding="24">
-        <Grid RowDefinitions="Auto, *, Auto, Auto, Auto">
+        <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto">
             
             <!-- Header -->
-            <TextBlock Grid.Row="0" Text="Send feedback" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,20"/>
+            <TextBlock Grid.Row="0" Text="Send feedback" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,10"/>
             
+            <!-- Category -->
+            <ComboBox Grid.Row="1" 
+                      ItemsSource="{Binding FeedbackCategories}" 
+                      SelectedItem="{Binding SelectedCategory}"
+                      Background="{DynamicResource SidebarBackground}"
+                      BorderThickness="0"
+                      CornerRadius="8"
+                      Margin="0,0,0,15"
+                      HorizontalAlignment="Stretch">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding, Converter={x:Static vm:StatusToColorConverter.FeedbackCategoryToString}}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
             <!-- Input Area -->
-            <TextBox Grid.Row="1" 
-                     Text="{Binding FeedbackText}"
-                     Watermark="Tell us about your experience using this app..."
-                     Background="{DynamicResource SidebarBackground}"
-                     Foreground="{DynamicResource PrimaryText}"
-                     AcceptsReturn="True"
-                     TextWrapping="Wrap"
-                     CornerRadius="8"
-                     BorderThickness="0"
-                     Padding="12"
-                     FontSize="14"
-                     VerticalContentAlignment="Top">
-                 <TextBox.Styles>
-                     <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
-                         <Setter Property="Background" Value="{DynamicResource SidebarBackground}"/>
-                         <Setter Property="BorderThickness" Value="0"/>
-                     </Style>
-                     <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
-                         <Setter Property="Background" Value="{DynamicResource SidebarBackground}"/>
-                         <Setter Property="BorderThickness" Value="0"/>
-                     </Style>
-                 </TextBox.Styles>
-            </TextBox>
+            <Grid Grid.Row="2">
+                <TextBox Text="{Binding FeedbackText}"
+                         Watermark="Tell us about your experience using this app..."
+                         Background="{DynamicResource SidebarBackground}"
+                         Foreground="{DynamicResource PrimaryText}"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         CornerRadius="8"
+                         BorderThickness="0"
+                         Padding="12,12,12,30"
+                         FontSize="14"
+                         Height="120"
+                         MaxLength="1000"
+                         VerticalContentAlignment="Top">
+                     <TextBox.Styles>
+                         <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                             <Setter Property="Background" Value="{DynamicResource SidebarBackground}"/>
+                             <Setter Property="BorderThickness" Value="0"/>
+                         </Style>
+                         <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                             <Setter Property="Background" Value="{DynamicResource SidebarBackground}"/>
+                             <Setter Property="BorderThickness" Value="0"/>
+                         </Style>
+                     </TextBox.Styles>
+                </TextBox>
+                <TextBlock Text="{Binding CharacterCountText}" 
+                           FontSize="11" 
+                           Foreground="{DynamicResource SecondaryText}" 
+                           HorizontalAlignment="Right" 
+                           VerticalAlignment="Bottom" 
+                           Margin="0,0,12,8"/>
+            </Grid>
 
             <!-- Screenshot Attachment -->
-            <StackPanel Grid.Row="2" Margin="0,12,0,0" Spacing="8">
+            <StackPanel Grid.Row="3" Margin="0,12,0,0" Spacing="8">
                 <Button Command="{Binding AttachScreenshotCommand}"
                         IsVisible="{Binding CanAttachMoreScreenshots}"
                         Background="{DynamicResource SidebarBackground}"
@@ -80,8 +106,8 @@
                                     Padding="10,7"
                                     Margin="0,0,8,6">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="&#xE8A7;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{DynamicResource SuccessColor}" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding FileName}" FontSize="12" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center"/>
+                                    <Image Source="{Binding Thumbnail}" Width="40" Height="25" Stretch="UniformToFill" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding FileName}" FontSize="12" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center" MaxWidth="150" TextTrimming="CharacterEllipsis"/>
                                     <Button x:CompileBindings="False"
                                             Command="{Binding DataContext.RemoveScreenshotCommand, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
                                             CommandParameter="{Binding}"
@@ -100,16 +126,17 @@
             </StackPanel>
 
             <!-- Privacy Text -->
-            <TextBlock Grid.Row="3" Margin="0,16,0,20" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryText}" FontSize="13" LineHeight="18">
+            <TextBlock Grid.Row="4" Margin="0,16,0,20" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryText}" FontSize="13" LineHeight="18">
                 Your feedback is anonymous and helps us improve Yomic. Only your message and attached screenshots will be sent. Your personal messages and library stay private on your device.
             </TextBlock>
 
             <!-- Action Buttons -->
-            <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="16">
+            <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="16">
                 <!-- Cancel Button -->
                 <Button Content="Cancel" 
                         Command="{Binding CancelCommand}"
                         CommandParameter="{Binding ElementName=FeedbackWindow}"
+                        IsEnabled="{Binding !IsSending}"
                         Background="{DynamicResource HoverBackground}" 
                         Foreground="{DynamicResource PrimaryText}" 
                         CornerRadius="20"
@@ -126,8 +153,7 @@
                 </Button>
                 
                 <!-- Submit Button -->
-                <Button Content="Submit" 
-                        Command="{Binding SubmitCommand}"
+                <Button Command="{Binding SubmitCommand}"
                         CommandParameter="{Binding ElementName=FeedbackWindow}"
                         Background="{DynamicResource AccentColor}" 
                         Foreground="White" 
@@ -138,7 +164,7 @@
                         Cursor="Hand"
                         BorderThickness="0">
                      <Button.Styles>
-                        <Style Selector="Button:disabled">
+                        <Style Selector="Button:disabled /template/ ContentPresenter">
                             <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
                             <Setter Property="Foreground" Value="{DynamicResource SecondaryText}"/>
                             <Setter Property="Opacity" Value="0.65"/>
@@ -148,6 +174,27 @@
                             <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}"/>
                         </Style>
                     </Button.Styles>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Path Data="M 12 2 A 10 10 0 1 1 2 12" Stroke="White" StrokeThickness="2" 
+                              Width="14" Height="14" Stretch="Uniform" RenderTransformOrigin="50%,50%"
+                              IsVisible="{Binding IsSending}" VerticalAlignment="Center">
+                            <Path.Styles>
+                                <Style Selector="Path">
+                                    <Style.Animations>
+                                        <Animation Duration="0:0:0.8" IterationCount="Infinite">
+                                            <KeyFrame KeyTime="0:0:0">
+                                                <Setter Property="RotateTransform.Angle" Value="0"/>
+                                            </KeyFrame>
+                                            <KeyFrame KeyTime="0:0:0.8">
+                                                <Setter Property="RotateTransform.Angle" Value="360"/>
+                                            </KeyFrame>
+                                        </Animation>
+                                    </Style.Animations>
+                                </Style>
+                            </Path.Styles>
+                        </Path>
+                        <TextBlock Text="Submit" VerticalAlignment="Center"/>
+                    </StackPanel>
                 </Button>
             </StackPanel>
         </Grid>

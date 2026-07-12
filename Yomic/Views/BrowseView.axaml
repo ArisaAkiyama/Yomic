@@ -83,7 +83,7 @@
                           Text="{Binding SearchText}"
                           Watermark="Search sources..." 
                           Background="{DynamicResource SidebarBackground}" Foreground="{DynamicResource PrimaryText}" 
-                          CornerRadius="20" Padding="12,8"
+                          CornerRadius="20" Padding="8,8,15,8"
                           BorderThickness="0" VerticalContentAlignment="Center" FontSize="13">
                     <TextBox.Styles>
                         <Style Selector="TextBox:focus">
@@ -111,10 +111,10 @@
                              <Setter Property="Foreground" Value="{DynamicResource SecondaryText}"/>
                          </Style>
                     </TextBox.Styles>
-                    <TextBox.InnerRightContent>
+                    <TextBox.InnerLeftContent>
                         <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource SecondaryText}" 
-                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    </TextBox.InnerRightContent>
+                                   VerticalAlignment="Center" Margin="12,0,0,0" FontSize="14"/>
+                    </TextBox.InnerLeftContent>
                 </TextBox>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="10,0,0,0" VerticalAlignment="Center">

@@ -12,6 +12,9 @@ namespace Yomic.ViewModels
         
         public static readonly IValueConverter StatusToVisibility = 
             new FuncValueConverter<int, bool>(s => s != 0);
+            
+        public static readonly IValueConverter ToUpperConverter =
+            new FuncValueConverter<string, string>(s => s?.ToUpperInvariant() ?? string.Empty);
         
         // Static instances for specific conversions
         public static readonly IValueConverter BoolToHeartIcon = 
@@ -37,6 +40,21 @@ namespace Yomic.ViewModels
         public static readonly IValueConverter BoolToFullOpacity = 
             new FuncValueConverter<bool, double>(b => b ? 1.0 : 0.35);
             
+        public static readonly IValueConverter FeedbackCategoryToString = 
+            new FuncValueConverter<object, string>(cat => 
+            {
+                if (cat == null) return string.Empty;
+                var str = cat.ToString();
+                return str switch
+                {
+                    "BugReport" => "Bug Report",
+                    "FeatureRequest" => "Feature Request",
+                    "General" => "General",
+                    "Question" => "Question",
+                    _ => str
+                };
+            });
+
         public static readonly IMultiValueConverter BoolToExpandText = 
             new FuncMultiValueConverter<object, string>(values => 
             {
@@ -107,7 +125,7 @@ namespace Yomic.ViewModels
             if (value is string status)
             {
                 if (status.StartsWith("Ongoing", StringComparison.OrdinalIgnoreCase))
-                    return new SolidColorBrush(Color.Parse("#22C55E"));    // Green
+                    return new SolidColorBrush(Color.Parse("#E53935"));    // Red
                 if (status.StartsWith("Completed", StringComparison.OrdinalIgnoreCase))
                     return new SolidColorBrush(Color.Parse("#0078D7"));  // Blue
                 if (status.StartsWith("Hiatus", StringComparison.OrdinalIgnoreCase))

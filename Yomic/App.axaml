@@ -67,6 +67,7 @@
                     <SolidColorBrush x:Key="ControlBorder" Color="#2B2D31"/>
                     <SolidColorBrush x:Key="SuccessColor" Color="#A6E3A1"/>
                     <SolidColorBrush x:Key="ErrorColor" Color="#F38BA8"/>
+                    <SolidColorBrush x:Key="InfoColor" Color="#89B4FA"/>
 
                     <!-- Global Control Overrides (Dark) -->
                     <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#0078D4"/>
@@ -97,8 +98,9 @@
                     <SolidColorBrush x:Key="ActiveNavBackground" Color="#F3F4F6"/>
                     <SolidColorBrush x:Key="ControlBackground" Color="#E5E7EB"/>
                     <SolidColorBrush x:Key="ControlBorder" Color="#D1D5DB"/>
-                    <SolidColorBrush x:Key="SuccessColor" Color="#2E7D32"/>
+                    <SolidColorBrush x:Key="SuccessColor" Color="#16A34A"/>
                     <SolidColorBrush x:Key="ErrorColor" Color="#C62828"/>
+                    <SolidColorBrush x:Key="InfoColor" Color="#3B82F6"/>
 
                      <!-- Global Control Overrides (Light) -->
                     <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#0078D4"/>

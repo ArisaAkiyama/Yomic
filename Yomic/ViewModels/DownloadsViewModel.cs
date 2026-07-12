@@ -54,7 +54,7 @@ namespace Yomic.ViewModels
                     IsDownloaded = _request.Status == "Completed"
                 };
 
-                mainVM.GoToReader(chapterItem, new System.Collections.Generic.List<ChapterItem> { chapterItem }, _request.Manga.Source, _request.Manga.Title ?? "", _request.Manga.Url ?? "", false);
+                mainVM.GoToReader(chapterItem, new System.Collections.Generic.List<ChapterItem> { chapterItem }, _request.Manga.Source, _request.Manga.Title ?? "", _request.Manga.Url ?? "", false, _request.Manga.ThumbnailUrl ?? "");
             });
             
             ExportCommand = ReactiveCommand.CreateFromTask(async () => 

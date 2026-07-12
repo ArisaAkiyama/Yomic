@@ -29,6 +29,7 @@ namespace Yomic.ViewModels
         public string ReleaseFrequency { get; set; } = string.Empty;
         public string WaitingForChapter { get; set; } = string.Empty;
         public bool IsOverdue { get; set; }
+        public bool IsSeverelyOverdue { get; set; }
         
         // Command parameters
         public ReactiveCommand<UpcomingItem, Unit>? OpenMangaCommand { get; set; }
@@ -100,15 +101,44 @@ namespace Yomic.ViewModels
                     string frequency = "Unknown";
                     string waitingFor = "New Chapter";
                     
+                    long realNextUpdate = m.NextUpdate;
                     if (m.Chapters.Count > 0)
                     {
-                        var recentChapters = m.Chapters.Where(c => c.DateUpload > 0).OrderByDescending(c => c.ChapterNumber).Take(10).ToList();
+                        var recentChapters = m.Chapters.Where(c => c.DateUpload > 0).OrderByDescending(c => c.DateUpload).Take(10).ToList();
                         if (recentChapters.Count > 0)
                         {
                             float maxChap = m.Chapters.Max(c => c.ChapterNumber);
-                            waitingFor = $"Waiting for Chapter {maxChap + 1}";
+                            if (maxChap <= 0)
+                            {
+                                float maxParsed = 0;
+                                foreach (var ch in m.Chapters)
+                                {
+                                    var match = System.Text.RegularExpressions.Regex.Match(ch.Name, @"(?i)(?:ch\.|chapter|ep\.|episode)\s*(\d+(\.\d+)?)");
+                                    if (match.Success && float.TryParse(match.Groups[1].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float parsed))
+                                    {
+                                        if (parsed > maxParsed) maxParsed = parsed;
+                                    }
+                                    else
+                                    {
+                                        var fallbackMatch = System.Text.RegularExpressions.Regex.Match(ch.Name, @"\d+(\.\d+)?");
+                                        if (fallbackMatch.Success && float.TryParse(fallbackMatch.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float parsedFallback))
+                                        {
+                                            if (parsedFallback > maxParsed) maxParsed = parsedFallback;
+                                        }
+                                    }
+                                }
+                                
+                                if (maxParsed > 0)
+                                    maxChap = maxParsed;
+                                else
+                                    maxChap = m.Chapters.Count;
+                            }
+                            
+                            if (maxChap > 0)
+                                waitingFor = $"Waiting for Chapter {maxChap + 1}";
+                            else
+                                waitingFor = "Waiting for New Chapter";
                         }
-
                         if (recentChapters.Count >= 3)
                         {
                             var diffs = new List<long>();
@@ -123,6 +153,8 @@ namespace Yomic.ViewModels
                                 long medianDiff = diffs[diffs.Count / 2];
                                 if (diffs.Count % 2 == 0) medianDiff = (diffs[(diffs.Count / 2) - 1] + diffs[diffs.Count / 2]) / 2;
                                 
+                                realNextUpdate = recentChapters[0].DateUpload + medianDiff;
+                                
                                 double days = TimeSpan.FromMilliseconds(medianDiff).TotalDays;
                                 if (days <= 2.5) frequency = "Daily";
                                 else if (days <= 9.5) frequency = "Weekly";
@@ -133,42 +165,41 @@ namespace Yomic.ViewModels
                         }
                     }
 
+                    var isOverdue = realNextUpdate < now;
+                    var daysOverdue = isOverdue ? (int)TimeSpan.FromMilliseconds(now - realNextUpdate).TotalDays : 0;
+
                     var item = new UpcomingItem
                     {
                         MangaRef = m,
-                        NextUpdateEpoch = m.NextUpdate,
+                        NextUpdateEpoch = realNextUpdate,
                         ReleaseFrequency = frequency,
                         WaitingForChapter = waitingFor,
-                        IsOverdue = m.NextUpdate < now,
+                        IsOverdue = isOverdue,
+                        IsSeverelyOverdue = isOverdue && daysOverdue > 180,
                         OpenMangaCommand = OpenMangaCommand
                     };
 
                     string groupName;
-                    var date = DateTimeOffset.FromUnixTimeMilliseconds(m.NextUpdate).ToLocalTime();
+                    var date = DateTimeOffset.FromUnixTimeMilliseconds(realNextUpdate).ToLocalTime();
                     
-                    if (m.NextUpdate < now)
+                    if (isOverdue)
                     {
-                        groupName = "Overdue / Pending";
-                        item.EstimatedRelease = "Should have updated " + date.ToString("MMM dd, yyyy");
+                        groupName = "Overdue";
+                        item.EstimatedRelease = $"{daysOverdue} days overdue";
                     }
-                    else if (m.NextUpdate < todayEnd)
+                    else if (realNextUpdate < nextWeekEnd)
                     {
-                        groupName = "Today";
-                        item.EstimatedRelease = date.ToString("hh:mm tt");
-                    }
-                    else if (m.NextUpdate < tomorrowEnd)
-                    {
-                        groupName = "Tomorrow";
-                        item.EstimatedRelease = date.ToString("hh:mm tt");
-                    }
-                    else if (m.NextUpdate < nextWeekEnd)
-                    {
-                        groupName = "Next 7 Days";
-                        item.EstimatedRelease = date.ToString("dddd, MMM dd");
+                        groupName = "Due Soon";
+                        if (realNextUpdate < todayEnd)
+                            item.EstimatedRelease = "Today at " + date.ToString("hh:mm tt");
+                        else if (realNextUpdate < tomorrowEnd)
+                            item.EstimatedRelease = "Tomorrow at " + date.ToString("hh:mm tt");
+                        else
+                            item.EstimatedRelease = date.ToString("dddd, MMM dd");
                     }
                     else
                     {
-                        groupName = "Later";
+                        groupName = "Upcoming";
                         item.EstimatedRelease = date.ToString("MMM dd, yyyy");
                     }
 
@@ -180,7 +211,7 @@ namespace Yomic.ViewModels
                 }
 
                 // Sorting the groups logically
-                var groupOrder = new[] { "Overdue / Pending", "Today", "Tomorrow", "Next 7 Days", "Later" };
+                var groupOrder = new[] { "Overdue", "Due Soon", "Upcoming" };
                 
                 Dispatcher.UIThread.Post(() =>
                 {
