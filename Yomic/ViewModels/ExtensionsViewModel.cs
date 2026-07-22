@@ -416,7 +416,29 @@ namespace Yomic.ViewModels
                 x.Name.Equals(cleanName, StringComparison.OrdinalIgnoreCase) ||
                 (x.DownloadUrl != null && x.DownloadUrl.Equals(downloadUrl, StringComparison.OrdinalIgnoreCase)) ||
                 (x.FilePath != null && x.FilePath.EndsWith(name, StringComparison.OrdinalIgnoreCase)));
-            if (existing != null) return;
+            if (existing != null)
+            {
+                if (string.IsNullOrEmpty(existing.RemoteDownloadUrl)) existing.RemoteDownloadUrl = downloadUrl;
+
+                var commitDateStr = file.TryGetProperty("last_commit_date", out var dProp) ? dProp.GetString() : null;
+                if (!string.IsNullOrEmpty(commitDateStr) && DateTime.TryParse(commitDateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal, out DateTime remoteCommitUtc))
+                {
+                    DateTime localTimeUtc = DateTime.MinValue;
+                    var localPath = existing.FilePath ?? _sourceManager.GetSourcePath(existing.Id);
+                    if (!string.IsNullOrEmpty(localPath) && File.Exists(localPath))
+                    {
+                        localTimeUtc = File.GetLastWriteTimeUtc(localPath);
+                    }
+
+                    if (remoteCommitUtc > localTimeUtc.AddSeconds(5))
+                    {
+                        existing.HasUpdate = true;
+                        existing.RemoteCommitDateText = remoteCommitUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm");
+                        LogService.Info("ExtensionsVM", $"Update available for {existing.Name} ({name}) via index.json! Remote Commit: {remoteCommitUtc.ToLocalTime()}, Local file: {localTimeUtc.ToLocalTime()}");
+                    }
+                }
+                return;
+            }
 
             string lowerName = cleanName.ToLower();
             string lang = "en";
