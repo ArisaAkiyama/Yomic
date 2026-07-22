@@ -319,8 +319,32 @@ namespace Yomic.ViewModels
                 {
                     _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Yomic-Desktop-App");
                 }
-                var response = await _httpClient.GetStringAsync("https://api.github.com/repos/ArisaAkiyama/extension-yomic/contents");
-                var files = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(response);
+
+                string? responseText = null;
+                try
+                {
+                    using var req = new HttpRequestMessage(HttpMethod.Get, "https://api.github.com/repos/ArisaAkiyama/extension-yomic/contents");
+                    using var res = await _httpClient.SendAsync(req);
+                    if (res.IsSuccessStatusCode)
+                    {
+                        responseText = await res.Content.ReadAsStringAsync();
+                    }
+                }
+                catch { }
+
+                // Fallback to raw.githubusercontent.com index.json if REST API is rate-limited (403)
+                if (string.IsNullOrEmpty(responseText))
+                {
+                    try
+                    {
+                        responseText = await _httpClient.GetStringAsync("https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/main/index.json");
+                    }
+                    catch { }
+                }
+
+                if (string.IsNullOrEmpty(responseText)) return;
+
+                var files = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseText);
                 
                 if (files.ValueKind == System.Text.Json.JsonValueKind.Array)
                 {
@@ -330,7 +354,7 @@ namespace Yomic.ViewModels
                         var name = file.TryGetProperty("name", out var nameProp) ? nameProp.GetString() : null;
                         if (string.IsNullOrWhiteSpace(name)) continue;
 
-                        if (string.Equals(type, "file", StringComparison.OrdinalIgnoreCase))
+                        if (string.Equals(type, "file", StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(type))
                         {
                             AddRemoteJsExtension(file);
                         }
