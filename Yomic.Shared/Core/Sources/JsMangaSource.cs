@@ -259,9 +259,7 @@ namespace Yomic.Core.Sources
                 // If it's a GET and no custom headers, call our built-in GetStringAsync which has cloudflare bypass built-in!
                 if (method == HttpMethod.Get && headers.Count == 0)
                 {
-                    Console.WriteLine($"[JsMangaSource] Fetch (GetStringAsync): {url}");
                     var content = Task.Run(() => GetStringAsync(url)).GetAwaiter().GetResult();
-                    Console.WriteLine($"[JsMangaSource] Fetch (GetStringAsync) OK: {url} ({content?.Length ?? 0} bytes)");
                     return new JsResponse { body = content, status = 200 };
                 }
 
@@ -269,76 +267,14 @@ namespace Yomic.Core.Sources
                 var request = new HttpRequestMessage(method, url);
                 foreach (var h in headers)
                 {
-                    var key = h.Key.Trim();
-                    var val = h.Value;
-                    if (key.Equals("Referer", StringComparison.OrdinalIgnoreCase) || key.Equals("Referrer", StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (Uri.TryCreate(val, UriKind.Absolute, out var refUri))
-                        {
-                            request.Headers.Referrer = refUri;
-                        }
-                    }
-                    else if (key.Equals("User-Agent", StringComparison.OrdinalIgnoreCase))
-                    {
-                        request.Headers.UserAgent.Clear();
-                        request.Headers.UserAgent.ParseAdd(val);
-                    }
-                    else
-                    {
-                        request.Headers.TryAddWithoutValidation(key, val);
-                    }
+                    request.Headers.TryAddWithoutValidation(h.Key, h.Value);
                 }
-
                 if (postBody != null)
                 {
                     request.Content = new StringContent(postBody, System.Text.Encoding.UTF8, "application/json");
                 }
 
-                Console.WriteLine($"[JsMangaSource] Fetch (Custom Request): {method} {url}");
                 var response = Task.Run(() => Client.SendAsync(request)).GetAwaiter().GetResult();
-                Console.WriteLine($"[JsMangaSource] Custom Response Status: {response.StatusCode} for {url}");
-
-                if ((response.StatusCode == System.Net.HttpStatusCode.Forbidden || response.StatusCode == System.Net.HttpStatusCode.Unauthorized || response.StatusCode == System.Net.HttpStatusCode.NotFound) && url.Contains("softkomik"))
-                {
-                    Console.WriteLine($"[JsMangaSource] Retrying {url} after refreshing Cloudflare tokens...");
-                    // Refresh Cloudflare tokens
-                    var (ua, cookies) = Task.Run(() => Yomic.Core.Services.CloudflareBypassService.Instance.GetTokensAsync("https://softkomik.co")).GetAwaiter().GetResult();
-                    if (!string.IsNullOrEmpty(ua)) Client.DefaultRequestHeaders.UserAgent.ParseAdd(ua);
-                    if (cookies != null && cookies.Count > 0)
-                    {
-                        var targetHost = new Uri("https://softkomik.co").Host;
-                        foreach (var kv in cookies)
-                        {
-                            CookieContainer.Add(new System.Net.Cookie(kv.Key, kv.Value, "/", targetHost));
-                        }
-                    }
-
-                    // Re-create request for retry
-                    var retryRequest = new HttpRequestMessage(method, url);
-                    foreach (var h in headers)
-                    {
-                        var key = h.Key.Trim();
-                        var val = h.Value;
-                        if (key.Equals("Referer", StringComparison.OrdinalIgnoreCase) || key.Equals("Referrer", StringComparison.OrdinalIgnoreCase))
-                        {
-                            if (Uri.TryCreate(val, UriKind.Absolute, out var refUri)) retryRequest.Headers.Referrer = refUri;
-                        }
-                        else if (key.Equals("User-Agent", StringComparison.OrdinalIgnoreCase))
-                        {
-                            retryRequest.Headers.UserAgent.Clear();
-                            retryRequest.Headers.UserAgent.ParseAdd(val);
-                        }
-                        else
-                        {
-                            retryRequest.Headers.TryAddWithoutValidation(key, val);
-                        }
-                    }
-                    if (postBody != null) retryRequest.Content = new StringContent(postBody, System.Text.Encoding.UTF8, "application/json");
-
-                    response = Task.Run(() => Client.SendAsync(retryRequest)).GetAwaiter().GetResult();
-                    Console.WriteLine($"[JsMangaSource] Custom Retry Response Status: {response.StatusCode} for {url}");
-                }
-
                 var bodyText = Task.Run(() => response.Content.ReadAsStringAsync()).GetAwaiter().GetResult();
                 return new JsResponse { body = bodyText, status = (int)response.StatusCode };
             }
@@ -367,10 +303,17 @@ namespace Yomic.Core.Sources
         {
             return await ExecuteJsAsync(engine =>
             {
-                var hasMethod = engine.Invoke("__hasMethod", "getSearchManga").AsBoolean();
+                var methodName = "getSearchManga";
+                var hasMethod = engine.Invoke("__hasMethod", methodName).AsBoolean();
+                if (!hasMethod)
+                {
+                    methodName = "searchManga";
+                    hasMethod = engine.Invoke("__hasMethod", methodName).AsBoolean();
+                }
+
                 if (!hasMethod) return new List<Manga>();
 
-                var jsResult = engine.Invoke("__callMethod", "getSearchManga", query, page);
+                var jsResult = engine.Invoke("__callMethod", methodName, query, page);
                 return ParseMangaListFromJs(jsResult);
             });
         }
