@@ -440,32 +440,18 @@ namespace Yomic.ViewModels
                     }
                 }
 
-                bool isDateNewer = false;
-                DateTime remoteCommitUtc = DateTime.MinValue;
-                if (!string.IsNullOrEmpty(commitDateStr) && DateTime.TryParse(commitDateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal, out remoteCommitUtc))
-                {
-                    DateTime localTimeUtc = DateTime.MinValue;
-                    var localPath = existing.FilePath ?? _sourceManager.GetSourcePath(existing.Id);
-                    if (!string.IsNullOrEmpty(localPath) && File.Exists(localPath))
-                    {
-                        localTimeUtc = File.GetLastWriteTimeUtc(localPath);
-                    }
-
-                    isDateNewer = remoteCommitUtc > localTimeUtc.AddSeconds(5);
-                }
-
-                if (isVersionNewer || isDateNewer)
+                if (isVersionNewer)
                 {
                     existing.HasUpdate = true;
-                    if (remoteCommitUtc != DateTime.MinValue)
-                    {
-                        existing.RemoteCommitDateText = remoteCommitUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm");
-                    }
-                    else if (!string.IsNullOrEmpty(remoteVersion))
+                    if (!string.IsNullOrEmpty(remoteVersion))
                     {
                         existing.RemoteCommitDateText = $"v{remoteVersion}";
                     }
-                    LogService.Info("ExtensionsVM", $"Update available for {existing.Name} ({name})! Remote Ver: {remoteVersion}, Local Ver: {existing.Version}, Remote Commit: {remoteCommitUtc.ToLocalTime()}");
+                    LogService.Info("ExtensionsVM", $"Update available for {existing.Name} ({name})! Remote Ver: {remoteVersion}, Local Ver: {existing.Version}");
+                }
+                else
+                {
+                    existing.HasUpdate = false;
                 }
                 return;
             }
@@ -916,8 +902,8 @@ namespace Yomic.ViewModels
                         localTimeUtc = File.GetLastWriteTimeUtc(localPath);
                     }
 
-                    // Compare remote commit date vs local file write time
-                    if (remoteCommitUtc > localTimeUtc.AddSeconds(5))
+                    // Compare remote commit date vs local file write time (only if remote commit is significantly newer)
+                    if (remoteCommitUtc > localTimeUtc.AddDays(1))
                     {
                         item.HasUpdate = true;
                         item.RemoteCommitDateText = remoteCommitUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm");
