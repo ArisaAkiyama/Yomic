@@ -844,11 +844,6 @@ namespace Yomic.ViewModels
                         
                         if (res.StatusCode == System.Net.HttpStatusCode.Forbidden)
                         {
-                            if (!_isRateLimitedNoticeShown)
-                            {
-                                _isRateLimitedNoticeShown = true;
-                                _mainVM.ShowNotification("Batas permintaan GitHub (rate limit) tercapai. Coba lagi nanti.", NotificationType.Warning);
-                            }
                             break;
                         }
 
