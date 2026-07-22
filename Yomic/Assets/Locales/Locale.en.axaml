@@ -1,0 +1,367 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=netstandard">
+    <!-- Navigation Labels -->
+    <sys:String x:Key="String.Library">Library</sys:String>
+    <sys:String x:Key="String.Updates">Updates</sys:String>
+    <sys:String x:Key="String.Upcoming">Upcoming</sys:String>
+    <sys:String x:Key="String.History">History</sys:String>
+    <sys:String x:Key="String.Downloads">Downloads</sys:String>
+    <sys:String x:Key="String.BrowseSources">Browse Sources</sys:String>
+    <sys:String x:Key="String.Extensions">Extensions</sys:String>
+    <sys:String x:Key="String.SendFeedback">Send Feedback</sys:String>
+    <sys:String x:Key="String.Settings">Settings</sys:String>
+
+    <!-- Settings Titles & Descriptions -->
+    <sys:String x:Key="String.General">General</sys:String>
+    <sys:String x:Key="String.DarkMode">Dark Mode</sys:String>
+    <sys:String x:Key="String.DarkModeDesc">Use system dark theme preferences</sys:String>
+    <sys:String x:Key="String.OfflineMode">Offline Mode</sys:String>
+    <sys:String x:Key="String.OfflineModeDesc">Force application to use downloaded content only</sys:String>
+    <sys:String x:Key="String.ShowNsfwSources">Show NSFW Sources</sys:String>
+    <sys:String x:Key="String.ShowNsfwSourcesDesc">Display extensions with 18+ content in Browse</sys:String>
+    <sys:String x:Key="String.AutoUpdate">Auto-Update</sys:String>
+    <sys:String x:Key="String.AutoUpdateDesc">Check for updates automatically on startup</sys:String>
+    
+    <sys:String x:Key="String.AppLanguage">Language</sys:String>
+    <sys:String x:Key="String.AppLanguageDesc">Select application UI language (requires restart)</sys:String>
+
+    <!-- Dialogs & Buttons -->
+    <sys:String x:Key="String.Confirm">Confirm</sys:String>
+    <sys:String x:Key="String.Cancel">Cancel</sys:String>
+    <sys:String x:Key="String.RestartRequired">Restart Required</sys:String>
+    <sys:String x:Key="String.RestartMessage">The application needs to restart to apply the new language. Do you want to restart now?</sys:String>
+
+    <!-- Network Section -->
+    <sys:String x:Key="String.Network">Network</sys:String>
+    <sys:String x:Key="String.DnsOverHttps">DNS over HTTPS</sys:String>
+    <sys:String x:Key="String.DnsOverHttpsDesc">Bypass DNS blocking by resolving over HTTPS</sys:String>
+    <sys:String x:Key="String.Disabled">Disabled</sys:String>
+
+    <!-- Library Section -->
+    <sys:String x:Key="String.LibraryHeader">Library</sys:String>
+    <sys:String x:Key="String.AutoSyncLibrary">Auto-Sync Library</sys:String>
+    <sys:String x:Key="String.AutoSyncLibraryDesc">Automatically check for new chapters on startup</sys:String>
+    <sys:String x:Key="String.SmartUpdate">Smart Update</sys:String>
+    <sys:String x:Key="String.Recommended">Recommended</sys:String>
+    <sys:String x:Key="String.SmartUpdateDesc">Prioritize updating active manga and skip completed/hiatus titles to save bandwidth</sys:String>
+    <sys:String x:Key="String.BackgroundAutoUpdate">Background Auto-Update</sys:String>
+    <sys:String x:Key="String.BackgroundAutoUpdateDesc">Update library in the background without opening the app (Uses Windows Task Scheduler)</sys:String>
+    <sys:String x:Key="String.UpdateIntervalOff">Off (Manual Only)</sys:String>
+    <sys:String x:Key="String.UpdateInterval6h">Every 6 Hours</sys:String>
+    <sys:String x:Key="String.UpdateInterval12h">Every 12 Hours</sys:String>
+    <sys:String x:Key="String.UpdateInterval24h">Every 24 Hours</sys:String>
+    <sys:String x:Key="String.RefreshLibraryCovers">Refresh Library Covers</sys:String>
+    <sys:String x:Key="String.RefreshLibraryCoversDesc">Re-download cover thumbnails for all manga in your library</sys:String>
+    <sys:String x:Key="String.Refresh">Refresh</sys:String>
+
+    <!-- Security Section -->
+    <sys:String x:Key="String.Security">Security</sys:String>
+    <sys:String x:Key="String.BlurExplicitCovers">Blur Explicit Covers</sys:String>
+    <sys:String x:Key="String.BlurExplicitCoversDesc">Blur cover images containing explicit content in Library</sys:String>
+
+    <!-- Reader Section -->
+    <sys:String x:Key="String.Reader">Reader</sys:String>
+    <sys:String x:Key="String.PreloadNextChapter">Preload Next Chapter</sys:String>
+    <sys:String x:Key="String.PreloadNextChapterDesc">Download pages of the next chapter in the background when nearing the end of current chapter</sys:String>
+    <sys:String x:Key="String.AutoDownloadNextChapter">Auto Download Next Chapter</sys:String>
+    <sys:String x:Key="String.AutoDownloadNextChapterDesc">Automatically add the next chapter to the Downloads queue while reading</sys:String>
+    <sys:String x:Key="String.SkipFilteredChapters">Skip Filtered Chapters</sys:String>
+    <sys:String x:Key="String.SkipFilteredChaptersDesc">Automatically skip chapters that are filtered out in the manga details page while reading</sys:String>
+    <sys:String x:Key="String.ReaderPerformanceMode">Reader Performance Mode</sys:String>
+    <sys:String x:Key="String.ReaderPerformanceModeDesc">Optimize reader performance by limiting concurrent downloads (2) and image decodes (1) for smoother scrolling</sys:String>
+    <sys:String x:Key="String.MaxReaderCacheSize">Max Reader Cache Size</sys:String>
+    <sys:String x:Key="String.MaxReaderCacheSizeDesc">Automatically clear oldest reader cache files when the size limit is exceeded</sys:String>
+
+    <!-- Data & Storage Section -->
+    <sys:String x:Key="String.DataStorage">Data &amp; Storage</sys:String>
+    <sys:String x:Key="String.CreateBackup">Create Backup</sys:String>
+    <sys:String x:Key="String.CreateBackupDesc">Create a backup of your local database and settings</sys:String>
+    <sys:String x:Key="String.Backup">Backup</sys:String>
+    <sys:String x:Key="String.RestoreBackup">Restore Backup</sys:String>
+    <sys:String x:Key="String.RestoreBackupDesc">Restore data from a previously created backup file</sys:String>
+    <sys:String x:Key="String.Restore">Restore</sys:String>
+    <sys:String x:Key="String.ClearCacheCookies">Clear Cache &amp; Cookies</sys:String>
+    <sys:String x:Key="String.ClearCacheCookiesDesc">Free up memory and reset network connections</sys:String>
+    <sys:String x:Key="String.ClearCache">Clear Cache</sys:String>
+
+    <!-- Advanced Section -->
+    <sys:String x:Key="String.Advanced">Advanced</sys:String>
+    <sys:String x:Key="String.DatabaseStatistics">Database Statistics</sys:String>
+    <sys:String x:Key="String.DatabaseStatisticsDesc">Overview of your local manga database</sys:String>
+    <sys:String x:Key="String.OptimizeDb">Optimize DB</sys:String>
+    <sys:String x:Key="String.Manga">Manga</sys:String>
+    <sys:String x:Key="String.Chapters">Chapters</sys:String>
+    <sys:String x:Key="String.HistoryLabel">History</sys:String>
+    <sys:String x:Key="String.DbSize">DB Size</sys:String>
+    <sys:String x:Key="String.ExportAppLogs">Export App Logs</sys:String>
+    <sys:String x:Key="String.ExportAppLogsDesc">Save the application log file for bug reporting or troubleshooting</sys:String>
+    <sys:String x:Key="String.ExportLogs">Export Logs</sys:String>
+
+    <!-- Danger Zone Section -->
+    <sys:String x:Key="String.DangerZone">Danger Zone</sys:String>
+    <sys:String x:Key="String.ClearHistoryCache">Clear Read History &amp; Cache</sys:String>
+    <sys:String x:Key="String.ClearHistoryCacheDesc">Reset all chapters to unread status and free up memory</sys:String>
+    <sys:String x:Key="String.ClearAll">Clear All</sys:String>
+    <sys:String x:Key="String.ClearAllData">Clear All Data</sys:String>
+    <sys:String x:Key="String.ClearAllDataDesc">Irreversible action to clear local database</sys:String>
+    <sys:String x:Key="String.ResetData">Reset Data</sys:String>
+
+    <!-- About Section -->
+    <sys:String x:Key="String.About">About</sys:String>
+    <sys:String x:Key="String.AboutDesc1">Yomic is a free and open source web comic reader, designed for a premium desktop reading experience.</sys:String>
+    <sys:String x:Key="String.AboutDesc2">It aggregates content from popular sources, allowing you to read your favorite stories distraction-free.</sys:String>
+    <sys:String x:Key="String.VisitWebsite">Visit Website</sys:String>
+    
+    <!-- Status & Status Info (Dynamic C#) -->
+    <sys:String x:Key="String.OnlineStatus">Online</sys:String>
+    <sys:String x:Key="String.OfflineStatus">Offline</sys:String>
+    <sys:String x:Key="String.UpdateChecking">Checking...</sys:String>
+    <sys:String x:Key="String.UpdateAvailable">Update Available</sys:String>
+    <sys:String x:Key="String.UpdateDownloading">Downloading Update</sys:String>
+    <sys:String x:Key="String.UpdateInstalling">Installing...</sys:String>
+    <sys:String x:Key="String.UpdateFailed">Update Failed (Retry)</sys:String>
+    <sys:String x:Key="String.UpdateUpToDate">You are up to date!</sys:String>
+    <sys:String x:Key="String.UpdateCheck">Check for Updates</sys:String>
+    <sys:String x:Key="String.NeverBackedUp">Never backed up</sys:String>
+    <sys:String x:Key="String.LastBackup">Last backup</sys:String>
+
+    <!-- Library View Extra Localizations -->
+    <sys:String x:Key="String.SearchLibrary">Search library...</sys:String>
+    <sys:String x:Key="String.FilterByGenre">Filter by Genre</sys:String>
+    <sys:String x:Key="String.LibraryEmpty">Your library is empty.</sys:String>
+    <sys:String x:Key="String.LibraryEmptyDesc">Add manga from Browse section to start reading.</sys:String>
+    <sys:String x:Key="String.NoResultsFound">No results found</sys:String>
+    <sys:String x:Key="String.NoResultsFoundDesc">Try searching for something else.</sys:String>
+    <sys:String x:Key="String.ShowAll">Show All</sys:String>
+    <sys:String x:Key="String.UnreadOnly">Unread Only</sys:String>
+    <sys:String x:Key="String.OngoingOnly">Ongoing Only</sys:String>
+    <sys:String x:Key="String.CompletedOnly">Completed Only</sys:String>
+    <sys:String x:Key="String.DownloadedOnly">Downloaded Only</sys:String>
+    <sys:String x:Key="String.FilterBy">Filter by</sys:String>
+    <sys:String x:Key="String.LastReadRecently">Last Read (Recently)</sys:String>
+    <sys:String x:Key="String.MostUnread">Most Unread</sys:String>
+    <sys:String x:Key="String.DateModified">Date Modified</sys:String>
+
+    <!-- Updates View Extra Localizations -->
+    <sys:String x:Key="String.UpdatesHeader">Updates</sys:String>
+    <sys:String x:Key="String.ClearUpdates">Clear Updates</sys:String>
+    <sys:String x:Key="String.UpdatesEmpty">Updates is Empty</sys:String>
+    <sys:String x:Key="String.UpdatesEmptyDesc">Add manga to your library to see updates here.</sys:String>
+    <sys:String x:Key="String.NoRecentUpdates">No Recent Updates</sys:String>
+    <sys:String x:Key="String.NoRecentUpdatesDesc">New chapters from your library will appear here.</sys:String>
+    <sys:String x:Key="String.GoToLibrary">Go to Library</sys:String>
+    <sys:String x:Key="String.CheckNow">Check Now</sys:String>
+    <sys:String x:Key="String.NoInternetConnection">No Internet Connection</sys:String>
+    <sys:String x:Key="String.OfflineMessage">You are currently offline. Please check your network settings.</sys:String>
+    <sys:String x:Key="String.MassSyncWarning">Avoid excessive mass synchronization to prevent IP bans by bot protection (like Cloudflare).</sys:String>
+    <sys:String x:Key="String.MangaList.New">NEW</sys:String>
+
+    <!-- Upcoming View Extra Localizations -->
+    <sys:String x:Key="String.UpcomingHeader">Upcoming</sys:String>
+    <sys:String x:Key="String.UpcomingDesc">Predicted chapter releases based on historical updates</sys:String>
+    <sys:String x:Key="String.NoUpcomingManga">No Upcoming Manga</sys:String>
+    <sys:String x:Key="String.NoUpcomingMangaDesc">We don't have enough data to predict any upcoming chapters yet.</sys:String>
+    <sys:String x:Key="String.WaitingForChapter">Waiting for Chapter</sys:String>
+    <sys:String x:Key="String.WaitingForNewChapter">Waiting for New Chapter</sys:String>
+    <sys:String x:Key="String.Daily">Daily</sys:String>
+    <sys:String x:Key="String.Weekly">Weekly</sys:String>
+    <sys:String x:Key="String.BiWeekly">Bi-Weekly</sys:String>
+    <sys:String x:Key="String.Monthly">Monthly</sys:String>
+    <sys:String x:Key="String.Irregular">Irregular</sys:String>
+    <sys:String x:Key="String.Unknown">Unknown</sys:String>
+    <sys:String x:Key="String.Overdue">Overdue</sys:String>
+    <sys:String x:Key="String.TodayAt">Today at</sys:String>
+    <sys:String x:Key="String.TomorrowAt">Tomorrow at</sys:String>
+    <sys:String x:Key="String.DaysOverdue">days overdue</sys:String>
+    <sys:String x:Key="String.Group.DueSoon">Due Soon</sys:String>
+    <sys:String x:Key="String.Group.Upcoming">Upcoming</sys:String>
+    <sys:String x:Key="String.Group.Overdue">Overdue</sys:String>
+
+    <!-- Updates View Extra Localizations -->
+    <sys:String x:Key="String.Updates.ClearAll">Clear All</sys:String>
+    <sys:String x:Key="String.Updates.Sync">Sync Library</sys:String>
+    <sys:String x:Key="String.Updates.Warning">Avoid excessive mass synchronization to prevent IP bans by bot protection (like Cloudflare).</sys:String>
+    <sys:String x:Key="String.Updates.MarkPreviousRead">Mark previous as read</sys:String>
+    <sys:String x:Key="String.Updates.Empty">Updates is Empty</sys:String>
+    <sys:String x:Key="String.Updates.EmptyDesc">Add manga to your library to see updates here.</sys:String>
+    <sys:String x:Key="String.Updates.NoRecent">No Recent Updates</sys:String>
+    <sys:String x:Key="String.Updates.NoRecentDesc">New chapters from your library will appear here.</sys:String>
+    <sys:String x:Key="String.Updates.CheckNow">Check Now</sys:String>
+    <sys:String x:Key="String.Updates.Offline">No Internet Connection</sys:String>
+    <sys:String x:Key="String.Updates.OfflineDesc">You are currently offline. Please check your network settings.</sys:String>
+
+    <!-- Downloads View Extra Localizations -->
+    <sys:String x:Key="String.DownloadsHeader">Downloads</sys:String>
+    <sys:String x:Key="String.DownloadsDesc">Manage your ongoing and queued downloads</sys:String>
+    <sys:String x:Key="String.NoDownloads">No Downloads Yet</sys:String>
+    <sys:String x:Key="String.NoDownloadsDesc">Downloaded chapters will appear here.</sys:String>
+    <sys:String x:Key="String.ResumeAll">Resume All</sys:String>
+    <sys:String x:Key="String.PauseAll">Pause All</sys:String>
+    <sys:String x:Key="String.ClearCompleted">Clear Completed</sys:String>
+    <sys:String x:Key="String.InQueue">In Queue</sys:String>
+    <sys:String x:Key="String.Series">Series</sys:String>
+
+    <!-- History View Extra Localizations -->
+    <sys:String x:Key="String.HistoryHeader">History</sys:String>
+    <sys:String x:Key="String.NoHistory">No History Yet</sys:String>
+    <sys:String x:Key="String.NoHistoryDesc">Read some manga to see them here.</sys:String>
+    <sys:String x:Key="String.DeleteAllHistory">Delete All History</sys:String>
+    <sys:String x:Key="String.RefreshHistory">Refresh History</sys:String>
+    <sys:String x:Key="String.RemoveFromHistory">Remove from History</sys:String>
+
+    <!-- Download Statuses -->
+    <sys:String x:Key="String.Status.Downloading">Downloading</sys:String>
+    <sys:String x:Key="String.Status.Completed">Completed</sys:String>
+    <sys:String x:Key="String.Status.Error">Error</sys:String>
+    <sys:String x:Key="String.Status.Paused">Paused</sys:String>
+    <sys:String x:Key="String.Status.Queued">Queued</sys:String>
+    <sys:String x:Key="String.Status.Cancelled">Cancelled</sys:String>
+    <sys:String x:Key="String.Status.Retrying">Retrying</sys:String>
+
+    <!-- Browse View Extra Localizations -->
+    <sys:String x:Key="String.SearchSources">Search sources...</sys:String>
+    <sys:String x:Key="String.SupportedSource">Supported Source</sys:String>
+    <sys:String x:Key="String.NoSourcesFound">No Sources Found</sys:String>
+    <sys:String x:Key="String.NoSourcesFoundDesc">Try changing the language filter to see more sources.</sys:String>
+    <sys:String x:Key="String.BypassWindowWarning">Please do not close the browser window until finished.</sys:String>
+
+    <!-- Extensions View Extra Localizations -->
+    <sys:String x:Key="String.SearchExtensions">Search extensions...</sys:String>
+    <sys:String x:Key="String.Installed">Installed</sys:String>
+    <sys:String x:Key="String.Available">Available</sys:String>
+    <sys:String x:Key="String.NoExtensionsFound">No Extensions Found</sys:String>
+    <sys:String x:Key="String.NoExtensionsFoundDesc">Try adjusting your search or add a new extension.</sys:String>
+    <sys:String x:Key="String.VerifyCloudflare">Verify Cloudflare</sys:String>
+    <sys:String x:Key="String.Uninstall">Uninstall</sys:String>
+    <sys:String x:Key="String.Uninstalling">Uninstalling...</sys:String>
+    <sys:String x:Key="String.NewUpdateAvailable">Update Available</sys:String>
+    <sys:String x:Key="String.UpdateExtension">Update Extension</sys:String>
+    <sys:String x:Key="String.Update">Update</sys:String>
+
+    <!-- Dialog Confirmation & Warnings -->
+    <sys:String x:Key="String.Dialog.RestoreTitle">Restore Backup</sys:String>
+    <sys:String x:Key="String.Dialog.RestoreMsg">Restoring a backup will replace all your current database, library, and settings. Make sure you have a recent backup if needed. Do you want to continue?</sys:String>
+    <sys:String x:Key="String.Dialog.RestorePickerTitle">Restore Yomic Backup</sys:String>
+    <sys:String x:Key="String.Dialog.ClearDataTitle">Clear All Data</sys:String>
+    <sys:String x:Key="String.Dialog.ClearDataMsg">Are you absolutely sure you want to reset all data? This action is irreversible and will delete your entire local library and settings.</sys:String>
+    <sys:String x:Key="String.Dialog.ClearHistoryTitle">Clear Read History &amp; Cache</sys:String>
+    <sys:String x:Key="String.Dialog.ClearHistoryMsg">Are you sure you want to clear your reading history and image cache? All chapters will be marked as unread and memory will be freed up.</sys:String>
+    <sys:String x:Key="String.Dialog.DeleteDiskTitle">Delete from Disk</sys:String>
+    <sys:String x:Key="String.Dialog.DeleteDiskMsg">This will remove "{0}" from your library and permanently delete its downloaded chapters from disk. This action cannot be undone.</sys:String>
+    <sys:String x:Key="String.Dialog.DeleteDownloadsTitle">Delete All Downloads</sys:String>
+    <sys:String x:Key="String.Dialog.DeleteDownloadsMsg">This will permanently delete all downloaded chapters of "{0}" from disk. The manga will remain in your library. This action cannot be undone.</sys:String>
+    <sys:String x:Key="String.Dialog.DeleteCategoryTitle">Delete Category</sys:String>
+    <sys:String x:Key="String.Dialog.DeleteCategoryMsg">Are you sure you want to delete the category "{0}"? Mangas in this category will not be deleted.</sys:String>
+
+    <!-- Download All Dialog -->
+    <sys:String x:Key="String.Dialog.DownloadChapters">Download Chapters</sys:String>
+    <sys:String x:Key="String.Dialog.Total">Total</sys:String>
+    <sys:String x:Key="String.Dialog.ToDownload">To Download</sys:String>
+    <sys:String x:Key="String.Dialog.Unread">Unread</sys:String>
+    <sys:String x:Key="String.Dialog.DownloadAllOpt">Download all chapters</sys:String>
+    <sys:String x:Key="String.Dialog.DownloadUnreadOpt">Download unread chapters only</sys:String>
+    <sys:String x:Key="String.Dialog.SkipWarning">Downloaded chapters will be skipped. Selected chapters will be added to the Downloads queue.</sys:String>
+    <sys:String x:Key="String.Dialog.MassDownloadWarning">Mass Download Warning:&#x0a;Downloading more than 20 chapters at once may trigger Anti-Bot protection (like Cloudflare) on the source server. If your IP is blocked, you will be unable to read from this source temporarily.</sys:String>
+    <sys:String x:Key="String.Dialog.StartDownload">Start Download</sys:String>
+
+    <!-- Feedback Dialog -->
+    <sys:String x:Key="String.Feedback.Title">Send feedback</sys:String>
+    <sys:String x:Key="String.Feedback.Watermark">Tell us about your experience using this app...</sys:String>
+    <sys:String x:Key="String.Feedback.AttachScreenshot">Attach Screenshot</sys:String>
+    <sys:String x:Key="String.Feedback.AttachScreenshotWithCount">Attach Screenshot ({0}/{1})</sys:String>
+    <sys:String x:Key="String.Feedback.RemoveTooltip">Remove screenshot</sys:String>
+    <sys:String x:Key="String.Feedback.PrivacyText">Your feedback is anonymous and helps us improve Yomic. Only your message and attached screenshots will be sent. Your personal messages and library stay private on your device.</sys:String>
+    <sys:String x:Key="String.Feedback.Submit">Submit</sys:String>
+    <sys:String x:Key="String.Feedback.Category.BugReport">Bug Report</sys:String>
+    <sys:String x:Key="String.Feedback.Category.FeatureRequest">Feature Request</sys:String>
+    <sys:String x:Key="String.Feedback.Category.Question">Question</sys:String>
+    <sys:String x:Key="String.Feedback.PickerNotAvailable">Screenshot picker is not available.</sys:String>
+    <sys:String x:Key="String.Feedback.MaxScreenshotsError">You can attach up to {0} screenshots.</sys:String>
+    <sys:String x:Key="String.Feedback.ScreenshotsAttached">{0} screenshot(s) attached.</sys:String>
+    <sys:String x:Key="String.Feedback.UrlNotConfigured">Feedback URL is not configured.</sys:String>
+    <sys:String x:Key="String.Feedback.SuccessMessage">Feedback sent successfully! Thank you.</sys:String>
+    <sys:String x:Key="String.Feedback.FailedMessage">Failed to send feedback. Please try again later.</sys:String>
+    <sys:String x:Key="String.Feedback.ErrorMessage">An error occurred while sending feedback.</sys:String>
+    <sys:String x:Key="String.Feedback.LimitReached">You can only send feedback once a day.</sys:String>
+    <sys:String x:Key="String.Ok">OK</sys:String>
+    
+    <!-- Crash Report Window -->
+    <sys:String x:Key="String.CrashReport.Title">Event Viewer Crash Data</sys:String>
+    <sys:String x:Key="String.CrashReport.Description">Send feedback (or view the crash log generated by Yomic below):</sys:String>
+
+    <!-- Source Feed / Browse Source Pagination & Search -->
+    <sys:String x:Key="String.BrowseSource">Browse Source</sys:String>
+    <sys:String x:Key="String.SearchManga">Search manga...</sys:String>
+    <sys:String x:Key="String.Previous">Previous</sys:String>
+    <sys:String x:Key="String.Next">Next</sys:String>
+    <sys:String x:Key="String.Go">Go</sys:String>
+    <sys:String x:Key="String.JumpToPage">Jump to Page</sys:String>
+    <sys:String x:Key="String.JumpToPageTooltip">Jump to a specific page</sys:String>
+    <sys:String x:Key="String.EnterPageWatermark">Enter page #...</sys:String>
+    <sys:String x:Key="String.PageInfoFormat">Page {0} of {1}</sys:String>
+
+    <!-- Time & Time Ago Groups -->
+    <sys:String x:Key="String.TimeHeader.Today">Today</sys:String>
+    <sys:String x:Key="String.TimeHeader.Yesterday">Yesterday</sys:String>
+    <sys:String x:Key="String.TimeHeader.ThisWeek">This Week</sys:String>
+    <sys:String x:Key="String.TimeHeader.ThisMonth">This Month</sys:String>
+    <sys:String x:Key="String.TimeHeader.Older">Older</sys:String>
+
+    <sys:String x:Key="String.TimeAgo.JustNow">Just now</sys:String>
+    <sys:String x:Key="String.TimeAgo.Unknown">Unknown</sys:String>
+    <sys:String x:Key="String.TimeAgo.Minutes">{0}m ago</sys:String>
+    <sys:String x:Key="String.TimeAgo.Hours">{0}h ago</sys:String>
+    <sys:String x:Key="String.TimeAgo.Days">{0}d ago</sys:String>
+
+    <!-- General Badges & Actions -->
+    <sys:String x:Key="String.Badge.New">NEW</sys:String>
+    <sys:String x:Key="String.InLibrary">In Library</sys:String>
+    <sys:String x:Key="String.AddToLibrary">Add to Library</sys:String>
+    <sys:String x:Key="String.Sort.OldestFirst">Oldest First</sys:String>
+    <sys:String x:Key="String.Sort.NewestFirst">Newest First</sys:String>
+    <sys:String x:Key="String.LoadingMore">Loading more...</sys:String>
+    
+    <!-- Categories Create / Edit -->
+    <sys:String x:Key="String.Category.CreateCategory">Create Category</sys:String>
+    <sys:String x:Key="String.Category.EditCategory">Edit Category</sys:String>
+    <sys:String x:Key="String.Category.Watermark">Category name...</sys:String>
+    <sys:String x:Key="String.Add">Add</sys:String>
+    <sys:String x:Key="String.Save">Save</sys:String>
+    <sys:String x:Key="String.AdditionalChaptersFormat">+{0} more</sys:String>
+
+    <!-- Manga Statuses -->
+    <sys:String x:Key="String.Status.Ongoing">Ongoing</sys:String>
+    <sys:String x:Key="String.Status.Licensed">Licensed</sys:String>
+    <sys:String x:Key="String.Status.PublishingFinished">Publishing Finished</sys:String>
+    <sys:String x:Key="String.Status.Hiatus">Hiatus</sys:String>
+    <sys:String x:Key="String.Status.Unknown">Unknown</sys:String>
+
+    <!-- Additional Category Dialog localizations -->
+    <sys:String x:Key="String.Category.ManageCategories">Manage Categories</sys:String>
+    <sys:String x:Key="String.Category.EmptyState">No custom categories yet. Create your first category below!</sys:String>
+    <sys:String x:Key="String.Category.SetAsDefault">Set as Default</sys:String>
+    <sys:String x:Key="String.Category.CancelEdit">Cancel Edit</sys:String>
+    <sys:String x:Key="String.Category.Color">Color:</sys:String>
+    <sys:String x:Key="String.Category.AlreadyExists">A category with this name already exists.</sys:String>
+    <sys:String x:Key="String.Edit">Edit</sys:String>
+    <sys:String x:Key="String.Delete">Delete</sys:String>
+    
+    <!-- Manga Detail View Tooltips -->
+    <sys:String x:Key="String.MangaDetail.ToggleBookmark">Toggle Bookmark</sys:String>
+    <sys:String x:Key="String.MangaDetail.DownloadChapter">Download Chapter</sys:String>
+    <sys:String x:Key="String.MangaDetail.DeleteDownload">Delete Download</sys:String>
+    <sys:String x:Key="String.Category.EditCategories">Edit Categories</sys:String>
+
+    <!-- Welcome View Localizations -->
+    <sys:String x:Key="String.Welcome.Title">Welcome to Yomic</sys:String>
+    <sys:String x:Key="String.Welcome.Subtitle">The ultimate manga reader for your desktop.</sys:String>
+    <sys:String x:Key="String.Welcome.GoToLibrary">Go to Library</sys:String>
+    <sys:String x:Key="String.Welcome.StorageTitle">Where should we store your downloads?</sys:String>
+    <sys:String x:Key="String.Welcome.StorageSubtitle">Choose a location for your manga library.</sys:String>
+    <sys:String x:Key="String.Welcome.ExtensionTitle">Install your first extension</sys:String>
+    <sys:String x:Key="String.Welcome.AllSet">All Set!</sys:String>
+    <sys:String x:Key="String.Welcome.ReadyDesc">You are ready to start reading.</sys:String>
+    <sys:String x:Key="String.Change">Change</sys:String>
+    <sys:String x:Key="String.Install">Install</sys:String>
+</ResourceDictionary>

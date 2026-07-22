@@ -44,6 +44,30 @@ namespace Yomic.ViewModels
         }
 
         public bool HasFileSize => !string.IsNullOrEmpty(FileSizeText);
+
+        private bool _hasUpdate;
+        public bool HasUpdate
+        {
+            get => _hasUpdate;
+            set => this.RaiseAndSetIfChanged(ref _hasUpdate, value);
+        }
+
+        private string _updateBadgeText = "Pembaruan Baru";
+        public string UpdateBadgeText
+        {
+            get => _updateBadgeText;
+            set => this.RaiseAndSetIfChanged(ref _updateBadgeText, value);
+        }
+
+        private string? _remoteCommitDateText;
+        public string? RemoteCommitDateText
+        {
+            get => _remoteCommitDateText;
+            set => this.RaiseAndSetIfChanged(ref _remoteCommitDateText, value);
+        }
+
+        public string? RemoteDownloadUrl { get; set; }
+        public DateTime? LocalWriteTimeUtc { get; set; }
         
         // Multi-Language Support
         public ObservableCollection<Bitmap> LanguageFlags { get; } = new();
@@ -237,6 +261,7 @@ namespace Yomic.ViewModels
         }
 
         public ReactiveCommand<ExtensionItem, Unit> DownloadExtensionCommand { get; }
+        public ReactiveCommand<ExtensionItem, Unit> UpdateExtensionCommand { get; }
 
         public ExtensionsViewModel(MainWindowViewModel mainVM, SourceManager sourceManager)
         {
@@ -263,6 +288,7 @@ namespace Yomic.ViewModels
             VerifyExtensionCommand = ReactiveCommand.Create<ExtensionItem>(VerifyExtension);
             AddExtensionCommand = ReactiveCommand.Create(AddExtension);
             DownloadExtensionCommand = ReactiveCommand.Create<ExtensionItem>(DownloadExtension);
+            UpdateExtensionCommand = ReactiveCommand.Create<ExtensionItem>(UpdateExtension);
             
             SetLanguageFilterCommand = ReactiveCommand.Create<string>(lang =>
             {
@@ -313,6 +339,7 @@ namespace Yomic.ViewModels
                         }
                     }
                     FilterExtensions();
+                    _ = CheckExtensionUpdatesAsync();
                 }
             }
             catch (Exception ex)
@@ -702,6 +729,131 @@ namespace Yomic.ViewModels
 
                 item.IsDownloading = false;
                 item.DownloadProgressText = "Downloading...";
+            }
+        }
+
+        private async System.Threading.Tasks.Task CheckExtensionUpdatesAsync()
+        {
+            if (IsOffline) return;
+
+            var installedItems = _allExtensionsCache.Where(x => x.IsInstalled).ToList();
+            if (installedItems.Count == 0) return;
+
+            foreach (var item in installedItems)
+            {
+                try
+                {
+                    var fileName = item.Name.EndsWith(".js", StringComparison.OrdinalIgnoreCase) ? item.Name : $"{item.Name}.js";
+                    var url = $"https://api.github.com/repos/ArisaAkiyama/extension-yomic/commits?path={Uri.EscapeDataString(fileName)}&per_page=1";
+                    
+                    if (!_httpClient.DefaultRequestHeaders.UserAgent.Any())
+                    {
+                        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Yomic-Desktop-App");
+                    }
+
+                    var response = await _httpClient.GetStringAsync(url);
+                    using var doc = System.Text.Json.JsonDocument.Parse(response);
+                    
+                    if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0)
+                    {
+                        var firstCommit = doc.RootElement[0];
+                        if (firstCommit.TryGetProperty("commit", out var commitObj) &&
+                            commitObj.TryGetProperty("committer", out var committerObj) &&
+                            committerObj.TryGetProperty("date", out var dateProp))
+                        {
+                            var dateStr = dateProp.GetString();
+                            if (!string.IsNullOrEmpty(dateStr) && DateTime.TryParse(dateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal, out DateTime remoteCommitUtc))
+                            {
+                                DateTime localTimeUtc = DateTime.MinValue;
+                                var localPath = item.FilePath ?? _sourceManager.GetSourcePath(item.Id);
+                                if (!string.IsNullOrEmpty(localPath) && File.Exists(localPath))
+                                {
+                                    localTimeUtc = File.GetLastWriteTimeUtc(localPath);
+                                }
+
+                                // Compare remote commit date vs local file write time
+                                if (remoteCommitUtc > localTimeUtc.AddSeconds(5))
+                                {
+                                    item.HasUpdate = true;
+                                    item.RemoteCommitDateText = remoteCommitUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm");
+                                    if (string.IsNullOrEmpty(item.RemoteDownloadUrl))
+                                    {
+                                        item.RemoteDownloadUrl = $"https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/main/{fileName}";
+                                    }
+
+                                    LogService.Info("ExtensionsVM", $"Update available for {item.Name}! GitHub Commit: {remoteCommitUtc}, Local file write time: {localTimeUtc}");
+                                }
+                                else
+                                {
+                                    item.HasUpdate = false;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to check updates for {item.Name}: {ex.Message}");
+                }
+            }
+
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => FilterExtensions());
+        }
+
+        private async void UpdateExtension(ExtensionItem item)
+        {
+            if (item == null) return;
+            var fileName = item.Name.EndsWith(".js", StringComparison.OrdinalIgnoreCase) ? item.Name : $"{item.Name}.js";
+            var downloadUrl = item.RemoteDownloadUrl ?? $"https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/main/{fileName}";
+
+            item.IsInstalling = true;
+            item.DownloadProgress = 0;
+            item.DownloadProgressText = "Updating...";
+
+            try
+            {
+                _mainVM.ShowNotification($"Updating {item.Name}...", NotificationType.Info);
+
+                if (!_httpClient.DefaultRequestHeaders.UserAgent.Any())
+                {
+                    _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Yomic-Desktop-App");
+                }
+
+                var jsCode = await _httpClient.GetStringAsync(downloadUrl);
+                if (string.IsNullOrWhiteSpace(jsCode))
+                {
+                    _mainVM.ShowNotification($"Update failed for {item.Name}: Empty script", NotificationType.Error);
+                    return;
+                }
+
+                var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var pluginsDir = Path.Combine(appData, "Yomic", "Plugins");
+                if (!Directory.Exists(pluginsDir)) Directory.CreateDirectory(pluginsDir);
+
+                var localPath = Path.Combine(pluginsDir, fileName);
+                await File.WriteAllTextAsync(localPath, jsCode);
+
+                // Reload instance in SourceManager
+                var newSource = new JsMangaSource(localPath);
+                _sourceManager.AddSource(newSource);
+
+                item.Version = newSource.Version;
+                item.SourceInstance = newSource;
+                item.FilePath = localPath;
+                item.IsInstalled = true;
+                item.HasUpdate = false;
+                item.LocalWriteTimeUtc = File.GetLastWriteTimeUtc(localPath);
+
+                _mainVM.ShowNotification($"{item.Name} v{newSource.Version} updated successfully!", NotificationType.Success);
+                FilterExtensions();
+            }
+            catch (Exception ex)
+            {
+                _mainVM.ShowNotification($"Update failed for {item.Name}: {ex.Message}", NotificationType.Error);
+            }
+            finally
+            {
+                item.IsInstalling = false;
             }
         }
 

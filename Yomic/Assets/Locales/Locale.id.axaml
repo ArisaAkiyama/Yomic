@@ -1,0 +1,367 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=netstandard">
+    <!-- Navigation Labels -->
+    <sys:String x:Key="String.Library">Perpustakaan</sys:String>
+    <sys:String x:Key="String.Updates">Pembaruan</sys:String>
+    <sys:String x:Key="String.Upcoming">Kalender</sys:String>
+    <sys:String x:Key="String.History">Riwayat</sys:String>
+    <sys:String x:Key="String.Downloads">Unduhan</sys:String>
+    <sys:String x:Key="String.BrowseSources">Jelajahi Sumber</sys:String>
+    <sys:String x:Key="String.Extensions">Ekstensi</sys:String>
+    <sys:String x:Key="String.SendFeedback">Kirim Masukan</sys:String>
+    <sys:String x:Key="String.Settings">Pengaturan</sys:String>
+
+    <!-- Settings Titles & Descriptions -->
+    <sys:String x:Key="String.General">Umum</sys:String>
+    <sys:String x:Key="String.DarkMode">Mode Gelap</sys:String>
+    <sys:String x:Key="String.DarkModeDesc">Gunakan preferensi tema gelap sistem</sys:String>
+    <sys:String x:Key="String.OfflineMode">Mode Offline</sys:String>
+    <sys:String x:Key="String.OfflineModeDesc">Paksa aplikasi untuk hanya menggunakan konten terunduh</sys:String>
+    <sys:String x:Key="String.ShowNsfwSources">Tampilkan Sumber NSFW</sys:String>
+    <sys:String x:Key="String.ShowNsfwSourcesDesc">Tampilkan ekstensi dengan konten 18+ di Jelajahi</sys:String>
+    <sys:String x:Key="String.AutoUpdate">Pembaruan Otomatis</sys:String>
+    <sys:String x:Key="String.AutoUpdateDesc">Periksa pembaruan secara otomatis saat aplikasi dimulai</sys:String>
+    
+    <sys:String x:Key="String.AppLanguage">Bahasa</sys:String>
+    <sys:String x:Key="String.AppLanguageDesc">Pilih bahasa antarmuka pengguna aplikasi (memerlukan restart)</sys:String>
+
+    <!-- Dialogs & Buttons -->
+    <sys:String x:Key="String.Confirm">Konfirmasi</sys:String>
+    <sys:String x:Key="String.Cancel">Batal</sys:String>
+    <sys:String x:Key="String.RestartRequired">Restart Diperlukan</sys:String>
+    <sys:String x:Key="String.RestartMessage">Aplikasi perlu dimulai ulang untuk menerapkan bahasa baru. Apakah Anda ingin restart sekarang?</sys:String>
+
+    <!-- Network Section -->
+    <sys:String x:Key="String.Network">Jaringan</sys:String>
+    <sys:String x:Key="String.DnsOverHttps">DNS melalui HTTPS</sys:String>
+    <sys:String x:Key="String.DnsOverHttpsDesc">Bypass pemblokiran DNS dengan penyelesaian melalui HTTPS</sys:String>
+    <sys:String x:Key="String.Disabled">Dinonaktifkan</sys:String>
+
+    <!-- Library Section -->
+    <sys:String x:Key="String.LibraryHeader">Perpustakaan</sys:String>
+    <sys:String x:Key="String.AutoSyncLibrary">Sinkronisasi Otomatis</sys:String>
+    <sys:String x:Key="String.AutoSyncLibraryDesc">Periksa bab baru secara otomatis saat startup aplikasi</sys:String>
+    <sys:String x:Key="String.SmartUpdate">Pembaruan Cerdas</sys:String>
+    <sys:String x:Key="String.Recommended">Direkomendasikan</sys:String>
+    <sys:String x:Key="String.SmartUpdateDesc">Prioritaskan memperbarui manga aktif dan lewati komik selesai/hiatus untuk menghemat kuota</sys:String>
+    <sys:String x:Key="String.BackgroundAutoUpdate">Pembaruan Latar Belakang</sys:String>
+    <sys:String x:Key="String.BackgroundAutoUpdateDesc">Perbarui perpustakaan di latar belakang tanpa membuka aplikasi (Menggunakan Penjadwal Tugas Windows)</sys:String>
+    <sys:String x:Key="String.UpdateIntervalOff">Nonaktif (Hanya Manual)</sys:String>
+    <sys:String x:Key="String.UpdateInterval6h">Setiap 6 Jam</sys:String>
+    <sys:String x:Key="String.UpdateInterval12h">Setiap 12 Jam</sys:String>
+    <sys:String x:Key="String.UpdateInterval24h">Setiap 24 Jam</sys:String>
+    <sys:String x:Key="String.RefreshLibraryCovers">Segarkan Sampul</sys:String>
+    <sys:String x:Key="String.RefreshLibraryCoversDesc">Unduh ulang gambar sampul untuk semua manga di perpustakaan Anda</sys:String>
+    <sys:String x:Key="String.Refresh">Segarkan</sys:String>
+
+    <!-- Security Section -->
+    <sys:String x:Key="String.Security">Keamanan</sys:String>
+    <sys:String x:Key="String.BlurExplicitCovers">Samarkan Sampul Eksplisit</sys:String>
+    <sys:String x:Key="String.BlurExplicitCoversDesc">Samarkan gambar sampul yang mengandung konten eksplisit di Perpustakaan</sys:String>
+
+    <!-- Reader Section -->
+    <sys:String x:Key="String.Reader">Pembaca</sys:String>
+    <sys:String x:Key="String.PreloadNextChapter">Muat Awal Bab Berikutnya</sys:String>
+    <sys:String x:Key="String.PreloadNextChapterDesc">Unduh halaman bab berikutnya di latar belakang saat mendekati akhir bab saat ini</sys:String>
+    <sys:String x:Key="String.AutoDownloadNextChapter">Unduh Otomatis Bab Berikutnya</sys:String>
+    <sys:String x:Key="String.AutoDownloadNextChapterDesc">Secara otomatis menambahkan bab berikutnya ke antrean Unduhan saat membaca</sys:String>
+    <sys:String x:Key="String.SkipFilteredChapters">Lewati Bab yang Difilter</sys:String>
+    <sys:String x:Key="String.SkipFilteredChaptersDesc">Lewati bab yang difilter di halaman detail manga secara otomatis saat membaca</sys:String>
+    <sys:String x:Key="String.ReaderPerformanceMode">Mode Performa Pembaca</sys:String>
+    <sys:String x:Key="String.ReaderPerformanceModeDesc">Optimalkan performa pembaca dengan membatasi unduhan bersamaan (2) dan dekode gambar (1) untuk kenyamanan membaca</sys:String>
+    <sys:String x:Key="String.MaxReaderCacheSize">Ukuran Cache Maksimum Pembaca</sys:String>
+    <sys:String x:Key="String.MaxReaderCacheSizeDesc">Hapus cache pembaca tertua secara otomatis ketika batas ukuran terlampaui</sys:String>
+
+    <!-- Data & Storage Section -->
+    <sys:String x:Key="String.DataStorage">Data &amp; Penyimpanan</sys:String>
+    <sys:String x:Key="String.CreateBackup">Buat Cadangan</sys:String>
+    <sys:String x:Key="String.CreateBackupDesc">Buat salinan cadangan basis data lokal dan pengaturan Anda</sys:String>
+    <sys:String x:Key="String.Backup">Cadangkan</sys:String>
+    <sys:String x:Key="String.RestoreBackup">Pulihkan Cadangan</sys:String>
+    <sys:String x:Key="String.RestoreBackupDesc">Pulihkan data dari file cadangan yang dibuat sebelumnya</sys:String>
+    <sys:String x:Key="String.Restore">Pulihkan</sys:String>
+    <sys:String x:Key="String.ClearCacheCookies">Hapus Cache &amp; Cookie</sys:String>
+    <sys:String x:Key="String.ClearCacheCookiesDesc">Kosongkan memori dan setel ulang koneksi jaringan</sys:String>
+    <sys:String x:Key="String.ClearCache">Hapus Cache</sys:String>
+
+    <!-- Advanced Section -->
+    <sys:String x:Key="String.Advanced">Tingkat Lanjut</sys:String>
+    <sys:String x:Key="String.DatabaseStatistics">Statistik Basis Data</sys:String>
+    <sys:String x:Key="String.DatabaseStatisticsDesc">Ikhtisar basis data manga lokal Anda</sys:String>
+    <sys:String x:Key="String.OptimizeDb">Optimalkan DB</sys:String>
+    <sys:String x:Key="String.Manga">Manga</sys:String>
+    <sys:String x:Key="String.Chapters">Bab</sys:String>
+    <sys:String x:Key="String.HistoryLabel">Riwayat</sys:String>
+    <sys:String x:Key="String.DbSize">Ukuran DB</sys:String>
+    <sys:String x:Key="String.ExportAppLogs">Ekspor Log Aplikasi</sys:String>
+    <sys:String x:Key="String.ExportAppLogsDesc">Simpan file log aplikasi untuk pelaporan bug atau pemecahan masalah</sys:String>
+    <sys:String x:Key="String.ExportLogs">Ekspor Log</sys:String>
+
+    <!-- Danger Zone Section -->
+    <sys:String x:Key="String.DangerZone">Zona Bahaya</sys:String>
+    <sys:String x:Key="String.ClearHistoryCache">Hapus Riwayat Baca &amp; Cache</sys:String>
+    <sys:String x:Key="String.ClearHistoryCacheDesc">Setel ulang semua bab ke status belum dibaca dan bebaskan memori</sys:String>
+    <sys:String x:Key="String.ClearAll">Hapus Semua</sys:String>
+    <sys:String x:Key="String.ClearAllData">Hapus Semua Data</sys:String>
+    <sys:String x:Key="String.ClearAllDataDesc">Tindakan tidak dapat dibatalkan untuk menghapus basis data lokal</sys:String>
+    <sys:String x:Key="String.ResetData">Setel Ulang Data</sys:String>
+
+    <!-- About Section -->
+    <sys:String x:Key="String.About">Tentang</sys:String>
+    <sys:String x:Key="String.AboutDesc1">Yomic adalah pembaca komik web gratis dan bersumber terbuka, dirancang untuk pengalaman membaca desktop yang premium.</sys:String>
+    <sys:String x:Key="String.AboutDesc2">Aplikasi ini mengumpulkan konten dari sumber populer, memungkinkan Anda membaca cerita favorit tanpa gangguan iklan.</sys:String>
+    <sys:String x:Key="String.VisitWebsite">Kunjungi Situs</sys:String>
+    
+    <!-- Status & Status Info (Dynamic C#) -->
+    <sys:String x:Key="String.OnlineStatus">Online</sys:String>
+    <sys:String x:Key="String.OfflineStatus">Offline</sys:String>
+    <sys:String x:Key="String.UpdateChecking">Memeriksa...</sys:String>
+    <sys:String x:Key="String.UpdateAvailable">Pembaruan Tersedia</sys:String>
+    <sys:String x:Key="String.UpdateDownloading">Mengunduh Pembaruan</sys:String>
+    <sys:String x:Key="String.UpdateInstalling">Memasang...</sys:String>
+    <sys:String x:Key="String.UpdateFailed">Pembaruan Gagal (Coba Lagi)</sys:String>
+    <sys:String x:Key="String.UpdateUpToDate">Versi aplikasi sudah terbaru!</sys:String>
+    <sys:String x:Key="String.UpdateCheck">Periksa Pembaruan</sys:String>
+    <sys:String x:Key="String.NeverBackedUp">Belum pernah dicadangkan</sys:String>
+    <sys:String x:Key="String.LastBackup">Cadangan terakhir</sys:String>
+
+    <!-- Library View Extra Localizations -->
+    <sys:String x:Key="String.SearchLibrary">Cari di perpustakaan...</sys:String>
+    <sys:String x:Key="String.FilterByGenre">Filter berdasarkan Genre</sys:String>
+    <sys:String x:Key="String.LibraryEmpty">Perpustakaan Anda kosong.</sys:String>
+    <sys:String x:Key="String.LibraryEmptyDesc">Tambahkan manga dari bagian Jelajahi untuk mulai membaca.</sys:String>
+    <sys:String x:Key="String.NoResultsFound">Hasil tidak ditemukan</sys:String>
+    <sys:String x:Key="String.NoResultsFoundDesc">Coba cari sesuatu yang lain.</sys:String>
+    <sys:String x:Key="String.ShowAll">Tampilkan Semua</sys:String>
+    <sys:String x:Key="String.UnreadOnly">Belum Dibaca</sys:String>
+    <sys:String x:Key="String.OngoingOnly">Sedang Berjalan</sys:String>
+    <sys:String x:Key="String.CompletedOnly">Tamat</sys:String>
+    <sys:String x:Key="String.DownloadedOnly">Terunduh</sys:String>
+    <sys:String x:Key="String.FilterBy">Filter berdasarkan</sys:String>
+    <sys:String x:Key="String.LastReadRecently">Terakhir Dibaca</sys:String>
+    <sys:String x:Key="String.MostUnread">Paling Banyak Belum Dibaca</sys:String>
+    <sys:String x:Key="String.DateModified">Tanggal Diubah</sys:String>
+
+    <!-- Updates View Extra Localizations -->
+    <sys:String x:Key="String.UpdatesHeader">Pembaruan</sys:String>
+    <sys:String x:Key="String.ClearUpdates">Hapus Pembaruan</sys:String>
+    <sys:String x:Key="String.UpdatesEmpty">Pembaruan Kosong</sys:String>
+    <sys:String x:Key="String.UpdatesEmptyDesc">Tambahkan manga ke perpustakaan Anda untuk melihat pembaruan di sini.</sys:String>
+    <sys:String x:Key="String.NoRecentUpdates">Tidak Ada Pembaruan Terkini</sys:String>
+    <sys:String x:Key="String.NoRecentUpdatesDesc">Bab baru dari perpustakaan Anda akan muncul di sini.</sys:String>
+    <sys:String x:Key="String.GoToLibrary">Buka Perpustakaan</sys:String>
+    <sys:String x:Key="String.CheckNow">Periksa Sekarang</sys:String>
+    <sys:String x:Key="String.NoInternetConnection">Tidak Ada Koneksi Internet</sys:String>
+    <sys:String x:Key="String.OfflineMessage">Anda sedang offline. Silakan periksa pengaturan jaringan Anda.</sys:String>
+    <sys:String x:Key="String.MassSyncWarning">Hindari sinkronisasi massal berlebihan untuk mencegah pemblokiran IP oleh perlindungan bot (seperti Cloudflare).</sys:String>
+    <sys:String x:Key="String.MangaList.New">BARU</sys:String>
+
+    <!-- Upcoming View Extra Localizations -->
+    <sys:String x:Key="String.UpcomingHeader">Kalender</sys:String>
+    <sys:String x:Key="String.UpcomingDesc">Prediksi perilisan bab berdasarkan pembaruan riwayat</sys:String>
+    <sys:String x:Key="String.NoUpcomingManga">Tidak Ada Komik Mendatang</sys:String>
+    <sys:String x:Key="String.NoUpcomingMangaDesc">Kami belum memiliki cukup data untuk memprediksi bab mendatang.</sys:String>
+    <sys:String x:Key="String.WaitingForChapter">Menunggu Bab</sys:String>
+    <sys:String x:Key="String.WaitingForNewChapter">Menunggu Bab Baru</sys:String>
+    <sys:String x:Key="String.Daily">Harian</sys:String>
+    <sys:String x:Key="String.Weekly">Mingguan</sys:String>
+    <sys:String x:Key="String.BiWeekly">Dua Mingguan</sys:String>
+    <sys:String x:Key="String.Monthly">Bulanan</sys:String>
+    <sys:String x:Key="String.Irregular">Tidak Teratur</sys:String>
+    <sys:String x:Key="String.Unknown">Tidak Diketahui</sys:String>
+    <sys:String x:Key="String.Overdue">Terlambat</sys:String>
+    <sys:String x:Key="String.TodayAt">Hari ini pukul</sys:String>
+    <sys:String x:Key="String.TomorrowAt">Besok pukul</sys:String>
+    <sys:String x:Key="String.DaysOverdue">hari terlambat</sys:String>
+    <sys:String x:Key="String.Group.DueSoon">Segera Tiba</sys:String>
+    <sys:String x:Key="String.Group.Upcoming">Mendatang</sys:String>
+    <sys:String x:Key="String.Group.Overdue">Terlambat</sys:String>
+
+    <!-- Updates View Extra Localizations -->
+    <sys:String x:Key="String.Updates.ClearAll">Bersihkan Semua</sys:String>
+    <sys:String x:Key="String.Updates.Sync">Sinkronkan Perpustakaan</sys:String>
+    <sys:String x:Key="String.Updates.Warning">Hindari sinkronisasi massal berlebihan untuk mencegah pemblokiran IP oleh perlindungan bot (seperti Cloudflare).</sys:String>
+    <sys:String x:Key="String.Updates.MarkPreviousRead">Tandai sebelumnya sebagai sudah dibaca</sys:String>
+    <sys:String x:Key="String.Updates.Empty">Pembaruan Kosong</sys:String>
+    <sys:String x:Key="String.Updates.EmptyDesc">Tambahkan manga ke perpustakaan Anda untuk melihat pembaruan di sini.</sys:String>
+    <sys:String x:Key="String.Updates.NoRecent">Tidak Ada Pembaruan Terkini</sys:String>
+    <sys:String x:Key="String.Updates.NoRecentDesc">Bab baru dari perpustakaan Anda akan muncul di sini.</sys:String>
+    <sys:String x:Key="String.Updates.CheckNow">Periksa Sekarang</sys:String>
+    <sys:String x:Key="String.Updates.Offline">Tidak Ada Koneksi Internet</sys:String>
+    <sys:String x:Key="String.Updates.OfflineDesc">Anda sedang offline. Silakan periksa pengaturan jaringan Anda.</sys:String>
+
+    <!-- Downloads View Extra Localizations -->
+    <sys:String x:Key="String.DownloadsHeader">Unduhan</sys:String>
+    <sys:String x:Key="String.DownloadsDesc">Kelola unduhan Anda yang sedang berlangsung dan dalam antrean</sys:String>
+    <sys:String x:Key="String.NoDownloads">Belum Ada Unduhan</sys:String>
+    <sys:String x:Key="String.NoDownloadsDesc">Bab yang diunduh akan muncul di sini.</sys:String>
+    <sys:String x:Key="String.ResumeAll">Lanjutkan Semua</sys:String>
+    <sys:String x:Key="String.PauseAll">Jeda Semua</sys:String>
+    <sys:String x:Key="String.ClearCompleted">Bersihkan yang Selesai</sys:String>
+    <sys:String x:Key="String.InQueue">Dalam Antrean</sys:String>
+    <sys:String x:Key="String.Series">Seri</sys:String>
+
+    <!-- History View Extra Localizations -->
+    <sys:String x:Key="String.HistoryHeader">Riwayat</sys:String>
+    <sys:String x:Key="String.NoHistory">Belum Ada Riwayat</sys:String>
+    <sys:String x:Key="String.NoHistoryDesc">Baca beberapa manga untuk melihatnya di sini.</sys:String>
+    <sys:String x:Key="String.DeleteAllHistory">Hapus Semua Riwayat</sys:String>
+    <sys:String x:Key="String.RefreshHistory">Segarkan Riwayat</sys:String>
+    <sys:String x:Key="String.RemoveFromHistory">Hapus dari Riwayat</sys:String>
+
+    <!-- Download Statuses -->
+    <sys:String x:Key="String.Status.Downloading">Mengunduh</sys:String>
+    <sys:String x:Key="String.Status.Completed">Selesai</sys:String>
+    <sys:String x:Key="String.Status.Error">Kesalahan</sys:String>
+    <sys:String x:Key="String.Status.Paused">Dijeda</sys:String>
+    <sys:String x:Key="String.Status.Queued">Antrean</sys:String>
+    <sys:String x:Key="String.Status.Cancelled">Dibatalkan</sys:String>
+    <sys:String x:Key="String.Status.Retrying">Mencoba kembali</sys:String>
+
+    <!-- Browse View Extra Localizations -->
+    <sys:String x:Key="String.SearchSources">Cari sumber...</sys:String>
+    <sys:String x:Key="String.SupportedSource">Sumber Didukung</sys:String>
+    <sys:String x:Key="String.NoSourcesFound">Sumber Tidak Ditemukan</sys:String>
+    <sys:String x:Key="String.NoSourcesFoundDesc">Coba ubah filter bahasa untuk melihat lebih banyak sumber.</sys:String>
+    <sys:String x:Key="String.BypassWindowWarning">Mohon jangan tutup jendela browser hingga selesai.</sys:String>
+
+    <!-- Extensions View Extra Localizations -->
+    <sys:String x:Key="String.SearchExtensions">Cari ekstensi...</sys:String>
+    <sys:String x:Key="String.Installed">Terpasang</sys:String>
+    <sys:String x:Key="String.Available">Tersedia</sys:String>
+    <sys:String x:Key="String.NoExtensionsFound">Ekstensi Tidak Ditemukan</sys:String>
+    <sys:String x:Key="String.NoExtensionsFoundDesc">Coba sesuaikan pencarian Anda atau tambahkan ekstensi baru.</sys:String>
+    <sys:String x:Key="String.VerifyCloudflare">Verifikasi Cloudflare</sys:String>
+    <sys:String x:Key="String.Uninstall">Copot</sys:String>
+    <sys:String x:Key="String.Uninstalling">Mencopot...</sys:String>
+    <sys:String x:Key="String.NewUpdateAvailable">Pembaruan Baru</sys:String>
+    <sys:String x:Key="String.UpdateExtension">Perbarui Ekstensi</sys:String>
+    <sys:String x:Key="String.Update">Update</sys:String>
+
+    <!-- Dialog Confirmation & Warnings -->
+    <sys:String x:Key="String.Dialog.RestoreTitle">Pulihkan Cadangan</sys:String>
+    <sys:String x:Key="String.Dialog.RestoreMsg">Memulihkan cadangan akan menggantikan semua basis data, perpustakaan, dan pengaturan Anda saat ini. Pastikan Anda memiliki cadangan terbaru jika diperlukan. Apakah Anda ingin melanjutkan?</sys:String>
+    <sys:String x:Key="String.Dialog.RestorePickerTitle">Pulihkan Cadangan Yomic</sys:String>
+    <sys:String x:Key="String.Dialog.ClearDataTitle">Hapus Semua Data</sys:String>
+    <sys:String x:Key="String.Dialog.ClearDataMsg">Apakah Anda benar-benar yakin ingin mengatur ulang semua data? Tindakan ini tidak dapat dibatalkan dan akan menghapus seluruh perpustakaan lokal dan pengaturan Anda.</sys:String>
+    <sys:String x:Key="String.Dialog.ClearHistoryTitle">Hapus Riwayat Baca &amp; Cache</sys:String>
+    <sys:String x:Key="String.Dialog.ClearHistoryMsg">Apakah Anda yakin ingin menghapus riwayat membaca dan cache gambar Anda? Semua bab akan ditandai sebagai belum dibaca dan memori akan dibebaskan.</sys:String>
+    <sys:String x:Key="String.Dialog.DeleteDiskTitle">Hapus dari Disk</sys:String>
+    <sys:String x:Key="String.Dialog.DeleteDiskMsg">Ini akan menghapus "{0}" dari perpustakaan Anda dan menghapus bab yang diunduh secara permanen dari disk. Tindakan ini tidak dapat dibatalkan.</sys:String>
+    <sys:String x:Key="String.Dialog.DeleteDownloadsTitle">Hapus Semua Unduhan</sys:String>
+    <sys:String x:Key="String.Dialog.DeleteDownloadsMsg">Ini akan menghapus semua bab terunduh dari "{0}" secara permanen dari disk. Manga akan tetap berada di perpustakaan Anda. Tindakan ini tidak dapat dibatalkan.</sys:String>
+    <sys:String x:Key="String.Dialog.DeleteCategoryTitle">Hapus Kategori</sys:String>
+    <sys:String x:Key="String.Dialog.DeleteCategoryMsg">Apakah Anda yakin ingin menghapus kategori "{0}"? Manga dalam kategori ini tidak akan dihapus.</sys:String>
+
+    <!-- Download All Dialog -->
+    <sys:String x:Key="String.Dialog.DownloadChapters">Unduh Bab</sys:String>
+    <sys:String x:Key="String.Dialog.Total">Total</sys:String>
+    <sys:String x:Key="String.Dialog.ToDownload">Akan Diunduh</sys:String>
+    <sys:String x:Key="String.Dialog.Unread">Belum Dibaca</sys:String>
+    <sys:String x:Key="String.Dialog.DownloadAllOpt">Unduh semua bab</sys:String>
+    <sys:String x:Key="String.Dialog.DownloadUnreadOpt">Unduh bab belum dibaca saja</sys:String>
+    <sys:String x:Key="String.Dialog.SkipWarning">Bab yang sudah diunduh akan dilewati. Bab terpilih akan dimasukkan ke antrean unduhan.</sys:String>
+    <sys:String x:Key="String.Dialog.MassDownloadWarning">Peringatan Unduh Massal:&#x0a;Mengunduh lebih dari 20 bab sekaligus dapat memicu perlindungan Anti-Bot (seperti Cloudflare) pada server sumber. Jika IP Anda diblokir, Anda tidak akan dapat membaca dari sumber ini untuk sementara waktu.</sys:String>
+    <sys:String x:Key="String.Dialog.StartDownload">Mulai Unduh</sys:String>
+
+    <!-- Feedback Dialog -->
+    <sys:String x:Key="String.Feedback.Title">Kirim Masukan</sys:String>
+    <sys:String x:Key="String.Feedback.Watermark">Beri tahu kami pengalaman Anda menggunakan aplikasi ini...</sys:String>
+    <sys:String x:Key="String.Feedback.AttachScreenshot">Lampirkan Tangkapan Layar</sys:String>
+    <sys:String x:Key="String.Feedback.AttachScreenshotWithCount">Lampirkan Tangkapan Layar ({0}/{1})</sys:String>
+    <sys:String x:Key="String.Feedback.RemoveTooltip">Hapus tangkapan layar</sys:String>
+    <sys:String x:Key="String.Feedback.PrivacyText">Masukan Anda bersifat anonim dan membantu kami meningkatkan Yomic. Hanya pesan Anda dan lampiran tangkapan layar yang akan dikirim. Pesan pribadi dan perpustakaan Anda tetap aman di perangkat Anda.</sys:String>
+    <sys:String x:Key="String.Feedback.Submit">Kirim</sys:String>
+    <sys:String x:Key="String.Feedback.Category.BugReport">Laporan Bug</sys:String>
+    <sys:String x:Key="String.Feedback.Category.FeatureRequest">Permintaan Fitur</sys:String>
+    <sys:String x:Key="String.Feedback.Category.Question">Pertanyaan</sys:String>
+    <sys:String x:Key="String.Feedback.PickerNotAvailable">Pemilih tangkapan layar tidak tersedia.</sys:String>
+    <sys:String x:Key="String.Feedback.MaxScreenshotsError">Anda dapat melampirkan hingga {0} tangkapan layar.</sys:String>
+    <sys:String x:Key="String.Feedback.ScreenshotsAttached">{0} tangkapan layar dilampirkan.</sys:String>
+    <sys:String x:Key="String.Feedback.UrlNotConfigured">URL masukan belum dikonfigurasi.</sys:String>
+    <sys:String x:Key="String.Feedback.SuccessMessage">Masukan berhasil dikirim! Terima kasih.</sys:String>
+    <sys:String x:Key="String.Feedback.FailedMessage">Gagal mengirim masukan. Silakan coba lagi nanti.</sys:String>
+    <sys:String x:Key="String.Feedback.ErrorMessage">Terjadi kesalahan saat mengirim masukan.</sys:String>
+    <sys:String x:Key="String.Feedback.LimitReached">Anda hanya dapat mengirim masukan 1 kali sehari.</sys:String>
+    <sys:String x:Key="String.Ok">OK</sys:String>
+    
+    <!-- Crash Report Window -->
+    <sys:String x:Key="String.CrashReport.Title">Data Crash Event Viewer</sys:String>
+    <sys:String x:Key="String.CrashReport.Description">Kirim masukan (atau lihat log crash yang dihasilkan oleh Yomic di bawah):</sys:String>
+
+    <!-- Source Feed / Browse Source Pagination & Search -->
+    <sys:String x:Key="String.BrowseSource">Jelajahi Sumber</sys:String>
+    <sys:String x:Key="String.SearchManga">Cari manga...</sys:String>
+    <sys:String x:Key="String.Previous">Sebelumnya</sys:String>
+    <sys:String x:Key="String.Next">Berikutnya</sys:String>
+    <sys:String x:Key="String.Go">Buka</sys:String>
+    <sys:String x:Key="String.JumpToPage">Lompat ke Halaman</sys:String>
+    <sys:String x:Key="String.JumpToPageTooltip">Lompat ke halaman tertentu</sys:String>
+    <sys:String x:Key="String.EnterPageWatermark">Masukkan hal #...</sys:String>
+    <sys:String x:Key="String.PageInfoFormat">Halaman {0} dari {1}</sys:String>
+
+    <!-- Time & Time Ago Groups -->
+    <sys:String x:Key="String.TimeHeader.Today">Hari Ini</sys:String>
+    <sys:String x:Key="String.TimeHeader.Yesterday">Kemarin</sys:String>
+    <sys:String x:Key="String.TimeHeader.ThisWeek">Minggu Ini</sys:String>
+    <sys:String x:Key="String.TimeHeader.ThisMonth">Bulan Ini</sys:String>
+    <sys:String x:Key="String.TimeHeader.Older">Terdahulu</sys:String>
+
+    <sys:String x:Key="String.TimeAgo.JustNow">Baru saja</sys:String>
+    <sys:String x:Key="String.TimeAgo.Unknown">Tidak diketahui</sys:String>
+    <sys:String x:Key="String.TimeAgo.Minutes">{0}m lalu</sys:String>
+    <sys:String x:Key="String.TimeAgo.Hours">{0}j lalu</sys:String>
+    <sys:String x:Key="String.TimeAgo.Days">{0}h lalu</sys:String>
+
+    <!-- General Badges & Actions -->
+    <sys:String x:Key="String.Badge.New">BARU</sys:String>
+    <sys:String x:Key="String.InLibrary">Dalam Pustaka</sys:String>
+    <sys:String x:Key="String.AddToLibrary">Tambah ke Pustaka</sys:String>
+    <sys:String x:Key="String.Sort.OldestFirst">Terlama Dahulu</sys:String>
+    <sys:String x:Key="String.Sort.NewestFirst">Terbaru Dahulu</sys:String>
+    <sys:String x:Key="String.LoadingMore">Memuat lebih banyak...</sys:String>
+    
+    <!-- Categories Create / Edit -->
+    <sys:String x:Key="String.Category.CreateCategory">Buat Kategori</sys:String>
+    <sys:String x:Key="String.Category.EditCategory">Ubah Kategori</sys:String>
+    <sys:String x:Key="String.Category.Watermark">Nama kategori...</sys:String>
+    <sys:String x:Key="String.Add">Tambah</sys:String>
+    <sys:String x:Key="String.Save">Simpan</sys:String>
+    <sys:String x:Key="String.AdditionalChaptersFormat">+{0} lagi</sys:String>
+
+    <!-- Manga Statuses -->
+    <sys:String x:Key="String.Status.Ongoing">Berjalan</sys:String>
+    <sys:String x:Key="String.Status.Licensed">Berlisensi</sys:String>
+    <sys:String x:Key="String.Status.PublishingFinished">Tamat Terbit</sys:String>
+    <sys:String x:Key="String.Status.Hiatus">Jeda (Hiatus)</sys:String>
+    <sys:String x:Key="String.Status.Unknown">Tidak Diketahui</sys:String>
+
+    <!-- Additional Category Dialog localizations -->
+    <sys:String x:Key="String.Category.ManageCategories">Kelola Kategori</sys:String>
+    <sys:String x:Key="String.Category.EmptyState">Belum ada kategori kustom. Buat kategori pertamamu di bawah!</sys:String>
+    <sys:String x:Key="String.Category.SetAsDefault">Atur sebagai Default</sys:String>
+    <sys:String x:Key="String.Category.CancelEdit">Batal Ubah</sys:String>
+    <sys:String x:Key="String.Category.Color">Warna:</sys:String>
+    <sys:String x:Key="String.Category.AlreadyExists">Kategori dengan nama ini sudah ada.</sys:String>
+    <sys:String x:Key="String.Edit">Ubah</sys:String>
+    <sys:String x:Key="String.Delete">Hapus</sys:String>
+    
+    <!-- Manga Detail View Tooltips -->
+    <sys:String x:Key="String.MangaDetail.ToggleBookmark">Alihkan Penanda</sys:String>
+    <sys:String x:Key="String.MangaDetail.DownloadChapter">Unduh Bab</sys:String>
+    <sys:String x:Key="String.MangaDetail.DeleteDownload">Hapus Unduhan</sys:String>
+    <sys:String x:Key="String.Category.EditCategories">Ubah Kategori</sys:String>
+
+    <!-- Welcome View Localizations -->
+    <sys:String x:Key="String.Welcome.Title">Selamat Datang di Yomic</sys:String>
+    <sys:String x:Key="String.Welcome.Subtitle">Pembaca manga terbaik untuk desktop Anda.</sys:String>
+    <sys:String x:Key="String.Welcome.GoToLibrary">Ke Perpustakaan</sys:String>
+    <sys:String x:Key="String.Welcome.StorageTitle">Di mana kami harus menyimpan unduhan Anda?</sys:String>
+    <sys:String x:Key="String.Welcome.StorageSubtitle">Pilih lokasi untuk pustaka manga Anda.</sys:String>
+    <sys:String x:Key="String.Welcome.ExtensionTitle">Pasang ekstensi pertama Anda</sys:String>
+    <sys:String x:Key="String.Welcome.AllSet">Semua Siap!</sys:String>
+    <sys:String x:Key="String.Welcome.ReadyDesc">Anda siap untuk mulai membaca.</sys:String>
+    <sys:String x:Key="String.Change">Ubah</sys:String>
+    <sys:String x:Key="String.Install">Pasang</sys:String>
+</ResourceDictionary>
