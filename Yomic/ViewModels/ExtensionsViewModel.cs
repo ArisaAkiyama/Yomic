@@ -742,6 +742,9 @@ namespace Yomic.ViewModels
             _mainVM.ShowNotification("Pemeriksaan ekstensi selesai!", NotificationType.Success);
         }
 
+        private static readonly Dictionary<string, (DateTime commitUtc, DateTime cachedAt)> _githubCommitCache = new(StringComparer.OrdinalIgnoreCase);
+        private bool _isRateLimitedNoticeShown = false;
+
         private async System.Threading.Tasks.Task CheckExtensionUpdatesAsync()
         {
             if (IsOffline) return;
@@ -757,62 +760,107 @@ namespace Yomic.ViewModels
                     string fileName = "";
                     if (!string.IsNullOrEmpty(item.RemoteDownloadUrl))
                     {
-                        fileName = System.IO.Path.GetFileName(new Uri(item.RemoteDownloadUrl).AbsolutePath);
+                        var uri = new Uri(item.RemoteDownloadUrl);
+                        var relativePath = uri.AbsolutePath;
+                        var mainIdx = relativePath.IndexOf("/main/", StringComparison.OrdinalIgnoreCase);
+                        fileName = mainIdx != -1 ? relativePath.Substring(mainIdx + 6) : System.IO.Path.GetFileName(uri.AbsolutePath);
                     }
                     else if (!string.IsNullOrEmpty(item.DownloadUrl))
                     {
-                        fileName = System.IO.Path.GetFileName(new Uri(item.DownloadUrl).AbsolutePath);
+                        var uri = new Uri(item.DownloadUrl);
+                        var relativePath = uri.AbsolutePath;
+                        var mainIdx = relativePath.IndexOf("/main/", StringComparison.OrdinalIgnoreCase);
+                        fileName = mainIdx != -1 ? relativePath.Substring(mainIdx + 6) : System.IO.Path.GetFileName(uri.AbsolutePath);
                     }
                     else
                     {
                         fileName = item.Name.ToLower() + ".js";
                     }
 
-                    var url = $"https://api.github.com/repos/ArisaAkiyama/extension-yomic/commits?path={Uri.EscapeDataString(fileName)}&per_page=1";
-                    
-                    if (!_httpClient.DefaultRequestHeaders.UserAgent.Any())
+                    DateTime remoteCommitUtc = DateTime.MinValue;
+                    bool isCached = _githubCommitCache.TryGetValue(fileName, out var cachedInfo) && (DateTime.UtcNow - cachedInfo.cachedAt).TotalMinutes < 15;
+
+                    if (isCached)
                     {
-                        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Yomic-Desktop-App");
+                        remoteCommitUtc = cachedInfo.commitUtc;
                     }
-
-                    var response = await _httpClient.GetStringAsync(url);
-                    using var doc = System.Text.Json.JsonDocument.Parse(response);
-                    
-                    if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0)
+                    else
                     {
-                        var firstCommit = doc.RootElement[0];
-                        if (firstCommit.TryGetProperty("commit", out var commitObj) &&
-                            commitObj.TryGetProperty("committer", out var committerObj) &&
-                            committerObj.TryGetProperty("date", out var dateProp))
+                        var url = $"https://api.github.com/repos/ArisaAkiyama/extension-yomic/commits?path={Uri.EscapeDataString(fileName)}&per_page=1";
+                        
+                        if (!_httpClient.DefaultRequestHeaders.UserAgent.Any())
                         {
-                            var dateStr = dateProp.GetString();
-                            if (!string.IsNullOrEmpty(dateStr) && DateTime.TryParse(dateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal, out DateTime remoteCommitUtc))
+                            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Yomic-Desktop-App");
+                        }
+
+                        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+                        using var res = await _httpClient.SendAsync(req);
+                        
+                        if (res.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                        {
+                            if (!_isRateLimitedNoticeShown)
                             {
-                                DateTime localTimeUtc = DateTime.MinValue;
-                                var localPath = item.FilePath ?? _sourceManager.GetSourcePath(item.Id);
-                                if (!string.IsNullOrEmpty(localPath) && File.Exists(localPath))
-                                {
-                                    localTimeUtc = File.GetLastWriteTimeUtc(localPath);
-                                }
+                                _isRateLimitedNoticeShown = true;
+                                _mainVM.ShowNotification("Batas permintaan GitHub (rate limit) tercapai. Coba lagi nanti.", NotificationType.Warning);
+                            }
+                            break;
+                        }
 
-                                // Compare remote commit date vs local file write time
-                                if (remoteCommitUtc > localTimeUtc.AddSeconds(5))
-                                {
-                                    item.HasUpdate = true;
-                                    item.RemoteCommitDateText = remoteCommitUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm");
-                                    if (string.IsNullOrEmpty(item.RemoteDownloadUrl))
-                                    {
-                                        item.RemoteDownloadUrl = $"https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/main/{fileName}";
-                                    }
+                        if (!res.IsSuccessStatusCode) continue;
 
-                                    LogService.Info("ExtensionsVM", $"Update available for {item.Name} ({fileName})! GitHub Commit: {remoteCommitUtc}, Local file write time: {localTimeUtc}");
+                        var responseText = await res.Content.ReadAsStringAsync();
+                        using var doc = System.Text.Json.JsonDocument.Parse(responseText);
+                        
+                        if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0)
+                        {
+                            var firstCommit = doc.RootElement[0];
+                            if (firstCommit.TryGetProperty("commit", out var commitObj) &&
+                                commitObj.TryGetProperty("committer", out var committerObj) &&
+                                committerObj.TryGetProperty("date", out var dateProp))
+                            {
+                                var dateStr = dateProp.GetString();
+                                if (!string.IsNullOrEmpty(dateStr) && DateTime.TryParse(dateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal, out remoteCommitUtc))
+                                {
+                                    _githubCommitCache[fileName] = (remoteCommitUtc, DateTime.UtcNow);
                                 }
                                 else
                                 {
-                                    item.HasUpdate = false;
+                                    continue;
                                 }
                             }
+                            else
+                            {
+                                continue;
+                            }
                         }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+
+                    DateTime localTimeUtc = DateTime.MinValue;
+                    var localPath = item.FilePath ?? _sourceManager.GetSourcePath(item.Id);
+                    if (!string.IsNullOrEmpty(localPath) && File.Exists(localPath))
+                    {
+                        localTimeUtc = File.GetLastWriteTimeUtc(localPath);
+                    }
+
+                    // Compare remote commit date vs local file write time
+                    if (remoteCommitUtc > localTimeUtc.AddSeconds(5))
+                    {
+                        item.HasUpdate = true;
+                        item.RemoteCommitDateText = remoteCommitUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm");
+                        if (string.IsNullOrEmpty(item.RemoteDownloadUrl))
+                        {
+                            item.RemoteDownloadUrl = $"https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/main/{fileName}";
+                        }
+
+                        LogService.Info("ExtensionsVM", $"Update available for {item.Name} ({fileName})! GitHub Commit: {remoteCommitUtc.ToLocalTime()}, Local file write time: {localTimeUtc.ToLocalTime()}");
+                    }
+                    else
+                    {
+                        item.HasUpdate = false;
                     }
                 }
                 catch (Exception ex)
