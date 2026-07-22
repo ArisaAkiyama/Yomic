@@ -19,7 +19,8 @@ namespace Yomic.Core.Services
         private readonly ImageCacheService _imageCacheService;
         private readonly string _cacheFolder;
         private HttpClient? _sharedClient;
-        private static readonly SemaphoreSlim _downloadSemaphore = new SemaphoreSlim(3, 3);
+        private readonly object _clientLock = new();
+        private static readonly SemaphoreSlim _downloadSemaphore = new SemaphoreSlim(6, 6);
 
         public SecureImageService(NetworkService networkService, ImageCacheService imageCacheService)
         {
@@ -27,8 +28,12 @@ namespace Yomic.Core.Services
             _imageCacheService = imageCacheService;
             
             _networkService.ConnectionReset += (s, e) => {
-                var oldClient = _sharedClient;
-                _sharedClient = null;
+                HttpClient? oldClient;
+                lock (_clientLock)
+                {
+                    oldClient = _sharedClient;
+                    _sharedClient = null;
+                }
                 oldClient?.Dispose();
             };
             
@@ -124,7 +129,11 @@ namespace Yomic.Core.Services
             await _downloadSemaphore.WaitAsync();
             try
             {
-                var client = _sharedClient ??= _networkService.CreateOptimizedHttpClient();
+                HttpClient client;
+                lock (_clientLock)
+                {
+                    client = _sharedClient ??= _networkService.CreateOptimizedHttpClient();
+                }
                 var req = new HttpRequestMessage(HttpMethod.Get, url);
 
                 // Apply custom User-Agent if provided
@@ -135,7 +144,11 @@ namespace Yomic.Core.Services
                 }
                 
                 // Smart Referer
-                if (!string.IsNullOrEmpty(referer))
+                if (referer == "none" || referer == "null")
+                {
+                    // Explicitly do not set any Referer (anti-hotlink bypass)
+                }
+                else if (!string.IsNullOrEmpty(referer))
                 {
                     req.Headers.Referrer = new Uri(referer);
                     // System.Diagnostics.Debug.WriteLine($"[SecureImageService] Using provided referer: {referer}");
@@ -173,7 +186,13 @@ namespace Yomic.Core.Services
 
                     if (relevantCookies.Count > 0)
                     {
-                        var cookieString = string.Join("; ", relevantCookies.Select(c => $"{c.Name}={c.Value}"));
+                        var sanitizedList = relevantCookies.Select(c =>
+                        {
+                            var name = c.Name.Replace("\r", "").Replace("\n", "").Replace("\0", "");
+                            var val = c.Value.Replace("\r", "").Replace("\n", "").Replace("\0", "");
+                            return $"{name}={val}";
+                        });
+                        var cookieString = string.Join("; ", sanitizedList);
                         req.Headers.Add("Cookie", cookieString);
                     }
                     
@@ -193,6 +212,32 @@ namespace Yomic.Core.Services
                 using var response = await client.SendAsync(req);
                 if (!response.IsSuccessStatusCode)
                 {
+                    if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                    {
+                        var freshUrl = await RefreshExpiredPresignedUrlAsync(client, url);
+                        if (!string.IsNullOrEmpty(freshUrl))
+                        {
+                            using var retryReq = new HttpRequestMessage(HttpMethod.Get, freshUrl);
+                            retryReq.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36");
+                            retryReq.Headers.Add("Referer", "https://v2.komikcast.fit/");
+                            using var retryRes = await client.SendAsync(retryReq);
+                            if (retryRes.IsSuccessStatusCode)
+                            {
+                                var retryData = await retryRes.Content.ReadAsByteArrayAsync();
+                                if (retryData.Length > 0)
+                                {
+                                    await File.WriteAllBytesAsync(cachePath, retryData);
+                                    using var msRetry = new MemoryStream(retryData);
+                                    var retryBitmap = decodeWidth.HasValue
+                                        ? Bitmap.DecodeToWidth(msRetry, decodeWidth.Value)
+                                        : new Bitmap(msRetry);
+                                    _imageCacheService.AddImage(url, retryBitmap);
+                                    return retryBitmap;
+                                }
+                            }
+                        }
+                    }
+
                     System.Diagnostics.Debug.WriteLine($"[SecureImageService] Failed {response.StatusCode} for {url}");
                     return null;
                 }
@@ -223,11 +268,52 @@ namespace Yomic.Core.Services
             }
         }
 
+        private async Task<string?> RefreshExpiredPresignedUrlAsync(HttpClient client, string url)
+        {
+            try
+            {
+                if (url.Contains("minio.imgkc1.my.id") || url.Contains("/series/"))
+                {
+                    var match = System.Text.RegularExpressions.Regex.Match(url, @"/series/([^/]+)/cover");
+                    if (match.Success)
+                    {
+                        var slug = match.Groups[1].Value;
+                        var apiUrl = $"https://be.komikcast.cc/series/{slug}";
+                        using var apiReq = new HttpRequestMessage(HttpMethod.Get, apiUrl);
+                        apiReq.Headers.Add("Accept", "application/json");
+                        apiReq.Headers.Add("Referer", "https://v2.komikcast.fit/");
+                        
+                        using var apiRes = await client.SendAsync(apiReq);
+                        if (apiRes.IsSuccessStatusCode)
+                        {
+                            var jsonStr = await apiRes.Content.ReadAsStringAsync();
+                            using var doc = System.Text.Json.JsonDocument.Parse(jsonStr);
+                            if (doc.RootElement.TryGetProperty("data", out var dataEl) &&
+                                dataEl.TryGetProperty("data", out var innerData) &&
+                                innerData.TryGetProperty("coverImage", out var coverEl))
+                            {
+                                var freshCoverUrl = coverEl.GetString();
+                                if (!string.IsNullOrEmpty(freshCoverUrl) && freshCoverUrl != url)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"[SecureImageService] Refreshed expired presigned URL for '{slug}' successfully!");
+                                    return freshCoverUrl;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[SecureImageService] Presigned URL recovery error: {ex.Message}");
+            }
+            return null;
+        }
+
         private string GenerateCacheKey(string url)
         {
-            using var md5 = MD5.Create();
-            var inputBytes = Encoding.ASCII.GetBytes(url);
-            var hashBytes = md5.ComputeHash(inputBytes);
+            var inputBytes = Encoding.UTF8.GetBytes(url);
+            var hashBytes = MD5.HashData(inputBytes);
             
             var sb = new StringBuilder();
             for (int i = 0; i < hashBytes.Length; i++) sb.Append(hashBytes[i].ToString("X2"));
