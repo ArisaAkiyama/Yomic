@@ -30,6 +30,13 @@ namespace Yomic.Core.Services
         public event Action<bool>? OfflineModeChanged;
         public event Action<bool>? ShowNsfwSourcesChanged;
 
+        public bool SecureScreen { get; set; } = false;
+        public bool UpdateOnStart { get; set; } = false;
+        public int AutoUpdateIntervalHours { get; set; } = 0; // 0 = Disabled
+        public bool CheckAppUpdateOnStart { get; set; } = true;
+        public bool IsFirstRun { get; set; } = true;
+        public int LibrarySortMode { get; set; } = 0; // 0=TitleAsc, 1=TitleDesc, 2=DateModified
+
         private bool _showNsfwSources = false;
         public bool ShowNsfwSources
         {
