@@ -321,23 +321,24 @@ namespace Yomic.ViewModels
                 }
 
                 string? responseText = null;
+                // 1. Try raw.githubusercontent.com index.json FIRST (instant, rate-limit free, contains version & last_commit_date)
                 try
                 {
-                    using var req = new HttpRequestMessage(HttpMethod.Get, "https://api.github.com/repos/ArisaAkiyama/extension-yomic/contents");
-                    using var res = await _httpClient.SendAsync(req);
-                    if (res.IsSuccessStatusCode)
-                    {
-                        responseText = await res.Content.ReadAsStringAsync();
-                    }
+                    responseText = await _httpClient.GetStringAsync("https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/main/index.json");
                 }
                 catch { }
 
-                // Fallback to raw.githubusercontent.com index.json if REST API is rate-limited (403)
+                // 2. Fallback to REST API /contents if index.json is unavailable
                 if (string.IsNullOrEmpty(responseText))
                 {
                     try
                     {
-                        responseText = await _httpClient.GetStringAsync("https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/main/index.json");
+                        using var req = new HttpRequestMessage(HttpMethod.Get, "https://api.github.com/repos/ArisaAkiyama/extension-yomic/contents");
+                        using var res = await _httpClient.SendAsync(req);
+                        if (res.IsSuccessStatusCode)
+                        {
+                            responseText = await res.Content.ReadAsStringAsync();
+                        }
                     }
                     catch { }
                 }
@@ -398,9 +399,12 @@ namespace Yomic.ViewModels
         {
             var type = file.TryGetProperty("type", out var typeProp) ? typeProp.GetString() : null;
             var name = file.TryGetProperty("name", out var nameProp) ? nameProp.GetString() : null;
-            if (!string.Equals(type, "file", StringComparison.OrdinalIgnoreCase) ||
-                string.IsNullOrWhiteSpace(name) ||
-                !name.EndsWith(".js", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(type) &&
+                !string.Equals(type, "file", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(name) || !name.EndsWith(".js", StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
@@ -420,8 +424,25 @@ namespace Yomic.ViewModels
             {
                 if (string.IsNullOrEmpty(existing.RemoteDownloadUrl)) existing.RemoteDownloadUrl = downloadUrl;
 
+                var remoteVersion = file.TryGetProperty("version", out var vProp) ? vProp.GetString() : null;
                 var commitDateStr = file.TryGetProperty("last_commit_date", out var dProp) ? dProp.GetString() : null;
-                if (!string.IsNullOrEmpty(commitDateStr) && DateTime.TryParse(commitDateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal, out DateTime remoteCommitUtc))
+
+                bool isVersionNewer = false;
+                if (!string.IsNullOrEmpty(remoteVersion) && !string.IsNullOrEmpty(existing.Version))
+                {
+                    if (Version.TryParse(remoteVersion, out var rVer) && Version.TryParse(existing.Version, out var lVer))
+                    {
+                        isVersionNewer = rVer > lVer;
+                    }
+                    else
+                    {
+                        isVersionNewer = !string.Equals(remoteVersion, existing.Version, StringComparison.OrdinalIgnoreCase);
+                    }
+                }
+
+                bool isDateNewer = false;
+                DateTime remoteCommitUtc = DateTime.MinValue;
+                if (!string.IsNullOrEmpty(commitDateStr) && DateTime.TryParse(commitDateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal, out remoteCommitUtc))
                 {
                     DateTime localTimeUtc = DateTime.MinValue;
                     var localPath = existing.FilePath ?? _sourceManager.GetSourcePath(existing.Id);
@@ -430,12 +451,21 @@ namespace Yomic.ViewModels
                         localTimeUtc = File.GetLastWriteTimeUtc(localPath);
                     }
 
-                    if (remoteCommitUtc > localTimeUtc.AddSeconds(5))
+                    isDateNewer = remoteCommitUtc > localTimeUtc.AddSeconds(5);
+                }
+
+                if (isVersionNewer || isDateNewer)
+                {
+                    existing.HasUpdate = true;
+                    if (remoteCommitUtc != DateTime.MinValue)
                     {
-                        existing.HasUpdate = true;
                         existing.RemoteCommitDateText = remoteCommitUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm");
-                        LogService.Info("ExtensionsVM", $"Update available for {existing.Name} ({name}) via index.json! Remote Commit: {remoteCommitUtc.ToLocalTime()}, Local file: {localTimeUtc.ToLocalTime()}");
                     }
+                    else if (!string.IsNullOrEmpty(remoteVersion))
+                    {
+                        existing.RemoteCommitDateText = $"v{remoteVersion}";
+                    }
+                    LogService.Info("ExtensionsVM", $"Update available for {existing.Name} ({name})! Remote Ver: {remoteVersion}, Local Ver: {existing.Version}, Remote Commit: {remoteCommitUtc.ToLocalTime()}");
                 }
                 return;
             }
@@ -789,7 +819,6 @@ namespace Yomic.ViewModels
         }
 
         private static readonly Dictionary<string, (DateTime commitUtc, DateTime cachedAt)> _githubCommitCache = new(StringComparer.OrdinalIgnoreCase);
-        private bool _isRateLimitedNoticeShown = false;
 
         private async System.Threading.Tasks.Task CheckExtensionUpdatesAsync()
         {
