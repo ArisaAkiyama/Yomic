@@ -25,18 +25,13 @@ namespace Yomic
             // Catch unobserved task exceptions
             System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
-                // Ignore harmless cancellation/disposed exceptions (e.g. when typing search or canceling tasks)
-                var baseEx = args.Exception?.GetBaseException();
-                if (baseEx is System.OperationCanceledException || baseEx is System.ObjectDisposedException)
-                {
-                    args.SetObserved();
-                    return;
-                }
+                // Mark as observed so background task cancellations (e.g. Puppeteer, HTTP, GC finalizers) do not crash the app
+                args.SetObserved();
 
-                if (args.Exception is System.Exception ex)
+                var baseEx = args.Exception?.GetBaseException();
+                if (baseEx != null)
                 {
-                    args.SetObserved();
-                    HandleCrash(ex);
+                    Yomic.Core.Services.LogService.Warn("Global", $"UnobservedTaskException (background): {baseEx.Message}");
                 }
             };
 
