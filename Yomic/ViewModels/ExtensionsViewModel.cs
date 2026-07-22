@@ -101,6 +101,7 @@ namespace Yomic.ViewModels
 
         public IMangaSource? SourceInstance { get; set; }
         public bool IsSystem { get; set; } // Bundled (Program Files) plugin
+        public bool IsNsfw { get; set; }
 
         public void Dispose()
         {
@@ -270,6 +271,14 @@ namespace Yomic.ViewModels
             
             LoadExtensions();
             _ = FetchRemoteExtensionsAsync();
+
+            if (_mainVM.SettingsService != null)
+            {
+                _mainVM.SettingsService.ShowNsfwSourcesChanged += (show) =>
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => FilterExtensions());
+                };
+            }
         }
 
         private async System.Threading.Tasks.Task FetchRemoteExtensionsAsync()
@@ -393,7 +402,8 @@ namespace Yomic.ViewModels
                 IconText = cleanName.Substring(0, 1),
                 Version = "Latest",
                 Language = lang,
-                FileSizeText = size > 0 ? FormatBytes(size) : ""
+                FileSizeText = size > 0 ? FormatBytes(size) : "",
+                IsNsfw = cleanName.Contains("nhentai", StringComparison.OrdinalIgnoreCase)
             };
 
             LoadLanguageFlags(extItem);
@@ -463,7 +473,8 @@ namespace Yomic.ViewModels
                     FilePath = _sourceManager.GetSourcePath(source.Id),
                     
                     SourceInstance = source,
-                    CanVerify = canVerify
+                    CanVerify = canVerify,
+                    IsNsfw = source.IsNsfw || source.Name.Contains("nhentai", StringComparison.OrdinalIgnoreCase)
                 };
 
 
@@ -503,9 +514,15 @@ namespace Yomic.ViewModels
             FilteredExtensions.Clear();
             
             var query = _searchText?.Trim();
+            var showNsfw = _mainVM.SettingsService.ShowNsfwSources;
             var list = string.IsNullOrEmpty(query) 
                 ? _allExtensionsCache 
                 : _allExtensionsCache.Where(x => x.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            if (!showNsfw)
+            {
+                list = list.Where(x => !x.IsNsfw).ToList();
+            }
 
             // Apply Language Filter
             if (!string.IsNullOrEmpty(SelectedLanguageFilter) && SelectedLanguageFilter != "ALL")
@@ -583,6 +600,9 @@ namespace Yomic.ViewModels
                 {
                      // Refresh list to show new item
                      LoadExtensions(); // Reloads list, new item will appear as "Installed"
+                     // Bug Fix: Repopulate available extensions list (was missing, causing all
+                     // available extensions to disappear after installing a local plugin)
+                     _ = FetchRemoteExtensionsAsync();
                      _mainVM.ShowNotification($"{loadedSource.Name} installed successfully!", NotificationType.Success);
                 }
                 else
@@ -603,6 +623,8 @@ namespace Yomic.ViewModels
         private async void DownloadExtension(ExtensionItem item)
         {
             if (string.IsNullOrEmpty(item.DownloadUrl)) return;
+            // Bug Fix: Guard against double-click / concurrent download
+            if (item.IsDownloading) return;
 
             item.IsDownloading = true;
             item.DownloadProgress = 0;
@@ -674,6 +696,10 @@ namespace Yomic.ViewModels
             }
             finally
             {
+                // Bug Fix: Always cleanup temp file to avoid disk bloat
+                var tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{item.Name}.js");
+                try { if (System.IO.File.Exists(tempPath)) System.IO.File.Delete(tempPath); } catch { }
+
                 item.IsDownloading = false;
                 item.DownloadProgressText = "Downloading...";
             }
@@ -685,14 +711,23 @@ namespace Yomic.ViewModels
             {
                 // Uninstall (Delete file if it is an installed user plugin, or just remove from list if temp)
                 item.IsInstalling = true;
-                await System.Threading.Tasks.Task.Delay(1000); 
-
-                _sourceManager.RemoveSource(item.Id);
-                
-                LoadExtensions();
-                _ = FetchRemoteExtensionsAsync();
-                
-                _mainVM.ShowNotification($"{item.Name} removed.", NotificationType.Success);
+                try
+                {
+                    await System.Threading.Tasks.Task.Delay(1000);
+                    _sourceManager.RemoveSource(item.Id);
+                    LoadExtensions();
+                    _ = FetchRemoteExtensionsAsync();
+                    _mainVM.ShowNotification($"{item.Name} removed.", NotificationType.Success);
+                }
+                catch (Exception ex)
+                {
+                    _mainVM.ShowNotification($"Failed to uninstall {item.Name}: {ex.Message}", NotificationType.Error);
+                }
+                finally
+                {
+                    // Bug Fix: Always reset IsInstalling so button is not stuck in loading state
+                    item.IsInstalling = false;
+                }
             }
         }
 

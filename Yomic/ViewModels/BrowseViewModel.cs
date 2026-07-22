@@ -138,6 +138,14 @@ namespace Yomic.ViewModels
                 // Refresh list on UI thread
                 Avalonia.Threading.Dispatcher.UIThread.Post(() => LoadSources());
             };
+
+            if (App.SettingsService != null)
+            {
+                App.SettingsService.ShowNsfwSourcesChanged += (show) =>
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => LoadSources());
+                };
+            }
         }
 
         private void OpenSource(SourceItem item)

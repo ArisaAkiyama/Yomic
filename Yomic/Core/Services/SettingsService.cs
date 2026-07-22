@@ -8,6 +8,8 @@ namespace Yomic.Core.Services
     public class SettingsService
     {
         private readonly string _settingsFilePath;
+        private System.Threading.Timer? _saveTimer;
+        private readonly object _saveLock = new();
 
         public bool IsDarkMode { get; set; } = true;
         
@@ -26,14 +28,21 @@ namespace Yomic.Core.Services
         }
         
         public event Action<bool>? OfflineModeChanged;
+        public event Action<bool>? ShowNsfwSourcesChanged;
 
-        public bool SecureScreen { get; set; } = false;
-        public bool UpdateOnStart { get; set; } = false;
-        public int AutoUpdateIntervalHours { get; set; } = 0; // 0 = Disabled
-        public bool CheckAppUpdateOnStart { get; set; } = true;
-        public bool IsFirstRun { get; set; } = true;
-        public int LibrarySortMode { get; set; } = 0; // 0=TitleAsc, 1=TitleDesc, 2=DateModified
-        public bool ShowNsfwSources { get; set; } = false;
+        private bool _showNsfwSources = false;
+        public bool ShowNsfwSources
+        {
+            get => _showNsfwSources;
+            set
+            {
+                if (_showNsfwSources != value)
+                {
+                    _showNsfwSources = value;
+                    ShowNsfwSourcesChanged?.Invoke(value);
+                }
+            }
+        }
         public int DnsOverHttpsProvider { get; set; } = 2; // 0=None, 1=Cloudflare, 2=Google, 3=AdGuard
         public bool PreloadNextChapter { get; set; } = true;
         public int MaxCacheSizeMb { get; set; } = 500;
@@ -44,6 +53,10 @@ namespace Yomic.Core.Services
         public bool SkipFilteredChapters { get; set; } = false;
         public string LastBackupTime { get; set; } = "";
         public string LastBackupSize { get; set; } = "";
+        public string MangaDexLanguage { get; set; } = "en";
+        public int DefaultReaderMode { get; set; } = 0; // 0=Webtoon, 1=Single Page, 2=Dual Page
+        public string AppLanguage { get; set; } = "en";
+        public string LastFeedbackDate { get; set; } = "";
 
         public SettingsService()
         {
@@ -87,6 +100,10 @@ namespace Yomic.Core.Services
                         SkipFilteredChapters = settings.SkipFilteredChapters;
                         LastBackupTime = settings.LastBackupTime ?? "";
                         LastBackupSize = settings.LastBackupSize ?? "";
+                        MangaDexLanguage = settings.MangaDexLanguage ?? "en";
+                        DefaultReaderMode = settings.DefaultReaderMode;
+                        AppLanguage = settings.AppLanguage ?? "en";
+                        LastFeedbackDate = settings.LastFeedbackDate ?? "";
                     }
                 }
             }
@@ -97,6 +114,21 @@ namespace Yomic.Core.Services
         }
 
         public void Save()
+        {
+            lock (_saveLock)
+            {
+                _saveTimer?.Dispose();
+                _saveTimer = new System.Threading.Timer(_ => 
+                {
+                    lock (_saveLock)
+                    {
+                        SaveInternal();
+                    }
+                }, null, 300, System.Threading.Timeout.Infinite);
+            }
+        }
+
+        private void SaveInternal()
         {
             try
             {
@@ -119,7 +151,11 @@ namespace Yomic.Core.Services
                     AutoDownloadNextChapter = AutoDownloadNextChapter,
                     SkipFilteredChapters = SkipFilteredChapters,
                     LastBackupTime = LastBackupTime,
-                    LastBackupSize = LastBackupSize
+                    LastBackupSize = LastBackupSize,
+                    MangaDexLanguage = MangaDexLanguage,
+                    DefaultReaderMode = DefaultReaderMode,
+                    AppLanguage = AppLanguage,
+                    LastFeedbackDate = LastFeedbackDate
                 };
 
                 var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
@@ -159,6 +195,9 @@ namespace Yomic.Core.Services
                 SkipFilteredChapters = false;
                 LastBackupTime = "";
                 LastBackupSize = "";
+                DefaultReaderMode = 0;
+                AppLanguage = "en";
+                LastFeedbackDate = "";
             }
             catch (Exception ex)
             {
@@ -187,6 +226,10 @@ namespace Yomic.Core.Services
             public bool SkipFilteredChapters { get; set; } = false;
             public string LastBackupTime { get; set; } = "";
             public string LastBackupSize { get; set; } = "";
+            public string MangaDexLanguage { get; set; } = "en";
+            public int DefaultReaderMode { get; set; } = 0;
+            public string AppLanguage { get; set; } = "en";
+            public string LastFeedbackDate { get; set; } = "";
         }
     }
 }
