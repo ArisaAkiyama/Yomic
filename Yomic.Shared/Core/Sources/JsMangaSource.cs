@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Threading;
+using System.Collections.Concurrent;
 using Jint;
 using Jint.Native;
 using Jint.Native.Array;
@@ -29,14 +30,15 @@ namespace Yomic.Core.Sources
         private bool _requiresProxy = false;
         private string? _userAgent = null;
 
-        private readonly SemaphoreSlim _executionLimit = new(4, 4);
+        private static readonly SemaphoreSlim _globalExecutionLimit = new(6, 6);
+        private readonly ConcurrentQueue<Engine> _enginePool = new();
         private string _scriptCode = "";
         private bool _supportsStatusFilter;
         private long _id;
         private List<string> _availableGenres = new();
         private List<string> _availableFormats = new();
 
-        private static string _selectedLanguage = "en";
+        private static volatile string _selectedLanguage = "en";
         public static string SelectedLanguage
         {
             get => _selectedLanguage;
@@ -143,14 +145,18 @@ namespace Yomic.Core.Sources
 
         private Engine CreateEngine()
         {
-            var engine = new Engine();
+            var engine = new Engine(cfg => cfg
+                .TimeoutInterval(TimeSpan.FromSeconds(30))
+                .MaxStatements(200_000));
 
             engine.SetValue("fetch", new Func<string, JsValue, JsResponse>(FetchUrl));
             engine.SetValue("Html", new
             {
                 parse = new Func<string, string, JsDocument>(HtmlParser.parse)
             });
-            engine.SetValue("log", new Action<object>(o => Console.WriteLine($"[JS Extension Log] {o}")));
+            engine.SetValue("log", new Action<object>(o => {
+                if (!SilenceLogs) Console.WriteLine($"[JS Extension Log] {o}");
+            }));
 
             engine.Execute(_scriptCode);
             engine.Execute($"if (typeof source === 'object' && source !== null) {{ source.selectedLanguage = '{_selectedLanguage}'; }}");
@@ -166,20 +172,42 @@ namespace Yomic.Core.Sources
             return engine;
         }
 
+        private Engine RentEngine()
+        {
+            if (_enginePool.TryDequeue(out var engine))
+            {
+                // IMPORTANT: Always refresh selectedLanguage before reuse.
+                // The engine pool caches engines, so if user changes language,
+                // old engines from the pool still have the previous language.
+                engine.Execute($"if (typeof source === 'object' && source !== null) {{ source.selectedLanguage = '{_selectedLanguage}'; }}");
+                return engine;
+            }
+            return CreateEngine();
+        }
+
+        private void ReturnEngine(Engine engine)
+        {
+            if (_enginePool.Count < 2)
+            {
+                _enginePool.Enqueue(engine);
+            }
+        }
+
         private async Task<T> ExecuteJsAsync<T>(Func<Engine, T> action)
         {
-            await _executionLimit.WaitAsync();
+            await _globalExecutionLimit.WaitAsync();
+            var engine = RentEngine();
             try
             {
                 return await Task.Run(() =>
                 {
-                    var engine = CreateEngine();
                     return action(engine);
                 });
             }
             finally
             {
-                _executionLimit.Release();
+                ReturnEngine(engine);
+                _globalExecutionLimit.Release();
             }
         }
 
@@ -231,7 +259,7 @@ namespace Yomic.Core.Sources
                 // If it's a GET and no custom headers, call our built-in GetStringAsync which has cloudflare bypass built-in!
                 if (method == HttpMethod.Get && headers.Count == 0)
                 {
-                    var content = GetStringAsync(url).GetAwaiter().GetResult();
+                    var content = Task.Run(() => GetStringAsync(url)).GetAwaiter().GetResult();
                     return new JsResponse { body = content, status = 200 };
                 }
 
@@ -239,15 +267,73 @@ namespace Yomic.Core.Sources
                 var request = new HttpRequestMessage(method, url);
                 foreach (var h in headers)
                 {
-                    request.Headers.TryAddWithoutValidation(h.Key, h.Value);
+                    var key = h.Key.Trim();
+                    var val = h.Value;
+                    if (key.Equals("Referer", StringComparison.OrdinalIgnoreCase) || key.Equals("Referrer", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (Uri.TryCreate(val, UriKind.Absolute, out var refUri))
+                        {
+                            request.Headers.Referrer = refUri;
+                        }
+                    }
+                    else if (key.Equals("User-Agent", StringComparison.OrdinalIgnoreCase))
+                    {
+                        request.Headers.UserAgent.Clear();
+                        request.Headers.UserAgent.ParseAdd(val);
+                    }
+                    else
+                    {
+                        request.Headers.TryAddWithoutValidation(key, val);
+                    }
                 }
+
                 if (postBody != null)
                 {
                     request.Content = new StringContent(postBody, System.Text.Encoding.UTF8, "application/json");
                 }
 
-                var response = Client.SendAsync(request).GetAwaiter().GetResult();
-                var bodyText = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                var response = Task.Run(() => Client.SendAsync(request)).GetAwaiter().GetResult();
+
+                if ((response.StatusCode == System.Net.HttpStatusCode.Forbidden || response.StatusCode == System.Net.HttpStatusCode.Unauthorized) && url.Contains("softkomik"))
+                {
+                    // Refresh Cloudflare tokens
+                    var (ua, cookies) = Task.Run(() => Yomic.Core.Services.CloudflareBypassService.Instance.GetTokensAsync("https://softkomik.co")).GetAwaiter().GetResult();
+                    if (!string.IsNullOrEmpty(ua)) Client.DefaultRequestHeaders.UserAgent.ParseAdd(ua);
+                    if (cookies != null && cookies.Count > 0)
+                    {
+                        var targetHost = new Uri("https://softkomik.co").Host;
+                        foreach (var kv in cookies)
+                        {
+                            CookieContainer.Add(new System.Net.Cookie(kv.Key, kv.Value, "/", targetHost));
+                        }
+                    }
+
+                    // Re-create request for retry
+                    var retryRequest = new HttpRequestMessage(method, url);
+                    foreach (var h in headers)
+                    {
+                        var key = h.Key.Trim();
+                        var val = h.Value;
+                        if (key.Equals("Referer", StringComparison.OrdinalIgnoreCase) || key.Equals("Referrer", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (Uri.TryCreate(val, UriKind.Absolute, out var refUri)) retryRequest.Headers.Referrer = refUri;
+                        }
+                        else if (key.Equals("User-Agent", StringComparison.OrdinalIgnoreCase))
+                        {
+                            retryRequest.Headers.UserAgent.Clear();
+                            retryRequest.Headers.UserAgent.ParseAdd(val);
+                        }
+                        else
+                        {
+                            retryRequest.Headers.TryAddWithoutValidation(key, val);
+                        }
+                    }
+                    if (postBody != null) retryRequest.Content = new StringContent(postBody, System.Text.Encoding.UTF8, "application/json");
+
+                    response = Task.Run(() => Client.SendAsync(retryRequest)).GetAwaiter().GetResult();
+                }
+
+                var bodyText = Task.Run(() => response.Content.ReadAsStringAsync()).GetAwaiter().GetResult();
                 return new JsResponse { body = bodyText, status = (int)response.StatusCode };
             }
             catch (Exception ex)
@@ -407,11 +493,31 @@ namespace Yomic.Core.Sources
                     for (int i = 0; i < arr.Length; i++)
                     {
                         var obj = arr.Get(i).AsObject();
+                        var name = GetSafeString(obj, "name", GetSafeString(obj, "title"));
+                        
+                        var jsNumVal = obj.Get("chapterNumber");
+                        if (jsNumVal.IsUndefined()) jsNumVal = obj.Get("chapter");
+                        
+                        float chapterNumber = -1;
+                        if (jsNumVal.IsNumber())
+                        {
+                            chapterNumber = (float)jsNumVal.AsNumber();
+                        }
+                        else if (jsNumVal.IsString() && float.TryParse(jsNumVal.AsString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float parsedJsNum))
+                        {
+                            chapterNumber = parsedJsNum;
+                        }
+                        else
+                        {
+                            chapterNumber = ParseChapterNumber(name);
+                        }
+
                         list.Add(new Chapter
                         {
-                            Name = GetSafeString(obj, "name", GetSafeString(obj, "title")),
+                            Name = name,
                             Url = GetSafeString(obj, "url"),
-                            DateUpload = (long)GetSafeNumber(obj, "dateUpload")
+                            DateUpload = (long)GetSafeNumber(obj, "dateUpload"),
+                            ChapterNumber = chapterNumber
                         });
                     }
                 }
@@ -510,6 +616,29 @@ namespace Yomic.Core.Sources
             if (obj == null) return defaultValue;
             var val = obj.Get(propertyName);
             return val.IsNumber() ? val.AsNumber() : defaultValue;
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex _chapterNumberRegex = 
+            new(@"\b(?:ch|chapter|chap|chp)\.?\s*([0-9]+(?:\.[0-9]+)?)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        public static float ParseChapterNumber(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return -1;
+            
+            var match = _chapterNumberRegex.Match(name);
+            if (match.Success && float.TryParse(match.Groups[1].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float num))
+            {
+                return num;
+            }
+            
+            // Fallback: try to find any decimal number in the string
+            var numbers = System.Text.RegularExpressions.Regex.Matches(name, @"([0-9]+(?:\.[0-9]+)?)");
+            if (numbers.Count > 0 && float.TryParse(numbers[0].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float fallbackNum))
+            {
+                return fallbackNum;
+            }
+            
+            return -1;
         }
     }
 }
