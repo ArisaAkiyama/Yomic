@@ -32,14 +32,14 @@
                             <Border Background="#20FF5555" BorderBrush="#FF5555" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" IsVisible="{Binding IsNsfw}">
                                 <TextBlock Text="NSFW" FontSize="10" FontWeight="Bold" Foreground="#FF5555" VerticalAlignment="Center"/>
                             </Border>
-                            <Border Background="#30FF9800" BorderBrush="#FF9800" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" IsVisible="{Binding HasUpdate}" ToolTip.Tip="{Binding RemoteCommitDateText}">
-                                <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Border Background="#25FF9800" BorderBrush="#FF9800" BorderThickness="1" CornerRadius="12" Padding="8,3" VerticalAlignment="Center" IsVisible="{Binding HasUpdate}" ToolTip.Tip="{Binding RemoteCommitDateText}">
+                                <StackPanel Orientation="Horizontal" Spacing="5">
                                     <Viewbox Width="12" Height="12" VerticalAlignment="Center">
                                         <Canvas Width="24" Height="24">
-                                            <Path Data="M20 11a81 81 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a81 81 0 0 0 15.5 2m.5 4v-4h-4" Stroke="#FF9800" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                            <Path Data="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6" Stroke="#FF9800" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
                                         </Canvas>
                                     </Viewbox>
-                                    <TextBlock Text="{DynamicResource String.NewUpdateAvailable}" FontSize="10" FontWeight="Bold" Foreground="#FF9800" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{DynamicResource String.NewUpdateAvailable}" FontSize="11" FontWeight="SemiBold" Foreground="#FF9800" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -70,8 +70,8 @@
                     <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
                         
                         <!-- Update Button (For Installed Extensions with Updates available) -->
-                        <Button x:CompileBindings="False" Classes="ExtBtn" Background="#FF9800" 
-                                Foreground="White" ToolTip.Tip="{DynamicResource String.UpdateExtension}" Padding="10,6"
+                        <Button x:CompileBindings="False" Classes="ExtBtn ExtBtnUpdate" 
+                                ToolTip.Tip="{DynamicResource String.UpdateExtension}" Padding="12,6"
                                 Command="{Binding DataContext.UpdateExtensionCommand, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}"
                                 CommandParameter="{Binding}">
                             <Button.IsVisible>
@@ -84,10 +84,10 @@
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <Viewbox Width="14" Height="14" VerticalAlignment="Center">
                                     <Canvas Width="24" Height="24">
-                                        <Path Data="M20 11a81 81 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a81 81 0 0 0 15.5 2m.5 4v-4h-4" Stroke="White" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                        <Path Data="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" Stroke="White" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
                                     </Canvas>
                                 </Viewbox>
-                                <TextBlock Text="{DynamicResource String.Update}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
+                                <TextBlock Text="{DynamicResource String.Update}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" Foreground="White"/>
                             </StackPanel>
                         </Button>
                         
@@ -205,6 +205,19 @@
         </Style>
         <Style Selector="Button.ExtBtn:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+        </Style>
+
+        <Style Selector="Button.ExtBtnUpdate">
+            <Setter Property="Background" Value="#FF9800"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+        <Style Selector="Button.ExtBtnUpdate:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#FFA726"/>
+        </Style>
+        <Style Selector="Button.ExtBtnUpdate:pointerover">
+            <Setter Property="Foreground" Value="White"/>
         </Style>
 
 
