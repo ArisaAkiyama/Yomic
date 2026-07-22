@@ -32,8 +32,8 @@
                             <Border Background="#20FF5555" BorderBrush="#FF5555" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" IsVisible="{Binding IsNsfw}">
                                 <TextBlock Text="NSFW" FontSize="10" FontWeight="Bold" Foreground="#FF5555" VerticalAlignment="Center"/>
                             </Border>
-                            <Border Background="#25FF9800" BorderBrush="#FF9800" BorderThickness="1" CornerRadius="12" Padding="8,3" VerticalAlignment="Center" IsVisible="{Binding HasUpdate}" ToolTip.Tip="{Binding RemoteCommitDateText}">
-                                <TextBlock Text="{DynamicResource String.NewUpdateAvailable}" FontSize="11" FontWeight="SemiBold" Foreground="#FF9800" VerticalAlignment="Center"/>
+                            <Border Background="#250078D4" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1" CornerRadius="12" Padding="8,3" VerticalAlignment="Center" IsVisible="{Binding HasUpdate}" ToolTip.Tip="{Binding RemoteCommitDateText}">
+                                <TextBlock Text="{DynamicResource String.NewUpdateAvailable}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Center"/>
                             </Border>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0">
@@ -201,13 +201,13 @@
         </Style>
 
         <Style Selector="Button.ExtBtnUpdate">
-            <Setter Property="Background" Value="#FF9800"/>
+            <Setter Property="Background" Value="{DynamicResource PrimaryAccent}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="Padding" Value="12,6"/>
             <Setter Property="CornerRadius" Value="6"/>
         </Style>
         <Style Selector="Button.ExtBtnUpdate:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#FFA726"/>
+            <Setter Property="Background" Value="#1B87DE"/>
         </Style>
         <Style Selector="Button.ExtBtnUpdate:pointerover">
             <Setter Property="Foreground" Value="White"/>
