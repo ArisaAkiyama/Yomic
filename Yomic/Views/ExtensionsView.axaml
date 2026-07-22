@@ -406,14 +406,11 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,0,0" VerticalAlignment="Center">
                     <!-- Refresh Button -->
                     <Button Classes="header-action" Command="{Binding RefreshCommand}" ToolTip.Tip="Segarkan Ekstensi &amp; Periksa Pembaruan">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <Viewbox Width="16" Height="16" VerticalAlignment="Center">
-                                <Canvas Width="24" Height="24">
-                                    <Path Data="M 20 11 A 8.1 8.1 0 0 0 4.5 9 M 4 5 v 4 h 4 M 4 13 A 8.1 8.1 0 0 0 19.5 15 M 20 19 v -4 h -4" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
-                                </Canvas>
-                            </Viewbox>
-                            <TextBlock Text="{DynamicResource String.Refresh}" FontSize="13" FontWeight="Medium" VerticalAlignment="Center"/>
-                        </StackPanel>
+                        <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M 20 11 A 8.1 8.1 0 0 0 4.5 9 M 4 5 v 4 h 4 M 4 13 A 8.1 8.1 0 0 0 19.5 15 M 20 19 v -4 h -4" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                            </Canvas>
+                        </Viewbox>
                     </Button>
 
                     <!-- Filter Button -->
