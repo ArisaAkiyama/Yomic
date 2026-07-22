@@ -31,7 +31,7 @@ namespace Yomic
                 var baseEx = args.Exception?.GetBaseException();
                 if (baseEx != null)
                 {
-                    Yomic.Core.Services.LogService.Warn("Global", $"UnobservedTaskException (background): {baseEx.Message}");
+                    Yomic.Core.Services.LogService.Warning("Global", $"UnobservedTaskException (background): {baseEx.Message}");
                 }
             };
 
