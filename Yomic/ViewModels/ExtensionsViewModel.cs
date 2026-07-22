@@ -366,13 +366,27 @@ namespace Yomic.ViewModels
                         }
                     }
                     FilterExtensions();
-                    _ = CheckExtensionUpdatesAsync();
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Failed to fetch remote extensions: {ex.Message}");
             }
+        }
+
+        private Version ParseVersion(string? verStr)
+        {
+            if (string.IsNullOrWhiteSpace(verStr)) return new Version(1, 0, 0);
+            var clean = verStr.TrimStart('v', 'V').Trim();
+            if (Version.TryParse(clean, out var parsed))
+            {
+                return parsed;
+            }
+            if (Version.TryParse(clean + ".0", out var parsed2))
+            {
+                return parsed2;
+            }
+            return new Version(1, 0, 0);
         }
 
         private async System.Threading.Tasks.Task FetchRemoteJsExtensionsFromFolderAsync(string folderName)
@@ -425,20 +439,11 @@ namespace Yomic.ViewModels
                 if (string.IsNullOrEmpty(existing.RemoteDownloadUrl)) existing.RemoteDownloadUrl = downloadUrl;
 
                 var remoteVersion = file.TryGetProperty("version", out var vProp) ? vProp.GetString() : null;
-                var commitDateStr = file.TryGetProperty("last_commit_date", out var dProp) ? dProp.GetString() : null;
 
-                bool isVersionNewer = false;
-                if (!string.IsNullOrEmpty(remoteVersion) && !string.IsNullOrEmpty(existing.Version))
-                {
-                    if (Version.TryParse(remoteVersion, out var rVer) && Version.TryParse(existing.Version, out var lVer))
-                    {
-                        isVersionNewer = rVer > lVer;
-                    }
-                    else
-                    {
-                        isVersionNewer = !string.Equals(remoteVersion, existing.Version, StringComparison.OrdinalIgnoreCase);
-                    }
-                }
+                var rVer = ParseVersion(remoteVersion);
+                var lVer = ParseVersion(existing.Version);
+
+                bool isVersionNewer = rVer > lVer;
 
                 if (isVersionNewer)
                 {
