@@ -33,14 +33,7 @@
                                 <TextBlock Text="NSFW" FontSize="10" FontWeight="Bold" Foreground="#FF5555" VerticalAlignment="Center"/>
                             </Border>
                             <Border Background="#25FF9800" BorderBrush="#FF9800" BorderThickness="1" CornerRadius="12" Padding="8,3" VerticalAlignment="Center" IsVisible="{Binding HasUpdate}" ToolTip.Tip="{Binding RemoteCommitDateText}">
-                                <StackPanel Orientation="Horizontal" Spacing="5">
-                                    <Viewbox Width="12" Height="12" VerticalAlignment="Center">
-                                        <Canvas Width="24" Height="24">
-                                            <Path Data="M 20 11 A 8.1 8.1 0 0 0 4.5 9 M 4 5 v 4 h 4 M 4 13 A 8.1 8.1 0 0 0 19.5 15 M 20 19 v -4 h -4" Stroke="#FF9800" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
-                                        </Canvas>
-                                    </Viewbox>
-                                    <TextBlock Text="{DynamicResource String.NewUpdateAvailable}" FontSize="11" FontWeight="SemiBold" Foreground="#FF9800" VerticalAlignment="Center"/>
-                                </StackPanel>
+                                <TextBlock Text="{DynamicResource String.NewUpdateAvailable}" FontSize="11" FontWeight="SemiBold" Foreground="#FF9800" VerticalAlignment="Center"/>
                             </Border>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0">
