@@ -262,6 +262,7 @@ namespace Yomic.ViewModels
 
         public ReactiveCommand<ExtensionItem, Unit> DownloadExtensionCommand { get; }
         public ReactiveCommand<ExtensionItem, Unit> UpdateExtensionCommand { get; }
+        public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
 
         public ExtensionsViewModel(MainWindowViewModel mainVM, SourceManager sourceManager)
         {
@@ -289,6 +290,7 @@ namespace Yomic.ViewModels
             AddExtensionCommand = ReactiveCommand.Create(AddExtension);
             DownloadExtensionCommand = ReactiveCommand.Create<ExtensionItem>(DownloadExtension);
             UpdateExtensionCommand = ReactiveCommand.Create<ExtensionItem>(UpdateExtension);
+            RefreshCommand = ReactiveCommand.CreateFromTask(RefreshExtensionsAsync);
             
             SetLanguageFilterCommand = ReactiveCommand.Create<string>(lang =>
             {
@@ -732,6 +734,14 @@ namespace Yomic.ViewModels
             }
         }
 
+        private async System.Threading.Tasks.Task RefreshExtensionsAsync()
+        {
+            _mainVM.ShowNotification("Memeriksa pembaruan ekstensi...", NotificationType.Info);
+            LoadExtensions();
+            await FetchRemoteExtensionsAsync();
+            _mainVM.ShowNotification("Pemeriksaan ekstensi selesai!", NotificationType.Success);
+        }
+
         private async System.Threading.Tasks.Task CheckExtensionUpdatesAsync()
         {
             if (IsOffline) return;
@@ -743,7 +753,21 @@ namespace Yomic.ViewModels
             {
                 try
                 {
-                    var fileName = item.Name.EndsWith(".js", StringComparison.OrdinalIgnoreCase) ? item.Name : $"{item.Name}.js";
+                    // Fix: Extract exact filename from DownloadUrl if available, or convert name to lowercase .js
+                    string fileName = "";
+                    if (!string.IsNullOrEmpty(item.RemoteDownloadUrl))
+                    {
+                        fileName = System.IO.Path.GetFileName(new Uri(item.RemoteDownloadUrl).AbsolutePath);
+                    }
+                    else if (!string.IsNullOrEmpty(item.DownloadUrl))
+                    {
+                        fileName = System.IO.Path.GetFileName(new Uri(item.DownloadUrl).AbsolutePath);
+                    }
+                    else
+                    {
+                        fileName = item.Name.ToLower() + ".js";
+                    }
+
                     var url = $"https://api.github.com/repos/ArisaAkiyama/extension-yomic/commits?path={Uri.EscapeDataString(fileName)}&per_page=1";
                     
                     if (!_httpClient.DefaultRequestHeaders.UserAgent.Any())
@@ -781,7 +805,7 @@ namespace Yomic.ViewModels
                                         item.RemoteDownloadUrl = $"https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/main/{fileName}";
                                     }
 
-                                    LogService.Info("ExtensionsVM", $"Update available for {item.Name}! GitHub Commit: {remoteCommitUtc}, Local file write time: {localTimeUtc}");
+                                    LogService.Info("ExtensionsVM", $"Update available for {item.Name} ({fileName})! GitHub Commit: {remoteCommitUtc}, Local file write time: {localTimeUtc}");
                                 }
                                 else
                                 {
