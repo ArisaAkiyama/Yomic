@@ -962,6 +962,201 @@
                     <Binding Path="!IsLoading"/>
                 </MultiBinding>
              </StackPanel.IsVisible>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                             </Border>
+                         </Button>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- Sync Overlay (Skeleton Grid Loading View) -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Disabled" IsVisible="{Binding IsRefreshing}" Margin="30,0,30,0">
+                <WrapPanel Orientation="Horizontal" ItemWidth="175" ItemHeight="310" HorizontalAlignment="Center">
+                    <!-- 14 Skeleton cards to fill the screen -->
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="120" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="80" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="110" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="70" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="130" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="90" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="100" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="60" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="125" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="85" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="115" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="75" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="105" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="65" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="110" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="80" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="120" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="70" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="95" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="65" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="115" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="75" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="105" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="60" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="125" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="85" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="110" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="70" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                </WrapPanel>
+            </ScrollViewer>
+
+            <!-- Skeleton Loading State (Initial Load) -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Disabled" IsVisible="{Binding IsLoading}" Margin="30,0,30,0">
+                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,20">
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="120" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="80" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="110" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="70" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="130" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="90" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="100" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="60" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="125" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="85" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="115" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="75" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="105" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="65" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="110" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="80" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="120" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="70" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="95" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="65" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="115" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="75" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="105" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="60" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="125" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="85" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" Width="150"/>
+                        <Border Classes="SkeletonText" Width="110" Height="14" HorizontalAlignment="Left"/>
+                        <Border Classes="SkeletonText" Width="70" Height="10" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                </WrapPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- Empty State (Only if NOT loading and IS empty) -->
+        <!-- Case 1: Library Empty (No Items) -->
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
+             <StackPanel.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding Path="IsLibraryEmpty"/>
+                    <Binding Path="!IsLoading"/>
+                </MultiBinding>
+             </StackPanel.IsVisible>
+
+            <Viewbox Width="48" Height="48" HorizontalAlignment="Center">
+                <Canvas Width="24" Height="24">
+                    <Path Data="M5 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-14a1 1 0 0 1 1 -1 M9 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-14a1 1 0 0 1 1 -1 M14 8h4a1 1 0 0 1 1 1v11a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-11a1 1 0 0 1 1 -1 M6 8h2 M10 8h2 M16 12h2 M16 16h2" Stroke="{DynamicResource HoverBackground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                </Canvas>
+            </Viewbox>
+            <TextBlock Text="{DynamicResource String.LibraryEmpty}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
+            <TextBlock Text="{DynamicResource String.LibraryEmptyDesc}" FontSize="16" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+            
+            <Button Content="{DynamicResource String.BrowseSources}" Classes="NavBtn" Background="#0078D7" Foreground="#FFFFFF" Padding="20,10" CornerRadius="8"
+                    Command="{Binding GoToBrowseCommand}" 
+                    HorizontalAlignment="Center" Margin="0,10,0,0"/>
+        </StackPanel>
+
+        <!-- Case 2: No Search Results -->
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
+             <StackPanel.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding Path="HasNoResults"/>
+                    <Binding Path="!IsLoading"/>
+                </MultiBinding>
+             </StackPanel.IsVisible>
 
             <Viewbox Width="48" Height="48" HorizontalAlignment="Center">
                 <Canvas Width="24" Height="24">
@@ -972,7 +1167,20 @@
             <TextBlock Text="{DynamicResource String.NoResultsFoundDesc}" FontSize="16" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
         </StackPanel>
 
-        <!-- Filter Overlay REMOVED for debugging -->
+        <!-- Bottom Floating Lazy Loading Bar -->
+        <Border VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                Margin="0,0,0,24" Padding="18,10"
+                Background="#E0181825" CornerRadius="20"
+                BoxShadow="0 4 16 0 #50000000"
+                IsVisible="{Binding IsLoadingMore}">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <helpers:LoadingArcs Width="22" Height="22"/>
+                <TextBlock Text="{DynamicResource String.LoadingMore}" 
+                           Foreground="{DynamicResource PrimaryText}" 
+                           FontSize="13" FontWeight="SemiBold" 
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
 
     </Panel>
 </UserControl>
