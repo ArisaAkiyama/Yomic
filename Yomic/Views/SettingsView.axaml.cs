@@ -35,6 +35,12 @@ namespace Yomic.Views
             }
         }
 
+        private static readonly Avalonia.Platform.Storage.FilePickerFileType ZipFileType = new("Zip Archive (*.zip)")
+        {
+            Patterns = new[] { "*.zip" },
+            MimeTypes = new[] { "application/zip", "application/x-zip-compressed" }
+        };
+
         private async void OpenBackupDialog()
         {
             var topLevel = TopLevel.GetTopLevel(this);
@@ -47,8 +53,8 @@ namespace Yomic.Views
                 DefaultExtension = "zip",
                 FileTypeChoices = new[]
                 {
-                    new Avalonia.Platform.Storage.FilePickerFileType("Zip Archive (*.zip)") { Patterns = new[] { "*.zip" } },
-                    new Avalonia.Platform.Storage.FilePickerFileType("All Files (*.*)") { Patterns = new[] { "*.*" } }
+                    ZipFileType,
+                    Avalonia.Platform.Storage.FilePickerFileTypes.All
                 }
             });
 
@@ -97,8 +103,8 @@ namespace Yomic.Views
                 AllowMultiple = false,
                 FileTypeFilter = new[]
                 {
-                    new Avalonia.Platform.Storage.FilePickerFileType("Zip Archive (*.zip)") { Patterns = new[] { "*.zip" } },
-                    new Avalonia.Platform.Storage.FilePickerFileType("All Files (*.*)") { Patterns = new[] { "*.*" } }
+                    ZipFileType,
+                    Avalonia.Platform.Storage.FilePickerFileTypes.All
                 }
             });
 
