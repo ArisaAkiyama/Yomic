@@ -2,6 +2,15 @@
 
 All notable changes to **Yomic** will be documented in this file.
 
+## [1.7.1] - 2026-07-26
+
+### Added
+- Native .NET 10 Desktop Runtime auto-downloader inside Inno Setup installer.
+- MSBuild auto-installer compiler target in `Yomic.csproj`.
+- Terminal / Command Prompt CLI integration (`yomic` command).
+- Single-instance protection (`AppMutex`) and automatic cache cleanup on upgrade.
+- Complete 100% Bahasa Indonesia language support in installer.
+
 ## [1.7.0] - 2026-07-23
 
 ### Changed
