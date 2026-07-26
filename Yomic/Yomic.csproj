@@ -60,8 +60,8 @@
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" Exclude="Assets\**\*.axaml" />
   </ItemGroup>
-  <ItemGroup>
-    <!-- Auto-compile Inno Setup installer after dotnet publish in Release mode -->
+
+  <!-- Auto-compile Inno Setup installer after dotnet publish in Release mode -->
   <Target Name="BuildInnoSetupInstaller" AfterTargets="Publish" Condition="'$(Configuration)' == 'Release'">
     <Exec Command="&quot;C:\Users\ASUS\AppData\Local\Programs\Inno Setup 6\ISCC.exe&quot; &quot;$(MSBuildThisFileDirectory)..\setup.iss&quot;"
           ContinueOnError="false" />
