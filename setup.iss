@@ -283,36 +283,90 @@ begin
   end;
 end;
 
-// -------------------------------------------------------
-// OnInitializeSetup: validate .NET BEFORE wizard shows
-// -------------------------------------------------------
-function InitializeSetup(): Boolean;
 var
-  ErrorCode: Integer;
-begin
-  Result := True;
+  DownloadPage: TDownloadWizardPage;
 
-  if not IsDotNetInstalled() then
-  begin
-    if MsgBox(
-      CustomMessage('DotNetMissing'),
-      mbError, MB_OKCANCEL) = IDOK then
-    begin
-      ShellExec('open',
-        'https://dotnet.microsoft.com/en-us/download/dotnet/{#DotNetVersion}',
-        '', '', SW_SHOWNORMAL, ewNoWait, ErrorCode);
+// -------------------------------------------------------
+// Helper: Download and Install .NET 10 Runtime automatically
+// -------------------------------------------------------
+function InstallDotNetRuntime(): Boolean;
+var
+  ResultCode: Integer;
+  InstallerPath: String;
+begin
+  Result := False;
+  DownloadPage.Clear;
+  // Official Microsoft .NET 10 Desktop Runtime Installer URL
+  DownloadPage.Add(
+    'https://dotnetcli.azureedge.net/dotnet/WindowsDesktop/10.0.0/windowsdesktop-runtime-10.0.0-win-x64.exe',
+    'windowsdesktop-runtime-10.0.0-win-x64.exe',
+    '');
+  
+  DownloadPage.Show;
+  try
+    try
+      DownloadPage.Download;
+      InstallerPath := ExpandConstant('{tmp}\windowsdesktop-runtime-10.0.0-win-x64.exe');
+      if FileExists(InstallerPath) then
+      begin
+        // Run .NET installer silently
+        Exec(InstallerPath, '/passive /norestart', '', SW_SHOW, ewWaitUntilTerminated, ResultCode);
+        Result := IsDotNetInstalled();
+      end;
+    except
+      if not DownloadPage.AbortedByUser then
+        MsgBox('Gagal mengunduh .NET 10 Runtime: ' + GetExceptionMessage, mbError, MB_OK);
     end;
-    Result := False; // Abort setup
-    Exit;
+  finally
+    DownloadPage.Hide;
   end;
 end;
 
 // -------------------------------------------------------
-// OnInitializeWizard: post-validation setup tasks
+// OnInitializeWizard: Setup DownloadPage & Legacy Cleanup
 // -------------------------------------------------------
 procedure InitializeWizard();
 begin
+  DownloadPage := CreateDownloadPage(
+    SetupMessage(msgWizardPreparing),
+    SetupMessage(msgPreparingDesc),
+    nil);
   CheckAndRemoveLegacyInstall();
+end;
+
+// -------------------------------------------------------
+// NextButtonClick: Intercept Ready page to verify/install .NET
+// -------------------------------------------------------
+function NextButtonClick(CurPageID: Integer): Boolean;
+var
+  ErrorCode: Integer;
+begin
+  Result := True;
+  
+  if CurPageID = wpReady then
+  begin
+    if not IsDotNetInstalled() then
+    begin
+      if MsgBox(
+        'Yomic memerlukan .NET 10 Desktop Runtime.' + #13#10 + #13#10 +
+        'Apakah Anda ingin mengunduh dan memasangnya secara otomatis sekarang?',
+        mbConfirmation, MB_YESNO) = IDYES then
+      begin
+        if not InstallDotNetRuntime() then
+        begin
+          if MsgBox(
+            'Instalasi .NET 10 belum selesai. Buka halaman unduhan di browser?',
+            mbError, MB_YESNO) = IDYES then
+          begin
+            ShellExec('open',
+              'https://dotnet.microsoft.com/en-us/download/dotnet/{#DotNetVersion}',
+              '', '', SW_SHOWNORMAL, ewNoWait, ErrorCode);
+          end;
+          Result := False;
+        end;
+      end;
+    end;
+  end;
 end;
 
 // -------------------------------------------------------
