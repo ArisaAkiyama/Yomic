@@ -74,14 +74,14 @@ Yomic is a centralized manga manager and high-performance reader. Instead of ope
 ### Automatic Installation (Recommended)
 1. Open **Yomic** and click the **Extensions** tab.
 2. Under the **Available** list, choose the sources you want to add.
-3. Click **Download** on any extension to automatically download and install it.
+3. Click the **Download & Install** button next to any extension — Yomic will download, extract, and register the extension automatically.
 4. Go to the **Browse** tab to start exploring comic catalogs.
 
-### Manual Installation
-1. Obtain the extension package file (`.zip` or `.dll`).
-2. Open the **Extensions** tab in Yomic.
-3. Click **Add** in the upper-right corner.
-4. Select your extension file to install it immediately.
+### Manual / Local Extension Installation
+1. Obtain your extension file (`.js` script or `.zip` extension package).
+2. Open **Yomic** and navigate to the **Extensions** tab.
+3. Place your extension file into the Yomic Extensions directory (`%LOCALAPPDATA%\Yomic\Extensions`), or click **Install Local Extension** to pick your `.js` or `.zip` file.
+4. Yomic will load and activate the extension immediately without requiring an application restart.
 
 ---
 
