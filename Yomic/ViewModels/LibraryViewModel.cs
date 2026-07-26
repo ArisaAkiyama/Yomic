@@ -658,6 +658,7 @@ namespace Yomic.ViewModels
 
                       if (existingItem.Status != m.Status) existingItem.Status = m.Status;
                       if (existingItem.LastViewed != m.LastViewed) existingItem.LastViewed = m.LastViewed;
+                      if (existingItem.LastUpdate != m.LastUpdate) existingItem.LastUpdate = m.LastUpdate;
                       if (string.IsNullOrEmpty(existingItem.SourceName)) existingItem.SourceName = _mainVM.SourceManager.GetSource(m.Source)?.Name;
                       if (existingItem.HasDownloadedChapters != hasDownloaded) existingItem.HasDownloadedChapters = hasDownloaded;
                       if (existingItem.DownloadedCount != downloadedCount) existingItem.DownloadedCount = downloadedCount;
@@ -684,6 +685,7 @@ namespace Yomic.ViewModels
                            UnreadCount = unreadString,
                            Status = m.Status,
                            LastViewed = m.LastViewed,
+                           LastUpdate = m.LastUpdate,
                            HasDownloadedChapters = hasDownloaded,
                            DownloadedCount = downloadedCount,
                            CategoryIds = m.Categories?.Select(c => c.Id).ToList() ?? new List<long>(),
@@ -883,9 +885,9 @@ namespace Yomic.ViewModels
                  {
                      LibrarySortMode.TitleAsc => query.OrderBy(x => x.Title),
                      LibrarySortMode.TitleDesc => query.OrderByDescending(x => x.Title),
-                     LibrarySortMode.DateModified => query.OrderByDescending(x => x.LastUpdate),
-                     LibrarySortMode.UnreadCountDesc => query.OrderByDescending(x => int.TryParse(x.UnreadCount, out int c) ? c : 0),
-                     LibrarySortMode.LastReadDesc => query.OrderByDescending(x => x.LastViewed),
+                     LibrarySortMode.DateModified => query.OrderByDescending(x => x.LastUpdate > 0 ? x.LastUpdate : x.LastViewed).ThenBy(x => x.Title),
+                     LibrarySortMode.UnreadCountDesc => query.OrderByDescending(x => int.TryParse(x.UnreadCount, out int c) ? c : 0).ThenBy(x => x.Title),
+                     LibrarySortMode.LastReadDesc => query.OrderByDescending(x => x.LastViewed).ThenBy(x => x.Title),
                      _ => query.OrderBy(x => x.Title)
                  };
                        
