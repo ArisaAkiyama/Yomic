@@ -67,6 +67,7 @@ LicenseFile=d:\Project\DesktopKomik\LICENSE
 UninstallDisplayIcon={app}\{#MyAppExeName}
 UninstallDisplayName={#MyAppName} v{#MyAppVersion}
 CreateUninstallRegKey=yes
+UsedUserAreasWarning=no
 
 ; --- Version Info ---
 VersionInfoCompany={#MyAppPublisher}
