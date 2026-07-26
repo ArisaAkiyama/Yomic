@@ -517,38 +517,81 @@ namespace Yomic.Core.Services
         {
             dbManga.LastUpdate = now;
             
-            if (dbManga.Chapters.Count >= 3)
-            {
-                var recentChapters = dbManga.Chapters
-                    .Where(c => c.DateUpload > 0)
-                    .OrderByDescending(c => c.DateUpload)
-                    .Take(10)
-                    .ToList();
+            if (dbManga.Chapters == null || dbManga.Chapters.Count == 0) return;
 
-                if (recentChapters.Count >= 3)
+            var chaptersWithDates = dbManga.Chapters
+                .Where(c => c.DateUpload > 0)
+                .OrderByDescending(c => c.DateUpload)
+                .Take(20)
+                .ToList();
+
+            if (chaptersWithDates.Count == 0) return;
+
+            // 1. Group chapters into Release Batches (chapters within 18 hours of each other belong to 1 batch)
+            const long ClusterThresholdMs = 18L * 3600L * 1000L;
+            var batchTimestamps = new List<long>();
+            long currentBatchTime = chaptersWithDates[0].DateUpload;
+            batchTimestamps.Add(currentBatchTime);
+
+            for (int i = 1; i < chaptersWithDates.Count; i++)
+            {
+                long uploadTime = chaptersWithDates[i].DateUpload;
+                if (Math.Abs(currentBatchTime - uploadTime) >= ClusterThresholdMs)
                 {
-                    var diffs = new List<long>();
-                    for (int i = 0; i < recentChapters.Count - 1; i++)
-                    {
-                        long diff = recentChapters[i].DateUpload - recentChapters[i + 1].DateUpload;
-                        if (diff > 0 && diff < 31536000000)
-                        {
-                            diffs.Add(diff);
-                        }
-                    }
-                    
-                    if (diffs.Count > 0)
-                    {
-                        diffs.Sort();
-                        long medianDiff = diffs[diffs.Count / 2];
-                        if (diffs.Count % 2 == 0)
-                        {
-                            medianDiff = (diffs[(diffs.Count / 2) - 1] + diffs[diffs.Count / 2]) / 2;
-                        }
-                        dbManga.NextUpdate = recentChapters[0].DateUpload + medianDiff;
-                    }
+                    currentBatchTime = uploadTime;
+                    batchTimestamps.Add(currentBatchTime);
                 }
             }
+
+            // 2. Calculate intervals between consecutive release batches & quantize cycle
+            long quantizedCycleMs = 7L * 86400L * 1000L; // Default weekly (7 days)
+
+            if (batchTimestamps.Count >= 2)
+            {
+                var diffs = new List<long>();
+                for (int i = 0; i < batchTimestamps.Count - 1; i++)
+                {
+                    long diff = batchTimestamps[i] - batchTimestamps[i + 1];
+                    if (diff > 0 && diff < 31536000000L) // Less than 1 year
+                    {
+                        diffs.Add(diff);
+                    }
+                }
+
+                if (diffs.Count > 0)
+                {
+                    diffs.Sort();
+                    long medianDiff = diffs[diffs.Count / 2];
+                    if (diffs.Count % 2 == 0)
+                    {
+                        medianDiff = (diffs[(diffs.Count / 2) - 1] + diffs[diffs.Count / 2]) / 2;
+                    }
+
+                    double days = TimeSpan.FromMilliseconds(medianDiff).TotalDays;
+                    if (days <= 2.5)
+                        quantizedCycleMs = 1L * 86400L * 1000L;       // Daily (1 day)
+                    else if (days <= 10.5)
+                        quantizedCycleMs = 7L * 86400L * 1000L;      // Weekly (7 days)
+                    else if (days <= 21.0)
+                        quantizedCycleMs = 14L * 86400L * 1000L;     // Bi-Weekly (14 days)
+                    else
+                        quantizedCycleMs = 30L * 86400L * 1000L;     // Monthly (30 days)
+                }
+            }
+
+            // 3. Project NextUpdate forward from the latest release batch
+            long latestRelease = batchTimestamps[0];
+            long nextUpdate = latestRelease + quantizedCycleMs;
+
+            if (nextUpdate <= now && (now - latestRelease) < (quantizedCycleMs * 2))
+            {
+                while (nextUpdate <= now)
+                {
+                    nextUpdate += quantizedCycleMs;
+                }
+            }
+
+            dbManga.NextUpdate = nextUpdate;
         }
 
 
@@ -609,6 +652,13 @@ namespace Yomic.Core.Services
                 {
                     chapter.Read = isRead;
                     if (isRead) chapter.IsNew = false; // Clear "New" badge when read
+
+                    var manga = await context.Mangas.FirstOrDefaultAsync(m => m.Id == chapter.MangaId);
+                    if (manga != null)
+                    {
+                        manga.LastViewed = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    }
+
                     await context.SaveChangesAsync();
                     System.Diagnostics.Debug.WriteLine($"[LibraryService] Set chapter read status to {isRead}: {chapter.Name}");
                 }
@@ -618,6 +668,7 @@ namespace Yomic.Core.Services
                      var manga = await context.Mangas.FirstOrDefaultAsync(m => m.Url == mangaUrl && m.Source == sourceId);
                      if (manga != null)
                      {
+                         manga.LastViewed = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                          var newChapter = new Chapter
                          {
                              MangaId = manga.Id,
@@ -649,6 +700,11 @@ namespace Yomic.Core.Services
                 if (chapter != null)
                 {
                     chapter.LastPageRead = pageIndex;
+                    var manga = await context.Mangas.FirstOrDefaultAsync(m => m.Id == chapter.MangaId);
+                    if (manga != null)
+                    {
+                        manga.LastViewed = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    }
                     await context.SaveChangesAsync();
                     System.Diagnostics.Debug.WriteLine($"[LibraryService] Saved scroll position ({pageIndex}) for chapter: {chapter.Name}");
                 }
@@ -668,6 +724,11 @@ namespace Yomic.Core.Services
                 if (chapter != null)
                 {
                     chapter.LastPageRead = value;
+                    var manga = context.Mangas.FirstOrDefault(m => m.Id == chapter.MangaId);
+                    if (manga != null)
+                    {
+                        manga.LastViewed = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    }
                     context.SaveChanges();
                     System.Diagnostics.Debug.WriteLine($"[LibraryService] Saved scroll position ({value}) for chapter: {chapter.Name}");
                 }

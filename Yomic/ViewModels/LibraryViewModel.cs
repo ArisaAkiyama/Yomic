@@ -108,7 +108,7 @@ namespace Yomic.ViewModels
         
         private List<MangaItem> _currentFilteredItems = new();
         private int _loadedCount = 0;
-        private const int PageSize = 40;
+        private const int PageSize = 100;
 
         private bool _isLoadingMore;
         public bool IsLoadingMore

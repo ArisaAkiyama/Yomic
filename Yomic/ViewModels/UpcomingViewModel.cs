@@ -161,29 +161,77 @@ namespace Yomic.ViewModels
                             else
                                 waitingFor = GetResourceString("String.WaitingForNewChapter", "Waiting for New Chapter");
                         }
-                        if (recentChapters.Count >= 3)
+                        var chaptersWithDates = m.Chapters.Where(c => c.DateUpload > 0).OrderByDescending(c => c.DateUpload).Take(20).ToList();
+                        if (chaptersWithDates.Count > 0)
                         {
-                            var diffs = new List<long>();
-                            for (int i = 0; i < recentChapters.Count - 1; i++)
+                            const long ClusterThresholdMs = 18L * 3600L * 1000L;
+                            var batchTimestamps = new List<long>();
+                            long currentBatchTime = chaptersWithDates[0].DateUpload;
+                            batchTimestamps.Add(currentBatchTime);
+
+                            for (int i = 1; i < chaptersWithDates.Count; i++)
                             {
-                                long diff = recentChapters[i].DateUpload - recentChapters[i + 1].DateUpload;
-                                if (diff > 0 && diff < 31536000000) diffs.Add(diff);
+                                long uploadTime = chaptersWithDates[i].DateUpload;
+                                if (Math.Abs(currentBatchTime - uploadTime) >= ClusterThresholdMs)
+                                {
+                                    currentBatchTime = uploadTime;
+                                    batchTimestamps.Add(currentBatchTime);
+                                }
                             }
-                            if (diffs.Count > 0)
+
+                            long quantizedCycleMs = 7L * 86400L * 1000L; // Default weekly (7 days)
+                            frequency = GetResourceString("String.Weekly", "Weekly");
+
+                            if (batchTimestamps.Count >= 2)
                             {
-                                diffs.Sort();
-                                long medianDiff = diffs[diffs.Count / 2];
-                                if (diffs.Count % 2 == 0) medianDiff = (diffs[(diffs.Count / 2) - 1] + diffs[diffs.Count / 2]) / 2;
-                                
-                                realNextUpdate = recentChapters[0].DateUpload + medianDiff;
-                                
-                                double days = TimeSpan.FromMilliseconds(medianDiff).TotalDays;
-                                if (days <= 2.5) frequency = GetResourceString("String.Daily", "Daily");
-                                else if (days <= 9.5) frequency = GetResourceString("String.Weekly", "Weekly");
-                                else if (days <= 16.5) frequency = GetResourceString("String.BiWeekly", "Bi-Weekly");
-                                else if (days <= 35) frequency = GetResourceString("String.Monthly", "Monthly");
-                                else frequency = GetResourceString("String.Irregular", "Irregular");
+                                var diffs = new List<long>();
+                                for (int i = 0; i < batchTimestamps.Count - 1; i++)
+                                {
+                                    long diff = batchTimestamps[i] - batchTimestamps[i + 1];
+                                    if (diff > 0 && diff < 31536000000L) diffs.Add(diff);
+                                }
+                                if (diffs.Count > 0)
+                                {
+                                    diffs.Sort();
+                                    long medianDiff = diffs[diffs.Count / 2];
+                                    if (diffs.Count % 2 == 0) medianDiff = (diffs[(diffs.Count / 2) - 1] + diffs[diffs.Count / 2]) / 2;
+
+                                    double days = TimeSpan.FromMilliseconds(medianDiff).TotalDays;
+                                    if (days <= 2.5)
+                                    {
+                                        quantizedCycleMs = 1L * 86400L * 1000L;
+                                        frequency = GetResourceString("String.Daily", "Daily");
+                                    }
+                                    else if (days <= 10.5)
+                                    {
+                                        quantizedCycleMs = 7L * 86400L * 1000L;
+                                        frequency = GetResourceString("String.Weekly", "Weekly");
+                                    }
+                                    else if (days <= 21.0)
+                                    {
+                                        quantizedCycleMs = 14L * 86400L * 1000L;
+                                        frequency = GetResourceString("String.BiWeekly", "Bi-Weekly");
+                                    }
+                                    else
+                                    {
+                                        quantizedCycleMs = 30L * 86400L * 1000L;
+                                        frequency = GetResourceString("String.Monthly", "Monthly");
+                                    }
+                                }
                             }
+
+                            long latestRelease = batchTimestamps[0];
+                            long calculatedNext = latestRelease + quantizedCycleMs;
+
+                            if (calculatedNext <= now && (now - latestRelease) < (quantizedCycleMs * 2))
+                            {
+                                while (calculatedNext <= now)
+                                {
+                                    calculatedNext += quantizedCycleMs;
+                                }
+                            }
+
+                            realNextUpdate = calculatedNext;
                         }
                     }
 

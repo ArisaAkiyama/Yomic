@@ -14,8 +14,6 @@ namespace Yomic.Views
 {
     public partial class LibraryView : UserControl
     {
-        private IDisposable? _scrollSubscription;
-
         public LibraryView()
         {
             InitializeComponent();
@@ -24,19 +22,31 @@ namespace Yomic.Views
             DetachedFromVisualTree += (_, _) => DetachLazyLoading();
         }
 
+        private EventHandler<ScrollChangedEventArgs>? _scrollHandler;
+
         private void AttachLazyLoading()
         {
             DetachLazyLoading();
 
-            var scrollViewer = this.FindControl<ScrollViewer>("LibraryScrollViewer");
-            if (scrollViewer == null) return;
+            var gridBox = this.FindControl<ListBox>("LibraryListBox");
+            var listModeBox = this.FindControl<ListBox>("LibraryListModeBox");
 
-            _scrollSubscription = Observable
-                .FromEventPattern<ScrollChangedEventArgs>(
-                    h => scrollViewer.ScrollChanged += h,
-                    h => scrollViewer.ScrollChanged -= h)
-                .Throttle(TimeSpan.FromMilliseconds(120))
-                .Subscribe(_ => Avalonia.Threading.Dispatcher.UIThread.Post(() => TryLoadMore(scrollViewer)));
+            _scrollHandler = (sender, e) =>
+            {
+                if (e.Source is ScrollViewer sv)
+                {
+                    TryLoadMore(sv);
+                }
+            };
+
+            if (gridBox != null)
+            {
+                gridBox.AddHandler(ScrollViewer.ScrollChangedEvent, _scrollHandler);
+            }
+            if (listModeBox != null)
+            {
+                listModeBox.AddHandler(ScrollViewer.ScrollChangedEvent, _scrollHandler);
+            }
         }
 
         private void TryLoadMore(ScrollViewer scrollViewer)
@@ -52,8 +62,21 @@ namespace Yomic.Views
 
         private void DetachLazyLoading()
         {
-            _scrollSubscription?.Dispose();
-            _scrollSubscription = null;
+            if (_scrollHandler == null) return;
+
+            var gridBox = this.FindControl<ListBox>("LibraryListBox");
+            var listModeBox = this.FindControl<ListBox>("LibraryListModeBox");
+
+            if (gridBox != null)
+            {
+                gridBox.RemoveHandler(ScrollViewer.ScrollChangedEvent, _scrollHandler);
+            }
+            if (listModeBox != null)
+            {
+                listModeBox.RemoveHandler(ScrollViewer.ScrollChangedEvent, _scrollHandler);
+            }
+
+            _scrollHandler = null;
         }
 
         private void OnDataContextChanged(object? sender, EventArgs e)
