@@ -19,6 +19,12 @@ namespace Yomic.ViewModels
         public long Id { get; set; }
         public string Name { get; set; } = "";
         public string Version { get; set; } = "1.0";
+        /// <summary>Mihon-style integer version code. Higher = newer. e.g. 1.0.3 → 103</summary>
+        public int VersionCode { get; set; } = 100;
+        /// <summary>Mihon-style package name (= JS filename without .js). e.g. "kiryuu"</summary>
+        public string Pkg { get; set; } = "";
+        /// <summary>Source names from sources[] array in index.min.json</summary>
+        public string[] SourceNames { get; set; } = Array.Empty<string>();
         public string Language { get; set; } = "EN";
         private string _iconText = "E";
         public string IconText
@@ -30,7 +36,7 @@ namespace Yomic.ViewModels
         public string IconBackground { get; set; } = "#313244";
         public string Description { get; set; } = "";
         public string? FilePath { get; set; } // Path for uninstalled extensions
-        public string? DownloadUrl { get; set; } // Raw URL from GitHub
+        public string? DownloadUrl { get; set; } // Raw URL from GitHub (built from pkg)
 
         private string _fileSizeText = "";
         public string FileSizeText
@@ -165,27 +171,8 @@ namespace Yomic.ViewModels
             return string.Format("{0:0.#} {1}", number, suffixes[counter]);
         }
         
-        private static readonly HashSet<string> IndonesianExtensions = new(StringComparer.OrdinalIgnoreCase)
-        {
-            "luvyaa", "aarlas", "ainzscansid", "astralscans", "bacakomik", 
-            "bacami", "comicazen", "cosmicscansid", "dailysuka", 
-            "dojingnet", "doujindesu", "doujindesuunoriginal", "doujinku", "dreamteamsscans", 
-            "hentaicrot", "holotoon", "hwago", "inazumanga", "izanamiscans", 
-            "kanzenin", "kiryuu", "klikmanga", "komikav", "komikcast", 
-            "komikdewasa", "komikdewasaart", "komikhwa", "komikindo", "komikindoco", 
-            "komikindoid", "komiknesia", "komiknextgonline", "komikstation", "komiktap", 
-            "komiku", "komikucc", "komikucom", "komikzoid", "kumapoi", 
-            "kumopoi", "kuromanga", "lepoytl", "lianscans", "lumoskomik", 
-            "maid", "maidmanga", "mangacan", "mangakuri", "mangalay", "mangasusu", 
-            "mangatale", "manhwadesu", "manhwahana", "manhwaindo", "manhwalandmom", 
-            "manhwalistid", "manhwalistorg", "medusascans", "mgkomik", "mihentai", 
-            "mikoroku", "narasininja", "natsu", "ngamenkomik", "ngomik", 
-            "noromax", "okyykomik", "omicaso", "otascans", "pixhentai", 
-            "pornhwa18", "pramramadhan", "riztranslation", "roseveil", "sasangeyou", 
-            "sektedoujin", "sektekomik", "shinigami", "shirakami", "shirodoujin", 
-            "shiyurasub", "siimanga", "softkomik", "soulscans", "themanga", 
-            "tooncubus", "ulascomic", "westmanga", "yubikiri"
-        };
+        // Language detection is now handled by 'lang' field in index.min.json (Mihon-style)
+        // IndonesianExtensions hashset removed — no longer needed.
         
         private List<ExtensionItem> _allExtensionsCache = new();
         public ObservableCollection<ExtensionItem> FilteredExtensions { get; } = new();
@@ -309,68 +296,255 @@ namespace Yomic.ViewModels
             }
         }
 
-        private async System.Threading.Tasks.Task FetchRemoteExtensionsAsync()
-        {
-            if (IsOffline) return;
+        private bool _isFetchingRemote;
 
+        public async System.Threading.Tasks.Task PreloadRemoteExtensionsAsync()
+        {
+            await FetchRemoteExtensionsAsync(force: false);
+        }
+
+        private static string GetLocalIndexCachePath()
+        {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var dir = System.IO.Path.Combine(appData, "Yomic");
+            if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
+            return System.IO.Path.Combine(dir, "extensions_index.json");
+        }
+
+        private void LoadLocalIndexCache()
+        {
             try
             {
-                if (!_httpClient.DefaultRequestHeaders.UserAgent.Any())
+                var cachePath = GetLocalIndexCachePath();
+                if (System.IO.File.Exists(cachePath))
                 {
-                    _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Yomic-Desktop-App");
+                    string jsonText = System.IO.File.ReadAllText(cachePath);
+                    if (!string.IsNullOrWhiteSpace(jsonText))
+                    {
+                        ParseAndAddIndexJson(jsonText);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to load local index cache: {ex.Message}");
+            }
+        }
 
-                string? responseText = null;
-                // 1. Try raw.githubusercontent.com index.json FIRST (instant, rate-limit free, contains version & last_commit_date)
+        private void ParseAndAddIndexJson(string jsonText)
+        {
+            if (string.IsNullOrWhiteSpace(jsonText)) return;
+            try
+            {
+                var files = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(jsonText);
+                if (files.ValueKind == System.Text.Json.JsonValueKind.Array)
+                {
+                    foreach (var file in files.EnumerateArray())
+                    {
+                        var name = file.TryGetProperty("name", out var nameProp) ? nameProp.GetString() : null;
+                        if (string.IsNullOrWhiteSpace(name)) continue;
+
+                        AddRemoteJsExtension(file);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to parse index JSON: {ex.Message}");
+            }
+        }
+
+        private static readonly HttpClient _extensionClient = new HttpClient(new SocketsHttpHandler
+        {
+            AllowAutoRedirect = true,
+            AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate,
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            ConnectTimeout = TimeSpan.FromSeconds(5),
+            MaxConnectionsPerServer = 20,
+            ConnectCallback = ExtensionConnectCallback // Mihon-style DoH resolution to bypass ISP DNS blocking!
+        })
+        {
+            Timeout = System.Threading.Timeout.InfiniteTimeSpan
+        };
+
+        private static async System.Threading.Tasks.ValueTask<System.IO.Stream> ExtensionConnectCallback(SocketsHttpConnectionContext context, System.Threading.CancellationToken cancellationToken)
+        {
+            var host = context.DnsEndPoint.Host;
+            var port = context.DnsEndPoint.Port;
+            System.Net.IPAddress? ipAddress = null;
+
+            if (System.Net.IPAddress.TryParse(host, out var directIp))
+            {
+                ipAddress = directIp;
+            }
+            else
+            {
+                // 1. Try Cloudflare DoH (Bypasses ISP Port 53 DNS blocking)
                 try
                 {
-                    responseText = await _httpClient.GetStringAsync("https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/main/index.json");
+                    using var dohClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+                    dohClient.DefaultRequestHeaders.Accept.ParseAdd("application/dns-json");
+                    var json = await dohClient.GetStringAsync($"https://1.1.1.1/dns-query?name={Uri.EscapeDataString(host)}&type=A", cancellationToken).ConfigureAwait(false);
+                    using var doc = System.Text.Json.JsonDocument.Parse(json);
+                    if (doc.RootElement.TryGetProperty("Answer", out var answerArr) && answerArr.ValueKind == System.Text.Json.JsonValueKind.Array)
+                    {
+                        foreach (var item in answerArr.EnumerateArray())
+                        {
+                            if (item.TryGetProperty("data", out var dataProp) && System.Net.IPAddress.TryParse(dataProp.GetString(), out var parsedIp))
+                            {
+                                ipAddress = parsedIp;
+                                break;
+                            }
+                        }
+                    }
                 }
                 catch { }
 
-                // 2. Fallback to REST API /contents if index.json is unavailable
-                if (string.IsNullOrEmpty(responseText))
+                // 2. Try Google DoH (Fallback)
+                if (ipAddress == null)
                 {
                     try
                     {
-                        using var req = new HttpRequestMessage(HttpMethod.Get, "https://api.github.com/repos/ArisaAkiyama/extension-yomic/contents");
-                        using var res = await _httpClient.SendAsync(req);
-                        if (res.IsSuccessStatusCode)
+                        using var dohClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+                        var json = await dohClient.GetStringAsync($"https://dns.google/resolve?name={Uri.EscapeDataString(host)}&type=A", cancellationToken).ConfigureAwait(false);
+                        using var doc = System.Text.Json.JsonDocument.Parse(json);
+                        if (doc.RootElement.TryGetProperty("Answer", out var answerArr) && answerArr.ValueKind == System.Text.Json.JsonValueKind.Array)
                         {
-                            responseText = await res.Content.ReadAsStringAsync();
+                            foreach (var item in answerArr.EnumerateArray())
+                            {
+                                if (item.TryGetProperty("data", out var dataProp) && System.Net.IPAddress.TryParse(dataProp.GetString(), out var parsedIp))
+                                {
+                                    ipAddress = parsedIp;
+                                    break;
+                                }
+                            }
                         }
                     }
                     catch { }
                 }
 
-                if (string.IsNullOrEmpty(responseText)) return;
-
-                var files = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseText);
-                
-                if (files.ValueKind == System.Text.Json.JsonValueKind.Array)
+                // 3. System DNS fallback
+                if (ipAddress == null)
                 {
-                    foreach (var file in files.EnumerateArray())
-                    {
-                        var type = file.TryGetProperty("type", out var typeProp) ? typeProp.GetString() : null;
-                        var name = file.TryGetProperty("name", out var nameProp) ? nameProp.GetString() : null;
-                        if (string.IsNullOrWhiteSpace(name)) continue;
+                    var addrs = await System.Net.Dns.GetHostAddressesAsync(host, cancellationToken).ConfigureAwait(false);
+                    ipAddress = addrs.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) ?? addrs.FirstOrDefault();
+                }
+            }
 
-                        if (string.Equals(type, "file", StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(type))
+            if (ipAddress == null) throw new Exception($"Could not resolve host {host}");
+
+            var socket = new System.Net.Sockets.Socket(ipAddress.AddressFamily, System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+            socket.NoDelay = true;
+            try
+            {
+                await socket.ConnectAsync(new System.Net.IPEndPoint(ipAddress, port), cancellationToken).ConfigureAwait(false);
+                return new System.Net.Sockets.NetworkStream(socket, ownsSocket: true);
+            }
+            catch
+            {
+                socket.Dispose();
+                throw;
+            }
+        }
+
+        private static readonly HttpClient _iconClient = new HttpClient(new SocketsHttpHandler
+        {
+            AllowAutoRedirect = true,
+            AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate,
+            ConnectTimeout = TimeSpan.FromSeconds(3),
+            MaxConnectionsPerServer = 10
+        })
+        {
+            Timeout = System.Threading.Timeout.InfiniteTimeSpan
+        };
+
+        private static async System.Threading.Tasks.Task<string?> FetchStringNativeAsync(string url, int timeoutMs = 8000)
+        {
+            try
+            {
+                if (!_extensionClient.DefaultRequestHeaders.UserAgent.Any())
+                {
+                    _extensionClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Yomic/1.7");
+                }
+
+                using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromMilliseconds(timeoutMs));
+                using var response = await _extensionClient.GetAsync(url, cts.Token).ConfigureAwait(false);
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                System.Diagnostics.Debug.WriteLine($"[NativeFetch] Timeout ({timeoutMs}ms) for {url}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[NativeFetch] Failed {url}: {ex.Message}");
+            }
+            return null;
+        }
+
+        private async System.Threading.Tasks.Task FetchRemoteExtensionsAsync(bool force = false)
+        {
+            if (IsOffline) return;
+            if (_isFetchingRemote && !force) return;
+            _isFetchingRemote = true;
+
+            try
+            {
+                // Run network fetch on background threadpool worker (Mihon-style Dispatchers.IO)
+                // to prevent Avalonia UI SynchronizationContext deadlocks!
+                await System.Threading.Tasks.Task.Run(async () =>
+                {
+                    string? responseText = null;
+
+                    var urlsToTry = new[]
+                    {
+                        $"https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/repo/index.min.json?t={DateTime.UtcNow.Ticks}",
+                        $"https://cdn.jsdelivr.net/gh/ArisaAkiyama/extension-yomic@repo/index.min.json?t={DateTime.UtcNow.Ticks}",
+                        $"https://fastly.jsdelivr.net/gh/ArisaAkiyama/extension-yomic@repo/index.min.json?t={DateTime.UtcNow.Ticks}",
+                        $"https://raw.githack.com/ArisaAkiyama/extension-yomic/repo/index.min.json?t={DateTime.UtcNow.Ticks}",
+                        $"https://ghproxy.net/https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/repo/index.min.json?t={DateTime.UtcNow.Ticks}"
+                    };
+
+                    foreach (var url in urlsToTry)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[ExtensionsVM] Trying index URL: {url}");
+                        responseText = await FetchStringNativeAsync(url, 8000).ConfigureAwait(false);
+                        if (!string.IsNullOrWhiteSpace(responseText) && responseText.TrimStart().StartsWith("["))
                         {
-                            AddRemoteJsExtension(file);
-                        }
-                        else if (string.Equals(type, "dir", StringComparison.OrdinalIgnoreCase) &&
-                                 !name.Equals("icons", StringComparison.OrdinalIgnoreCase))
-                        {
-                            await FetchRemoteJsExtensionsFromFolderAsync(name);
+                            System.Diagnostics.Debug.WriteLine($"[ExtensionsVM] index.min.json fetched OK ({responseText.Length} bytes)");
+                            break;
                         }
                     }
-                    FilterExtensions();
-                }
+
+                    if (string.IsNullOrEmpty(responseText))
+                    {
+                        System.Diagnostics.Debug.WriteLine("[ExtensionsVM] All index URLs failed, using embedded fallback.");
+                        return;
+                    }
+
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        ParseAndAddIndexJson(responseText);
+                        FilterExtensions();
+                    });
+
+                    try
+                    {
+                        System.IO.File.WriteAllText(GetLocalIndexCachePath(), responseText);
+                    }
+                    catch { }
+                }).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Failed to fetch remote extensions: {ex.Message}");
+            }
+            finally
+            {
+                _isFetchingRemote = false;
             }
         }
 
@@ -389,117 +563,152 @@ namespace Yomic.ViewModels
             return new Version(1, 0, 0);
         }
 
-        private async System.Threading.Tasks.Task FetchRemoteJsExtensionsFromFolderAsync(string folderName)
+        /// <summary>
+        /// Converts a semver string to a Mihon-style integer version code.
+        /// e.g. "1.0.3" -> 103, "1.9.0" -> 190, "2.1.0" -> 210
+        /// </summary>
+        private static int VersionStringToCode(string? version)
         {
-            try
-            {
-                var url = $"https://api.github.com/repos/ArisaAkiyama/extension-yomic/contents/{Uri.EscapeDataString(folderName)}";
-                var response = await _httpClient.GetStringAsync(url);
-                var files = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(response);
-                if (files.ValueKind != System.Text.Json.JsonValueKind.Array) return;
-
-                foreach (var file in files.EnumerateArray())
-                {
-                    AddRemoteJsExtension(file);
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to fetch JS extensions from {folderName}: {ex.Message}");
-            }
+            if (string.IsNullOrWhiteSpace(version)) return 100;
+            var clean = version.TrimStart('v', 'V').Trim();
+            var parts = clean.Split('.');
+            int major = parts.Length > 0 && int.TryParse(parts[0], out var ma) ? ma : 1;
+            int minor = parts.Length > 1 && int.TryParse(parts[1], out var mi) ? mi : 0;
+            int patch = parts.Length > 2 && int.TryParse(parts[2], out var pa) ? pa : 0;
+            return major * 100 + minor * 10 + patch;
         }
+
+        // FetchRemoteJsExtensionsFromFolderAsync removed — was GitHub REST API (rate-limited).
+        // Replaced by Mihon-style static index.min.json from branch 'repo'.
 
         private void AddRemoteJsExtension(System.Text.Json.JsonElement file)
         {
-            var type = file.TryGetProperty("type", out var typeProp) ? typeProp.GetString() : null;
-            var name = file.TryGetProperty("name", out var nameProp) ? nameProp.GetString() : null;
-            if (!string.IsNullOrEmpty(type) &&
-                !string.Equals(type, "file", StringComparison.OrdinalIgnoreCase))
+            // ── Mihon-style index.min.json format ──
+            // Required fields: name, pkg, lang, code (int), version, nsfw (0/1), sources[]
+            // Download URL is built from pkg: raw.githubusercontent.com/.../main/{pkg}.js
+
+            // Support both old format (name ends with .js) and new Mihon-style format (pkg field)
+            var pkg = file.TryGetProperty("pkg", out var pkgProp) ? pkgProp.GetString() : null;
+            var nameRaw = file.TryGetProperty("name", out var nameProp) ? nameProp.GetString() : null;
+
+            // Determine clean display name and pkg identifier
+            string cleanName;
+            string pkgId;
+            if (!string.IsNullOrWhiteSpace(pkg))
             {
-                return;
+                // Mihon-style: pkg = "kiryuu", name = "Kiryuu"
+                pkgId = pkg;
+                cleanName = !string.IsNullOrWhiteSpace(nameRaw) ? nameRaw : pkg;
             }
-            if (string.IsNullOrWhiteSpace(name) || !name.EndsWith(".js", StringComparison.OrdinalIgnoreCase))
+            else if (!string.IsNullOrWhiteSpace(nameRaw) && nameRaw.EndsWith(".js", StringComparison.OrdinalIgnoreCase))
             {
-                return;
+                // Legacy format: name = "kiryuu.js" (old index.json)
+                pkgId = nameRaw.Replace(".js", "", StringComparison.OrdinalIgnoreCase);
+                cleanName = pkgId;
+            }
+            else
+            {
+                return; // Skip unrecognized entries
             }
 
-            var downloadUrl = file.TryGetProperty("download_url", out var downloadProp) ? downloadProp.GetString() : null;
-            if (string.IsNullOrWhiteSpace(downloadUrl)) return;
+            if (string.IsNullOrWhiteSpace(pkgId)) return;
 
-            var cleanName = name
-                .Replace("Yomic.Extensions.", "", StringComparison.OrdinalIgnoreCase)
-                .Replace(".js", "", StringComparison.OrdinalIgnoreCase);
+            // Read Mihon-style fields
+            int remoteCode = 0;
+            if (file.TryGetProperty("code", out var codeProp) && codeProp.ValueKind == System.Text.Json.JsonValueKind.Number)
+                remoteCode = codeProp.GetInt32();
 
+            var remoteVersion = file.TryGetProperty("version", out var vProp) ? vProp.GetString() : null;
+
+            int nsfwFlag = 0;
+            if (file.TryGetProperty("nsfw", out var nsfwProp) && nsfwProp.ValueKind == System.Text.Json.JsonValueKind.Number)
+                nsfwFlag = nsfwProp.GetInt32();
+
+            string lang = file.TryGetProperty("lang", out var langProp) ? (langProp.GetString() ?? "en") : "en";
+
+            // Parse sources[] array
+            var sourceNames = new System.Collections.Generic.List<string>();
+            if (file.TryGetProperty("sources", out var sourcesProp) && sourcesProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                foreach (var src in sourcesProp.EnumerateArray())
+                {
+                    if (src.TryGetProperty("name", out var srcName))
+                        sourceNames.Add(srcName.GetString() ?? "");
+                }
+            }
+
+            // Build download URL from pkg field (Mihon-style: files stay in main branch)
+            var downloadUrl = file.TryGetProperty("download_url", out var dlProp) ? dlProp.GetString() : null;
+            if (string.IsNullOrWhiteSpace(downloadUrl))
+            {
+                downloadUrl = $"https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/main/{pkgId}.js";
+            }
+
+            // ── UPDATE DETECTION (Mihon-style: integer code comparison) ──
             var existing = _allExtensionsCache.FirstOrDefault(x =>
+                x.Pkg.Equals(pkgId, StringComparison.OrdinalIgnoreCase) ||
                 x.Name.Equals(cleanName, StringComparison.OrdinalIgnoreCase) ||
-                (x.DownloadUrl != null && x.DownloadUrl.Equals(downloadUrl, StringComparison.OrdinalIgnoreCase)) ||
-                (x.FilePath != null && x.FilePath.EndsWith(name, StringComparison.OrdinalIgnoreCase)));
+                (x.FilePath != null && x.FilePath.EndsWith(pkgId + ".js", StringComparison.OrdinalIgnoreCase)));
+
             if (existing != null)
             {
-                if (string.IsNullOrEmpty(existing.RemoteDownloadUrl)) existing.RemoteDownloadUrl = downloadUrl;
+                if (string.IsNullOrEmpty(existing.RemoteDownloadUrl))
+                    existing.RemoteDownloadUrl = downloadUrl;
 
-                var remoteVersion = file.TryGetProperty("version", out var vProp) ? vProp.GetString() : null;
-
-                var rVer = ParseVersion(remoteVersion);
-                var lVer = ParseVersion(existing.Version);
-
-                bool isVersionNewer = rVer > lVer;
-
-                if (isVersionNewer)
+                // Mihon-style: compare integer code (higher = newer)
+                if (remoteCode > 0 && existing.VersionCode > 0)
                 {
-                    existing.HasUpdate = true;
-                    if (!string.IsNullOrEmpty(remoteVersion))
+                    bool isNewer = remoteCode > existing.VersionCode;
+                    existing.HasUpdate = isNewer;
+                    if (isNewer)
                     {
-                        existing.RemoteCommitDateText = $"v{remoteVersion}";
+                        existing.RemoteCommitDateText = !string.IsNullOrEmpty(remoteVersion) ? $"v{remoteVersion}" : $"code {remoteCode}";
+                        LogService.Info("ExtensionsVM", $"[Mihon] Update for {existing.Name}: local code={existing.VersionCode}, remote code={remoteCode} (v{remoteVersion})");
                     }
-                    LogService.Info("ExtensionsVM", $"Update available for {existing.Name} ({name})! Remote Ver: {remoteVersion}, Local Ver: {existing.Version}");
                 }
                 else
                 {
-                    existing.HasUpdate = false;
+                    // Fallback to semver string comparison
+                    var rVer = ParseVersion(remoteVersion);
+                    var lVer = ParseVersion(existing.Version);
+                    existing.HasUpdate = rVer > lVer;
+                    if (existing.HasUpdate)
+                        existing.RemoteCommitDateText = !string.IsNullOrEmpty(remoteVersion) ? $"v{remoteVersion}" : null;
                 }
                 return;
             }
 
-            string lowerName = cleanName.ToLower();
-            string lang = "en";
-            if (IndonesianExtensions.Contains(lowerName) ||
-                lowerName.Contains("komik") ||
-                lowerName.Contains("indo"))
-                lang = "id";
-            else if (lowerName == "mangadex" || lowerName == "nhentai")
-                lang = "global";
-
+            // ── NEW EXTENSION ENTRY ──
             long stableId;
             try
             {
-                var hashName = "JS_" + cleanName + "_" + lang;
+                var hashName = "JS_" + pkgId + "_" + lang;
                 var hash = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(hashName));
                 stableId = BitConverter.ToInt64(hash, 0);
             }
             catch
             {
-                stableId = cleanName.GetHashCode();
+                stableId = pkgId.GetHashCode();
             }
 
-            long size = 0;
-            if (file.TryGetProperty("size", out var sizeProp) && sizeProp.ValueKind == System.Text.Json.JsonValueKind.Number)
-            {
-                size = sizeProp.GetInt64();
-            }
+            // Convert version code to display version if not provided
+            string displayVersion = !string.IsNullOrWhiteSpace(remoteVersion) ? remoteVersion : "Latest";
 
             var extItem = new ExtensionItem
             {
                 Id = stableId,
                 Name = cleanName,
-                Description = "Available on GitHub",
+                Pkg = pkgId,
+                VersionCode = remoteCode > 0 ? remoteCode : 100,
+                Version = displayVersion,
+                Language = lang,
+                Description = sourceNames.Count > 0 ? string.Join(", ", sourceNames) : "Available on GitHub",
                 IsInstalled = false,
                 DownloadUrl = downloadUrl,
-                IconText = cleanName.Substring(0, 1),
-                Version = "Latest",
-                Language = lang,
-                FileSizeText = size > 0 ? FormatBytes(size) : "",
-                IsNsfw = cleanName.Contains("nhentai", StringComparison.OrdinalIgnoreCase)
+                RemoteDownloadUrl = downloadUrl,
+                IconText = cleanName.Length > 0 ? cleanName.Substring(0, 1) : "?",
+                IsNsfw = nsfwFlag == 1 || cleanName.Contains("nhentai", StringComparison.OrdinalIgnoreCase),
+                SourceNames = sourceNames.ToArray()
             };
 
             LoadLanguageFlags(extItem);
@@ -558,6 +767,9 @@ namespace Yomic.ViewModels
                     Id = source.Id,
                     Name = source.Name,
                     Version = source.Version, // Dynamic Version
+                    // Mihon-style: convert installed version string to integer code for update detection
+                    VersionCode = VersionStringToCode(source.Version),
+                    Pkg = System.IO.Path.GetFileNameWithoutExtension(_sourceManager.GetSourcePath(source.Id) ?? source.Name.ToLowerInvariant()),
                     Language = source.Language,
                     IconText = iconTxt,
                     IconColor = iconFg,
@@ -600,6 +812,7 @@ namespace Yomic.ViewModels
                 _allExtensionsCache.Add(extItem);
             }
             
+            LoadLocalIndexCache();
             FilterExtensions();
         }
 
@@ -719,58 +932,53 @@ namespace Yomic.ViewModels
         private async void DownloadExtension(ExtensionItem item)
         {
             if (string.IsNullOrEmpty(item.DownloadUrl)) return;
-            // Bug Fix: Guard against double-click / concurrent download
             if (item.IsDownloading) return;
 
             item.IsDownloading = true;
             item.DownloadProgress = 0;
-            item.DownloadProgressText = "Downloading 0%";
-            _mainVM.ShowNotification($"Downloading {item.Name}...", NotificationType.Info);
+            item.DownloadProgressText = "Mengunduh...";
+            _mainVM.ShowNotification($"Mengunduh {item.Name}...", NotificationType.Info);
 
+            string? tempPath = null;
             try
             {
-                if (!item.DownloadUrl.EndsWith(".js", StringComparison.OrdinalIgnoreCase))
+                var fileName = System.IO.Path.GetFileName(item.DownloadUrl);
+                if (string.IsNullOrEmpty(fileName) || !fileName.EndsWith(".js", StringComparison.OrdinalIgnoreCase))
                 {
-                    _mainVM.ShowNotification("Only JS extensions are supported from GitHub.", NotificationType.Error);
+                    fileName = $"{item.Name}.js";
+                }
+
+                // Mihon-style download URLs — static files only, no GitHub REST API
+                var pkgFileName = !string.IsNullOrEmpty(item.Pkg) ? $"{item.Pkg}.js" : fileName;
+                var urlsToTry = new[]
+                {
+                    // 1. Primary: raw GitHub (main branch — where .js files live)
+                    item.DownloadUrl ?? $"https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/main/{pkgFileName}",
+                    // 2. jsDelivr CDN Mirror
+                    $"https://cdn.jsdelivr.net/gh/ArisaAkiyama/extension-yomic@main/{pkgFileName}",
+                    // 3. Fastly jsDelivr Mirror
+                    $"https://fastly.jsdelivr.net/gh/ArisaAkiyama/extension-yomic@main/{pkgFileName}",
+                    // 4. GitHack Raw Mirror
+                    $"https://raw.githack.com/ArisaAkiyama/extension-yomic/main/{pkgFileName}",
+                    // 5. GHProxy Mirror (Anti-ISP Blocking)
+                    $"https://ghproxy.net/https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/main/{pkgFileName}"
+                };
+
+                string? jsContent = null;
+                foreach (var url in urlsToTry)
+                {
+                    jsContent = await FetchStringNativeAsync(url, 8000).ConfigureAwait(false);
+                    if (!string.IsNullOrWhiteSpace(jsContent)) break;
+                }
+
+                if (string.IsNullOrWhiteSpace(jsContent))
+                {
+                    _mainVM.ShowNotification($"Gagal mengunduh {item.Name}. Periksa koneksi internet.", NotificationType.Error);
                     return;
                 }
 
-                var tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{item.Name}.js");
-                
-                if (!_httpClient.DefaultRequestHeaders.UserAgent.Any())
-                {
-                    _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Yomic-Desktop-App");
-                }
-                
-                using (var response = await _httpClient.GetAsync(item.DownloadUrl, HttpCompletionOption.ResponseHeadersRead))
-                {
-                    response.EnsureSuccessStatusCode();
-                    
-                    var totalBytes = response.Content.Headers.ContentLength ?? -1L;
-                    using var stream = await response.Content.ReadAsStreamAsync();
-                    using var fileStream = new System.IO.FileStream(tempPath, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None, 8192, true);
-                    
-                    var buffer = new byte[8192];
-                    long totalRead = 0;
-                    int read;
-                    
-                    while ((read = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-                    {
-                        await fileStream.WriteAsync(buffer, 0, read);
-                        totalRead += read;
-                        
-                        if (totalBytes != -1)
-                        {
-                            var progress = (double)totalRead / totalBytes;
-                            item.DownloadProgress = progress;
-                            item.DownloadProgressText = $"Downloading {(int)(progress * 100)}%";
-                        }
-                        else
-                        {
-                            item.DownloadProgressText = $"Downloading {totalRead / 1024} KB";
-                        }
-                    }
-                }
+                tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), fileName);
+                System.IO.File.WriteAllText(tempPath, jsContent, System.Text.Encoding.UTF8);
 
                 // Install the downloaded JS extension
                 var loadedSource = await System.Threading.Tasks.Task.Run(() => _sourceManager.InstallPlugin(tempPath));
@@ -778,12 +986,12 @@ namespace Yomic.ViewModels
                 if (loadedSource != null)
                 {
                      LoadExtensions();
-                     await FetchRemoteExtensionsAsync(); // Refresh remote list to catch any others
-                     _mainVM.ShowNotification($"{loadedSource.Name} installed successfully!", NotificationType.Success);
+                     await FetchRemoteExtensionsAsync();
+                     _mainVM.ShowNotification($"{loadedSource.Name} berhasil terpasang!", NotificationType.Success);
                 }
                 else
                 {
-                    _mainVM.ShowNotification("Failed to install downloaded extension.", NotificationType.Error);
+                    _mainVM.ShowNotification("Gagal memasang ekstensi.", NotificationType.Error);
                 }
             }
             catch (Exception ex)
@@ -792,54 +1000,65 @@ namespace Yomic.ViewModels
             }
             finally
             {
-                // Bug Fix: Always cleanup temp file to avoid disk bloat
-                var tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{item.Name}.js");
-                try { if (System.IO.File.Exists(tempPath)) System.IO.File.Delete(tempPath); } catch { }
+                if (!string.IsNullOrEmpty(tempPath))
+                {
+                    try { if (System.IO.File.Exists(tempPath)) System.IO.File.Delete(tempPath); } catch { }
+                }
 
                 item.IsDownloading = false;
-                item.DownloadProgressText = "Downloading...";
+                item.DownloadProgressText = "Mengunduh...";
             }
         }
 
         private async System.Threading.Tasks.Task RefreshExtensionsAsync()
         {
             _mainVM.ShowNotification("Memeriksa pembaruan ekstensi...", NotificationType.Info);
-            LoadExtensions();
-            await FetchRemoteExtensionsAsync();
+            await FetchRemoteExtensionsAsync(force: true);
             _mainVM.ShowNotification("Pemeriksaan ekstensi selesai!", NotificationType.Success);
         }
 
-        private static readonly Dictionary<string, (DateTime commitUtc, DateTime cachedAt)> _githubCommitCache = new(StringComparer.OrdinalIgnoreCase);
-
-        private async System.Threading.Tasks.Task CheckExtensionUpdatesAsync()
-        {
-            if (IsOffline) return;
-            await FetchRemoteExtensionsAsync();
-        }
+        // _githubCommitCache removed — commit date checking replaced by Mihon-style integer code comparison.
+        // CheckExtensionUpdatesAsync removed — use FetchRemoteExtensionsAsync(force: true) directly (called by RefreshCommand).
 
         private async void UpdateExtension(ExtensionItem item)
         {
             if (item == null) return;
             var fileName = item.Name.EndsWith(".js", StringComparison.OrdinalIgnoreCase) ? item.Name : $"{item.Name}.js";
-            var downloadUrl = item.RemoteDownloadUrl ?? $"https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/main/{fileName}";
-
+            
             item.IsInstalling = true;
             item.DownloadProgress = 0;
-            item.DownloadProgressText = "Updating...";
+            item.DownloadProgressText = "Memperbarui...";
 
             try
             {
-                _mainVM.ShowNotification($"Updating {item.Name}...", NotificationType.Info);
+                _mainVM.ShowNotification($"Memperbarui {item.Name}...", NotificationType.Info);
 
-                if (!_httpClient.DefaultRequestHeaders.UserAgent.Any())
+                // Mihon-style update URLs — static files only, no GitHub REST API
+                var pkgFileName = !string.IsNullOrEmpty(item.Pkg) ? $"{item.Pkg}.js" : fileName;
+                var urlsToTry = new[]
                 {
-                    _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Yomic-Desktop-App");
+                    // 1. Primary: raw GitHub (main branch — where .js files live)
+                    item.RemoteDownloadUrl ?? $"https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/main/{pkgFileName}",
+                    // 2. jsDelivr CDN Mirror
+                    $"https://cdn.jsdelivr.net/gh/ArisaAkiyama/extension-yomic@main/{pkgFileName}",
+                    // 3. Fastly jsDelivr Mirror
+                    $"https://fastly.jsdelivr.net/gh/ArisaAkiyama/extension-yomic@main/{pkgFileName}",
+                    // 4. GitHack Raw Mirror
+                    $"https://raw.githack.com/ArisaAkiyama/extension-yomic/main/{pkgFileName}",
+                    // 5. GHProxy Mirror (Anti-ISP Blocking)
+                    $"https://ghproxy.net/https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/main/{pkgFileName}"
+                };
+
+                string? jsCode = null;
+                foreach (var url in urlsToTry)
+                {
+                    jsCode = await FetchStringNativeAsync(url, 8000).ConfigureAwait(false);
+                    if (!string.IsNullOrWhiteSpace(jsCode)) break;
                 }
 
-                var jsCode = await _httpClient.GetStringAsync(downloadUrl);
                 if (string.IsNullOrWhiteSpace(jsCode))
                 {
-                    _mainVM.ShowNotification($"Update failed for {item.Name}: Empty script", NotificationType.Error);
+                    _mainVM.ShowNotification($"Pembaruan gagal untuk {item.Name}: Gagal mengunduh script", NotificationType.Error);
                     return;
                 }
 
@@ -900,40 +1119,123 @@ namespace Yomic.ViewModels
             }
         }
 
+        private static string GetKnownDomainForExtension(string cleanName)
+        {
+            var name = cleanName.ToLowerInvariant();
+            return name switch
+            {
+                "aarlas" => "aarlas.com",
+                "ainzscansid" => "ainzscans.id",
+                "astralscans" => "astralscans.com",
+                "bacakomik" => "bacakomik.co",
+                "bacami" => "bacami.id",
+                "comicazen" => "comicazen.com",
+                "cosmicscansid" => "cosmicscans.id",
+                "dailysuka" => "dailysuka.com",
+                "dojingnet" => "dojing.net",
+                "doujindesu" => "doujindesu.tv",
+                "doujindesuunoriginal" => "doujindesu.tv",
+                "doujinku" => "doujinku.net",
+                "dreamteamsscans" => "dreamteams.id",
+                "hentaicrot" => "hentaicrot.com",
+                "holotoon" => "holotoon.net",
+                "hwago" => "hwago.org",
+                "inazumanga" => "inazumanga.com",
+                "izanamiscans" => "izanamiscans.org",
+                "kanzenin" => "kanzenin.xyz",
+                "kiryuu" => "kiryuu.id",
+                "klikmanga" => "klikmanga.com",
+                "komikav" => "komikav.com",
+                "komikcast" => "komikcast.cz",
+                "komikdewasa" => "komikdewasa.org",
+                "komikdewasaart" => "komikdewasa.art",
+                "komikhwa" => "komikhwa.com",
+                "komikindo" => "komikindo.tv",
+                "komikindoco" => "komikindo.co",
+                "komikindoid" => "komikindo.id",
+                "komiknesia" => "komiknesia.com",
+                "komiknextgonline" => "komiknextg.online",
+                "komikstation" => "komikstation.co",
+                "komiktap" => "komiktap.me",
+                "komiku" => "komiku.id",
+                "komikucc" => "komiku.cc",
+                "komikucom" => "komiku.com",
+                "komikzoid" => "komikzoid.com",
+                "kumapoi" => "kumapoi.me",
+                "kumopoi" => "kumopoi.me",
+                "kuromanga" => "kuromanga.com",
+                "lepoytl" => "lepoytl.com",
+                "lianscans" => "lianscans.my.id",
+                "lumoskomik" => "lumoskomik.com",
+                "luvyaa" => "luvyaa.com",
+                "maid" => "maid.my.id",
+                "maidmanga" => "maid.my.id",
+                "mangacan" => "mangacanblog.com",
+                "mangakuri" => "mangakuri.net",
+                "mangalay" => "mangalay.com",
+                "mangasusu" => "mangasusu.co",
+                "mangatale" => "mangatale.co",
+                "manhwadesu" => "manhwadesu.org",
+                "manhwahana" => "manhwahana.com",
+                "manhwaindo" => "manhwaindo.id",
+                "manhwalandmom" => "manhwaland.mom",
+                "manhwalistid" => "manhwalist.id",
+                "manhwalistorg" => "manhwalist.org",
+                "medusascans" => "medusascans.com",
+                "mgkomik" => "mgkomik.com",
+                "mihentai" => "mihentai.com",
+                "mikoroku" => "mikoroku.web.id",
+                "narasininja" => "narasininja.com",
+                "natsu" => "natsu.id",
+                "ngamenkomik" => "ngamenkomik.com",
+                "ngomik" => "ngomik.net",
+                "noromax" => "noromax.com",
+                "okyykomik" => "okyykomik.com",
+                "omicaso" => "omicaso.com",
+                "otascans" => "otascans.com",
+                "pixhentai" => "pixhentai.com",
+                "pornhwa18" => "pornhwa18.com",
+                "pramramadhan" => "pramramadhan.com",
+                "riztranslation" => "riztranslation.com",
+                "roseveil" => "roseveil.org",
+                "sasangeyou" => "sasangeyou.com",
+                "sektedoujin" => "sektedoujin.cc",
+                "sektekomik" => "sektekomik.biz",
+                "shinigami" => "shinigamiscans.com",
+                "shirakami" => "shirakami.id",
+                "shirodoujin" => "shirodoujin.com",
+                "shiyurasub" => "shiyurasub.com",
+                "siimanga" => "siimanga.com",
+                "softkomik" => "softkomik.com",
+                "soulscans" => "soulscans.my.id",
+                "themanga" => "themanga.net",
+                "tooncubus" => "tooncubus.com",
+                "ulascomic" => "ulascomic.com",
+                "westmanga" => "westmanga.info",
+                "yubikiri" => "yubikiri.id",
+                "weebcentral" => "weebcentral.com",
+                "mangabat" => "h.mangabat.com",
+                "mangafire" => "mangafire.to",
+                "mangadex" => "mangadex.org",
+                "nhentai" => "nhentai.net",
+                _ => $"{name}.com"
+            };
+        }
+
         private async System.Threading.Tasks.Task LoadFaviconFromRemoteJsAsync(ExtensionItem item)
         {
-            if (string.IsNullOrEmpty(item.DownloadUrl)) return;
-            item.IsLoadingIcon = true;
+            if (string.IsNullOrEmpty(item.Name)) return;
             try
             {
-                using var optClient = _mainVM.NetworkService.CreateOptimizedHttpClient();
-                var script = await optClient.GetStringAsync(item.DownloadUrl);
-                
-                var matchIcon = System.Text.RegularExpressions.Regex.Match(script, @"iconUrl:\s*['""](.*?)['""]");
-                if (matchIcon.Success && !string.IsNullOrEmpty(matchIcon.Groups[1].Value))
+                var domain = GetKnownDomainForExtension(item.Name);
+                if (!string.IsNullOrEmpty(domain))
                 {
-                    await LoadIconAsync(item, matchIcon.Groups[1].Value);
-                    return;
-                }
-
-                var matchBaseUrl = System.Text.RegularExpressions.Regex.Match(script, @"baseUrl:\s*['""](.*?)['""]");
-                if (matchBaseUrl.Success && !string.IsNullOrEmpty(matchBaseUrl.Groups[1].Value))
-                {
-                    var baseUrl = matchBaseUrl.Groups[1].Value;
-                    if (Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri))
-                    {
-                        var domain = uri.Host;
-                        await LoadIconAsync(item, $"https://www.google.com/s2/favicons?domain={domain}&sz=128");
-                    }
+                    await LoadIconAsync(item, $"https://www.google.com/s2/favicons?domain={domain}&sz=128");
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Failed to load favicon for {item.Name}: {ex.Message}");
-            }
-            finally
-            {
-                item.IsLoadingIcon = false;
             }
         }
 
@@ -955,8 +1257,8 @@ namespace Yomic.ViewModels
                 }
                 else
                 {
-                    using var optClient = _mainVM.NetworkService.CreateOptimizedHttpClient();
-                    bytes = await optClient.GetByteArrayAsync(url);
+                    using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(4));
+                    bytes = await _iconClient.GetByteArrayAsync(url, cts.Token);
                     await System.IO.File.WriteAllBytesAsync(iconFile, bytes);
                 }
 
@@ -971,30 +1273,12 @@ namespace Yomic.ViewModels
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[ExtensionsVM] Icon load failed: {ex.Message}");
+                // Silently swallow favicon 404/timeout errors
+                System.Diagnostics.Debug.WriteLine($"[ExtensionsVM] Icon load skipped for {item.Name}: {ex.Message}");
             }
             finally
             {
                 item.IsLoadingIcon = false;
-            }
-        }
-
-        private void LoadDefaultExtensionIcon(ExtensionItem item)
-        {
-            try
-            {
-                var uri = new Uri("avares://Yomic/Assets/Icons/WindowsIcons/extensions.ico");
-                if (AssetLoader.Exists(uri))
-                {
-                    using var stream = AssetLoader.Open(uri);
-                    item.IconBitmap = new Bitmap(stream);
-                    item.IconText = "";
-                    item.IconBackground = "Transparent";
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to load default extension icon: {ex.Message}");
             }
         }
         

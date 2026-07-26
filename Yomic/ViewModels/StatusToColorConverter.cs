@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
+using Avalonia.Controls;
 
 namespace Yomic.ViewModels
 {
@@ -17,20 +18,32 @@ namespace Yomic.ViewModels
             new FuncValueConverter<string, string>(s => s?.ToUpperInvariant() ?? string.Empty);
         
         // Static instances for specific conversions
+        private static string GetResourceString(string key, string defaultValue)
+        {
+            if (Avalonia.Application.Current != null && Avalonia.Application.Current.TryFindResource(key, out var res))
+            {
+                if (res is string str)
+                {
+                    return str;
+                }
+            }
+            return defaultValue;
+        }
+
         public static readonly IValueConverter BoolToHeartIcon = 
-            new FuncValueConverter<bool, string>(b => b ? "\uEB52" : "\uEB51"); // Filled : Outline
+            new FuncValueConverter<bool, string>(b => b ? "M6.979 3.074a6 6 0 0 1 4.988 1.425l.037 .033l.034 -.03a6 6 0 0 1 4.733 -1.44l.246 .036a6 6 0 0 1 3.364 10.008l-.18 .185l-.048 .041l-7.45 7.379a1 1 0 0 1 -1.313 .082l-.094 -.082l-7.493 -7.422a6 6 0 0 1 3.176 -10.215z" : "M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572"); // Filled : Outline
             
         public static readonly IValueConverter BoolToHeartColor = 
             new FuncValueConverter<bool, IBrush>(b => b ? Brushes.Red : Brushes.White);
             
         public static readonly IValueConverter BoolToLibraryText = 
-            new FuncValueConverter<bool, string>(b => b ? "In Library" : "Add to Library");
+            new FuncValueConverter<bool, string>(b => b ? GetResourceString("String.InLibrary", "In Library") : GetResourceString("String.AddToLibrary", "Add to Library"));
             
         public static readonly IValueConverter BoolToOpacity = 
             new FuncValueConverter<bool, double>(b => b ? 0.5 : 1.0); // Read = 0.5, Unread = 1.0
             
         public static readonly IValueConverter SortToString = 
-            new FuncValueConverter<bool, string>(b => b ? "Oldest First" : "Newest First");
+            new FuncValueConverter<bool, string>(b => b ? GetResourceString("String.Sort.OldestFirst", "Oldest First") : GetResourceString("String.Sort.NewestFirst", "Newest First"));
             
         // Unread indicator: IsRead=true -> Opacity 0 (hide), IsRead=false -> Opacity 1 (show)
         public static readonly IValueConverter UnreadToOpacity = 
@@ -47,10 +60,10 @@ namespace Yomic.ViewModels
                 var str = cat.ToString();
                 return str switch
                 {
-                    "BugReport" => "Bug Report",
-                    "FeatureRequest" => "Feature Request",
-                    "General" => "General",
-                    "Question" => "Question",
+                    "BugReport" => GetResourceString("String.Feedback.Category.BugReport", "Bug Report"),
+                    "FeatureRequest" => GetResourceString("String.Feedback.Category.FeatureRequest", "Feature Request"),
+                    "General" => GetResourceString("String.General", "General"),
+                    "Question" => GetResourceString("String.Feedback.Category.Question", "Question"),
                     _ => str
                 };
             });
@@ -59,8 +72,8 @@ namespace Yomic.ViewModels
             new FuncMultiValueConverter<object, string>(values => 
             {
                 if (values != null && values.Count() > 0 && values.First() is bool isExpanded)
-                    return isExpanded ? "\uE70E" : "\uE70D"; // ChevronUp : ChevronDown
-                return "\uE70D";
+                    return isExpanded ? "M6 15l6 -6l6 6" : "M6 9l6 6l6 -6"; // ChevronUp : ChevronDown
+                return "M6 9l6 6l6 -6";
             });
 
         public static readonly IMultiValueConverter StringEqualityConverter = 
@@ -122,15 +135,34 @@ namespace Yomic.ViewModels
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
+            if (value is int statusInt)
+            {
+                return statusInt switch
+                {
+                    1 => new SolidColorBrush(Color.Parse("#E53935")),    // Red
+                    2 => new SolidColorBrush(Color.Parse("#0078D7")),  // Blue
+                    5 => new SolidColorBrush(Color.Parse("#0066B8")),     // Darker Blue
+                    6 => new SolidColorBrush(Color.Parse("#EF4444")),  // Red
+                    _ => new SolidColorBrush(Color.Parse("#6B7280"))
+                };
+            }
+
             if (value is string status)
             {
-                if (status.StartsWith("Ongoing", StringComparison.OrdinalIgnoreCase))
+                if (status.StartsWith("Ongoing", StringComparison.OrdinalIgnoreCase) || 
+                    status.StartsWith("Berjalan", StringComparison.OrdinalIgnoreCase))
                     return new SolidColorBrush(Color.Parse("#E53935"));    // Red
-                if (status.StartsWith("Completed", StringComparison.OrdinalIgnoreCase))
+                
+                if (status.StartsWith("Completed", StringComparison.OrdinalIgnoreCase) || 
+                    status.StartsWith("Selesai", StringComparison.OrdinalIgnoreCase))
                     return new SolidColorBrush(Color.Parse("#0078D7"));  // Blue
-                if (status.StartsWith("Hiatus", StringComparison.OrdinalIgnoreCase))
+                
+                if (status.StartsWith("Hiatus", StringComparison.OrdinalIgnoreCase) || 
+                    status.StartsWith("Jeda", StringComparison.OrdinalIgnoreCase))
                     return new SolidColorBrush(Color.Parse("#0066B8"));     // Darker Blue
-                if (status.StartsWith("Cancelled", StringComparison.OrdinalIgnoreCase))
+                
+                if (status.StartsWith("Cancelled", StringComparison.OrdinalIgnoreCase) || 
+                    status.StartsWith("Dibatalkan", StringComparison.OrdinalIgnoreCase))
                     return new SolidColorBrush(Color.Parse("#EF4444"));  // Red
                 
                 return new SolidColorBrush(Color.Parse("#6B7280"));              // Gray for Unknown

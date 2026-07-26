@@ -210,6 +210,11 @@
                      ScrollViewer.VerticalScrollBarVisibility="Auto"
                      ScrollViewer.ScrollChanged="OnScrollChanged"
                      SelectionMode="Single">
+                     <ListBox.Transitions>
+                         <Transitions>
+                             <DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                         </Transitions>
+                     </ListBox.Transitions>
                      <ListBox.Styles>
                          <!-- Remove ListBoxItem default padding/margin/hover -->
                          <Style Selector="ListBoxItem">
@@ -381,18 +386,21 @@
                             <Setter Property="Background" Value="#33FFFFFF"/>
                         </Style>
                     </Button.Styles>
-                    <TextBlock Text="&#xE76B;" FontFamily="Segoe Fluent Icons" FontSize="48" Foreground="White" Opacity="0.3" VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <TextBlock.Transitions>
+                    <Viewbox Width="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.3">
+                        <Viewbox.Transitions>
                             <Transitions>
                                 <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
                             </Transitions>
-                        </TextBlock.Transitions>
-                        <TextBlock.Styles>
-                            <Style Selector="Button:pointerover TextBlock">
+                        </Viewbox.Transitions>
+                        <Viewbox.Styles>
+                            <Style Selector="Button:pointerover Viewbox">
                                 <Setter Property="Opacity" Value="0.8"/>
                             </Style>
-                        </TextBlock.Styles>
-                    </TextBlock>
+                        </Viewbox.Styles>
+                        <Canvas Width="24" Height="24">
+                            <Path Data="M15 6l-6 6l6 6" Stroke="White" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                        </Canvas>
+                    </Viewbox>
                 </Button>
                 
                 <!-- Right Button: Previous Page (Right-to-Left reading) -->
@@ -408,18 +416,21 @@
                             <Setter Property="Background" Value="#33FFFFFF"/>
                         </Style>
                     </Button.Styles>
-                    <TextBlock Text="&#xE76C;" FontFamily="Segoe Fluent Icons" FontSize="48" Foreground="White" Opacity="0.3" VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <TextBlock.Transitions>
+                    <Viewbox Width="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.3">
+                        <Viewbox.Transitions>
                             <Transitions>
                                 <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
                             </Transitions>
-                        </TextBlock.Transitions>
-                        <TextBlock.Styles>
-                            <Style Selector="Button:pointerover TextBlock">
+                        </Viewbox.Transitions>
+                        <Viewbox.Styles>
+                            <Style Selector="Button:pointerover Viewbox">
                                 <Setter Property="Opacity" Value="0.8"/>
                             </Style>
-                        </TextBlock.Styles>
-                    </TextBlock>
+                        </Viewbox.Styles>
+                        <Canvas Width="24" Height="24">
+                            <Path Data="M9 6l6 6l-6 6" Stroke="White" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                        </Canvas>
+                    </Viewbox>
                 </Button>
             </Grid>
             
@@ -430,8 +441,16 @@
                          BoxShadow="0 4 15 0 #40000000"
                          Margin="-20,-20,0,0"> <!-- Centered via negative margin -->
                      <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="-2">
-                         <TextBlock Text="&#xE70E;" FontFamily="Segoe Fluent Icons" Foreground="White" FontSize="12" HorizontalAlignment="Center"/>
-                         <TextBlock Text="&#xE70D;" FontFamily="Segoe Fluent Icons" Foreground="White" FontSize="12" HorizontalAlignment="Center"/>
+                         <Viewbox Width="12" Height="12" HorizontalAlignment="Center">
+                             <Canvas Width="24" Height="24">
+                                 <Path Data="M6 9l6 6l6 -6" Stroke="White" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                             </Canvas>
+                         </Viewbox>
+                         <Viewbox Width="12" Height="12" HorizontalAlignment="Center">
+                             <Canvas Width="24" Height="24">
+                                 <Path Data="M6 15l6 -6l6 6" Stroke="White" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                             </Canvas>
+                         </Viewbox>
                      </StackPanel>
                  </Border>
             </Canvas>
@@ -454,7 +473,11 @@
                             Command="{Binding BackCommand}"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center">
-                        <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center" FontSize="18"/>
+                        <Viewbox Width="18" Height="18" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M5 12l14 0 M5 12l6 6 M5 12l6 -6" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                            </Canvas>
+                        </Viewbox>
                     </Button>
 
                     <!-- Title Info (Center) -->
@@ -471,7 +494,11 @@
                         <Button Classes="NavBtn" 
                                 Command="{Binding RefreshCommand}"
                                 ToolTip.Tip="Refresh">
-                            <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="18"/>
+                            <Viewbox Width="18" Height="18">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Button>
                         
                         <!-- Fullscreen Button -->
@@ -479,10 +506,16 @@
                                 Command="{Binding ToggleFullscreenCommand}"
                                 ToolTip.Tip="Toggle Fullscreen">
                             <Panel>
-                                <TextBlock Text="&#xE740;" FontFamily="Segoe Fluent Icons" FontSize="18"
-                                           IsVisible="{Binding !IsFullscreen}"/>
-                                <TextBlock Text="&#xE73F;" FontFamily="Segoe Fluent Icons" FontSize="18"
-                                           IsVisible="{Binding IsFullscreen}"/>
+                                <Viewbox Width="18" Height="18" IsVisible="{Binding !IsFullscreen}">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="M4 8v-2a2 2 0 0 1 2 -2h2 M4 16v2a2 2 0 0 0 2 2h2 M16 4h2a2 2 0 0 1 2 2v2 M16 20h2a2 2 0 0 0 2 -2v-2" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <Viewbox Width="18" Height="18" IsVisible="{Binding IsFullscreen}">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="M5 9h4v-4 M5 15h4v4 M19 9h-4v-4 M19 15h-4v4" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                    </Canvas>
+                                </Viewbox>
                             </Panel>
                         </Button>
                         
@@ -495,32 +528,60 @@
                                             <Button Background="Transparent" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="8"
                                                     Command="{Binding SetModeCommand}" CommandParameter="{x:Static vm:ReaderMode.Webtoon}">
                                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                                    <TextBlock Grid.Column="0" Text="&#xE81E;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,10,0" Grid.Column="0">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Data="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z M4 12l16 0 M12 4l0 16" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                        </Canvas>
+                                                    </Viewbox>
                                                     <TextBlock Grid.Column="1" Text="Webtoon" VerticalAlignment="Center"/>
-                                                    <TextBlock Grid.Column="2" Text="&#xE73E;" FontFamily="Segoe Fluent Icons" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource AccentColor}" IsVisible="{Binding IsWebtoon}"/>
+                                                    <Viewbox Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsWebtoon}" Grid.Column="2">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Data="M5 12l5 5l10 -10" Stroke="{DynamicResource AccentColor}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                        </Canvas>
+                                                    </Viewbox>
                                                 </Grid>
                                             </Button>
                                             <Button Background="Transparent" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="8"
                                                     Command="{Binding SetModeCommand}" CommandParameter="{x:Static vm:ReaderMode.Single}">
                                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                                    <TextBlock Grid.Column="0" Text="&#xE7C3;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,10,0" Grid.Column="0">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Data="M14 3v4a1 1 0 0 0 1 1h4 M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                        </Canvas>
+                                                    </Viewbox>
                                                     <TextBlock Grid.Column="1" Text="Single Page" VerticalAlignment="Center"/>
-                                                    <TextBlock Grid.Column="2" Text="&#xE73E;" FontFamily="Segoe Fluent Icons" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource AccentColor}" IsVisible="{Binding IsPaged}"/>
+                                                    <Viewbox Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsPaged}" Grid.Column="2">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Data="M5 12l5 5l10 -10" Stroke="{DynamicResource AccentColor}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                        </Canvas>
+                                                    </Viewbox>
                                                 </Grid>
                                             </Button>
                                             <Button Background="Transparent" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="8"
                                                     Command="{Binding SetModeCommand}" CommandParameter="{x:Static vm:ReaderMode.Double}">
                                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                                    <TextBlock Grid.Column="0" Text="&#xE8A5;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,10,0" Grid.Column="0">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Data="M19 4v16h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12 M19 16h-12a2 2 0 0 0 -2 2 M9 8h6" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                        </Canvas>
+                                                    </Viewbox>
                                                     <TextBlock Grid.Column="1" Text="Dual Page" VerticalAlignment="Center"/>
-                                                    <TextBlock Grid.Column="2" Text="&#xE73E;" FontFamily="Segoe Fluent Icons" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource AccentColor}" IsVisible="{Binding IsDualPage}"/>
+                                                    <Viewbox Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsDualPage}" Grid.Column="2">
+                                                        <Canvas Width="24" Height="24">
+                                                            <Path Data="M5 12l5 5l10 -10" Stroke="{DynamicResource AccentColor}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                        </Canvas>
+                                                    </Viewbox>
                                                 </Grid>
                                             </Button>
                                         </StackPanel>
                                     </Border>
                                 </Flyout>
                             </Button.Flyout>
-                            <TextBlock Text="&#xE8F1;" FontFamily="Segoe Fluent Icons" FontSize="18"/>
+                            <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M5 5a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1l0 -14 M9 5a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1l0 -14 M5 8h4 M9 16h4 M13.803 4.56l2.184 -.53c.562 -.135 1.133 .19 1.282 .732l3.695 13.418a1.02 1.02 0 0 1 -.634 1.219l-.133 .041l-2.184 .53c-.562 .135 -1.133 -.19 -1.282 -.732l-3.695 -13.418a1.02 1.02 0 0 1 .634 -1.219l.133 -.041 M14 9l4 -1 M16 16l3.923 -.98" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Button>
 
                         <!-- Zoom Controls -->
@@ -546,7 +607,11 @@
                                     </Border>
                                 </Flyout>
                             </Button.Flyout>
-                            <TextBlock Text="&#xE71E;" FontFamily="Segoe Fluent Icons" FontSize="18"/>
+                            <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0 M21 21l-6 -6" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Button>
                     </StackPanel>
                 </Grid>
@@ -558,25 +623,7 @@
                     HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
                     Padding="30,15">
 
-                <StackPanel Spacing="10" MaxWidth="1200" HorizontalAlignment="Stretch">
-                    
-                    <!-- Page Indicator Pill -->
-                    <Border Background="{DynamicResource HoverBackground}" CornerRadius="15" Padding="15,6" 
-                            HorizontalAlignment="Center" Margin="0,0,0,2"
-                            BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Text="Page" Foreground="{DynamicResource SecondaryText}" FontSize="11" VerticalAlignment="Center" Opacity="0.8"/>
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <TextBlock Text="{Binding CurrentPageIndex, Converter={x:Static vm:MathConverters.AddOne}}" 
-                                           Foreground="{DynamicResource AccentColor}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <TextBlock Text="/" Foreground="{DynamicResource SecondaryText}" FontSize="12" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding Pages.Count}" Foreground="{DynamicResource PrimaryText}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Single Row: Prev | Slider | Next -->
-                    <Grid ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
+                <Grid ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center" MaxWidth="1200" HorizontalAlignment="Stretch">
                         
                         <!-- Prev (Icon Only) -->
                         <Button Grid.Column="0" Classes="NavBtn" 
@@ -588,23 +635,44 @@
                                 Padding="10"
                                 CornerRadius="20"
                                 ToolTip.Tip="Previous Chapter">
-                            <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center" FontSize="20"/>
+                            <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M5 12l14 0 M5 12l6 6 M5 12l6 -6" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Button>
 
-                        <!-- Slider (Center) -->
-                        <Slider Grid.Column="1" 
-                                Name="ProgressSlider"
-                                Classes="IosSlider"
-                                Foreground="{DynamicResource AccentColor}"
-                                Background="{DynamicResource HoverBackground}"
-                                Focusable="False"
-                                Minimum="0" 
-                                Maximum="{Binding Pages.Count, Converter={x:Static vm:MathConverters.SubtractOne}}" 
-                                Value="{Binding CurrentPageIndex, Mode=TwoWay}"
-                                ValueChanged="OnSliderValueChanged"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Center"
-                                Margin="15,0"/>
+                        <!-- Slider & Page Indicator (Center) -->
+                        <Panel Grid.Column="1" Margin="15,0">
+                            <!-- Slider -->
+                            <Slider Name="ProgressSlider"
+                                    Classes="IosSlider"
+                                    Foreground="{DynamicResource PrimaryAccent}"
+                                    Background="{DynamicResource HoverBackground}"
+                                    Focusable="False"
+                                    Minimum="0" 
+                                    Maximum="{Binding Pages.Count, Converter={x:Static vm:MathConverters.SubtractOne}}" 
+                                    Value="{Binding CurrentPageIndex, Mode=TwoWay}"
+                                    ValueChanged="OnSliderValueChanged"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Center"/>
+
+                            <!-- Page Indicator (Overlaid) -->
+                            <Border Background="Transparent" CornerRadius="12" Padding="12,4" 
+                                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    IsHitTestVisible="False"
+                                    BorderThickness="0">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="Page" Foreground="#CCCCCC" FontSize="11" VerticalAlignment="Center" Opacity="0.9"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="{Binding CurrentPageIndex, Converter={x:Static vm:MathConverters.AddOne}}" 
+                                                   Foreground="White" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        <TextBlock Text="/" Foreground="#CCCCCC" FontSize="11" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Pages.Count}" Foreground="White" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Panel>
 
                         <!-- Next (Icon Only) -->
                         <Button Grid.Column="2" Classes="NavBtn" 
@@ -616,10 +684,13 @@
                                 CornerRadius="20"
                                 Padding="10"
                                 ToolTip.Tip="Next Chapter"> 
-                            <TextBlock Text="&#xE72A;" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center" FontSize="20"/>
+                            <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M5 12l14 0 M13 18l6 -6 M13 6l6 6" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Button>
                     </Grid>
-                </StackPanel>
             </Border>
         </Grid>
 

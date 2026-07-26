@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Avalonia;
+using Avalonia.Controls;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -63,19 +64,31 @@ namespace Yomic.ViewModels
 
         private string _downloadUrl = "";
 
+        private string GetResourceString(string key, string defaultValue)
+        {
+            if (Avalonia.Application.Current != null && Avalonia.Application.Current.TryFindResource(key, out var res))
+            {
+                if (res is string str)
+                {
+                    return str;
+                }
+            }
+            return defaultValue;
+        }
+
         public string UpdateStatusText
         {
             get
             {
                 return UpdateState switch
                 {
-                    UpdateStatus.Checking => "Checking...",
-                    UpdateStatus.UpdateAvailable => "Update Available",
-                    UpdateStatus.Downloading => $"Downloading Update ({Math.Round(DownloadProgress)}%)",
-                    UpdateStatus.Installing => "Installing...",
-                    UpdateStatus.Failed => "Update Failed (Retry)",
-                    UpdateStatus.UpToDate => "You are up to date!",
-                    _ => "Check for Updates"
+                    UpdateStatus.Checking => GetResourceString("String.UpdateChecking", "Checking..."),
+                    UpdateStatus.UpdateAvailable => GetResourceString("String.UpdateAvailable", "Update Available"),
+                    UpdateStatus.Downloading => $"{GetResourceString("String.UpdateDownloading", "Downloading Update")} ({Math.Round(DownloadProgress)}%)",
+                    UpdateStatus.Installing => GetResourceString("String.UpdateInstalling", "Installing..."),
+                    UpdateStatus.Failed => GetResourceString("String.UpdateFailed", "Update Failed (Retry)"),
+                    UpdateStatus.UpToDate => GetResourceString("String.UpdateUpToDate", "You are up to date!"),
+                    _ => GetResourceString("String.UpdateCheck", "Check for Updates")
                 };
             }
         }
@@ -101,6 +114,15 @@ namespace Yomic.ViewModels
         {
             get => _isThemeChanging;
             set => this.RaiseAndSetIfChanged(ref _isThemeChanging, value);
+        }
+
+        public event Action<string>? RequestLanguageRestartConfirmation;
+
+        private int _appLanguageIndex;
+        public int AppLanguageIndex
+        {
+            get => _appLanguageIndex;
+            set => this.RaiseAndSetIfChanged(ref _appLanguageIndex, value);
         }
 
         private bool _isOfflineMode;
@@ -459,6 +481,14 @@ namespace Yomic.ViewModels
             }
         }
 
+        public void RevertLanguageSelection()
+        {
+            string reverted = _settingsService.AppLanguage == "id" ? "en" : "id";
+            _settingsService.AppLanguage = reverted;
+            _settingsService.Save();
+            AppLanguageIndex = reverted == "id" ? 1 : 0;
+        }
+
         public SettingsViewModel(MainWindowViewModel mainViewModel, Core.Services.LibraryService libraryService, Core.Services.SettingsService settingsService, Core.Services.SourceManager sourceManager, Core.Services.NetworkService networkService)
         {
             _mainViewModel = mainViewModel;
@@ -472,6 +502,7 @@ namespace Yomic.ViewModels
             // Load settings
             _isDarkMode = _settingsService.IsDarkMode;
             _isOfflineMode = _settingsService.IsOfflineMode;
+            _appLanguageIndex = _settingsService.AppLanguage == "id" ? 1 : 0;
             _secureScreen = _settingsService.SecureScreen;
             _updateOnStart = _settingsService.UpdateOnStart;
             _useSmartUpdate = _settingsService.UseSmartUpdate;
@@ -551,6 +582,17 @@ namespace Yomic.ViewModels
                     
                     if (x) _mainViewModel.ShowNotification("Offline Mode Enabled", NotificationType.Error);
                     else _mainViewModel.ShowNotification("Offline Mode Disabled", NotificationType.Success);
+                });
+            this.WhenAnyValue(x => x.AppLanguageIndex)
+                .Skip(1)
+                .Subscribe(x => {
+                    string lang = x == 1 ? "id" : "en";
+                    if (_settingsService.AppLanguage != lang)
+                    {
+                        _settingsService.AppLanguage = lang;
+                        _settingsService.Save();
+                        RequestLanguageRestartConfirmation?.Invoke(lang);
+                    }
                 });
             this.WhenAnyValue(x => x.CheckAppUpdateOnStart)
                 .Subscribe(x => { _settingsService.CheckAppUpdateOnStart = x; _settingsService.Save(); });
@@ -753,11 +795,11 @@ namespace Yomic.ViewModels
         {
             if (string.IsNullOrEmpty(_settingsService.LastBackupTime))
             {
-                LastBackupInfo = "Never backed up";
+                LastBackupInfo = GetResourceString("String.NeverBackedUp", "Never backed up");
             }
             else
             {
-                LastBackupInfo = $"Last backup: {_settingsService.LastBackupTime} ({_settingsService.LastBackupSize})";
+                LastBackupInfo = $"{GetResourceString("String.LastBackup", "Last backup")}: {_settingsService.LastBackupTime} ({_settingsService.LastBackupSize})";
             }
         }
 

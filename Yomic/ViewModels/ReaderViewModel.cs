@@ -31,6 +31,7 @@ namespace Yomic.ViewModels
     {
         public string Url { get; }
         private readonly Core.Services.NetworkService _networkService;
+        private readonly System.Net.Http.HttpClient _client;
         private System.Threading.CancellationToken _cancellationToken;
         
         // Limit concurrent image downloads globally (Max 4 downloads at once for Mihon-like speed)
@@ -68,10 +69,11 @@ namespace Yomic.ViewModels
 
         private bool _isLoaded = false;
 
-        public PageViewModel(string url, Core.Services.NetworkService networkService, bool shouldBlur = false, System.Threading.CancellationToken cancellationToken = default)
+        public PageViewModel(string url, Core.Services.NetworkService networkService, System.Net.Http.HttpClient client, bool shouldBlur = false, System.Threading.CancellationToken cancellationToken = default)
         {
             Url = url;
             _networkService = networkService;
+            _client = client;
             _cancellationToken = cancellationToken;
             if (shouldBlur) BlurRadius = 40; // Strong Blur
             
@@ -89,7 +91,14 @@ namespace Yomic.ViewModels
         {
             if (_isLoaded) return;
             _isLoaded = true;
-            await LoadImageAsync();
+            try
+            {
+                await LoadImageAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PageVM] Error loading page: {ex.Message}");
+            }
         }
 
         public void Dispose()
@@ -111,14 +120,11 @@ namespace Yomic.ViewModels
                 _cancellationToken.ThrowIfCancellationRequested();
                 
                 // --- Disk Cache Logic Setup ---
-                var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                var cacheDir = System.IO.Path.Combine(appData, "Yomic", "Cache", "Reader");
-                System.IO.Directory.CreateDirectory(cacheDir);
+                var cacheDir = ReaderViewModel.CacheDir;
                 
                 // Create a clean hash for the URL to use as filename
-                using var md5 = System.Security.Cryptography.MD5.Create();
-                var hashBytes = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(Url));
-                var hashString = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+                var hashBytes = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(Url));
+                var hashString = Convert.ToHexString(hashBytes).Replace("-", "").ToLowerInvariant();
                 var cacheFilePath = System.IO.Path.Combine(cacheDir, hashString + ".cache");
 
                 // Check Disk Cache First
@@ -198,11 +204,11 @@ namespace Yomic.ViewModels
                     requestUrl = $"https://wsrv.nl/?url={Uri.EscapeDataString(requestUrl)}&output=webp";
                 }
                 
-                Console.WriteLine($"[PageVM] Fetching: {requestUrl}");
-                Console.WriteLine($"[PageVM] Headers: {string.Join(", ", customHeaders.Select(kv => $"{kv.Key}={kv.Value}"))}");
+                // System.Diagnostics.Debug.WriteLine($"[PageVM] Fetching: {requestUrl}");
+                // System.Diagnostics.Debug.WriteLine($"[PageVM] Headers: {string.Join(", ", customHeaders.Select(kv => $"{kv.Key}={kv.Value}"))}");
                 
-                // Use Optimized Client (Proxy Aware + Default Headers)
-                using var client = _networkService.CreateOptimizedHttpClient();
+                // Use Shared HttpClient (Proxy Aware + Default Headers)
+                var client = _client;
                 
                 // Construct Request
                 var req = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, requestUrl);
@@ -210,7 +216,11 @@ namespace Yomic.ViewModels
                 // Add Referer header
                 if (customHeaders.ContainsKey("Referer"))
                 {
-                    req.Headers.Referrer = new Uri(customHeaders["Referer"]);
+                    var customRef = customHeaders["Referer"];
+                    if (customRef != "none" && customRef != "null")
+                    {
+                        req.Headers.Referrer = new Uri(customRef);
+                    }
                 }
                 else
                 {
@@ -269,7 +279,7 @@ namespace Yomic.ViewModels
                 req.Headers.TryAddWithoutValidation("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8");
 
                 var response = await client.SendAsync(req, _cancellationToken);
-                Console.WriteLine($"[PageVM] Response: {response.StatusCode}, ContentType: {response.Content.Headers.ContentType}, Size: {response.Content.Headers.ContentLength}");
+                // System.Diagnostics.Debug.WriteLine($"[PageVM] Response: {response.StatusCode}, ContentType: {response.Content.Headers.ContentType}, Size: {response.Content.Headers.ContentLength}");
                 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -282,7 +292,7 @@ namespace Yomic.ViewModels
                 // Log first few bytes to detect if it's the placeholder
                 if (data.Length > 20)
                 {
-                    Console.WriteLine($"[PageVM] First 20 bytes: {BitConverter.ToString(data.Take(20).ToArray())}");
+                    // System.Diagnostics.Debug.WriteLine($"[PageVM] First 20 bytes: {BitConverter.ToString(data.Take(20).ToArray())}");
                 }
                 
                 using var remoteStream = new System.IO.MemoryStream(data);
@@ -327,6 +337,10 @@ namespace Yomic.ViewModels
 
     public class ReaderViewModel : ViewModelBase, IDisposable
     {
+        public static readonly string CacheDir = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
+            "Yomic", "Cache", "Reader");
+
         private readonly MainWindowViewModel _mainViewModel;
         private readonly Core.Services.SourceManager? _sourceManager;
         private readonly Core.Services.NetworkService _networkService;
@@ -336,6 +350,7 @@ namespace Yomic.ViewModels
         private List<ChapterItem>? _allChapters;
         private int _currentChapterIndex;
         private System.Threading.CancellationTokenSource _cts = new();
+        private readonly System.Reactive.Disposables.CompositeDisposable _disposables = new();
 
         private string _title = "";
         public string Title
@@ -396,6 +411,7 @@ namespace Yomic.ViewModels
         private readonly string _mangaUrl;
         private readonly string? _mangaThumbnail;
         private readonly bool _isNsfwContent;
+        private readonly System.Net.Http.HttpClient _sharedHttpClient;
 
         public ReaderViewModel(MainWindowViewModel mainViewModel, Core.Services.SourceManager? sourceManager, 
                                ChapterItem? chapter, System.Collections.Generic.List<ChapterItem>? allChapters, 
@@ -411,11 +427,17 @@ namespace Yomic.ViewModels
             _networkService = networkService ?? new Core.Services.NetworkService();
             _libraryService = libraryService;
             _settingsService = settingsService ?? new Core.Services.SettingsService();
+            _currentMode = (ReaderMode)Math.Clamp(_settingsService.DefaultReaderMode, 0, 2);
             _sourceId = sourceId;
             _mangaTitle = mangaTitle;
             _mangaUrl = mangaUrl;
             _mangaThumbnail = mangaThumbnail;
             _isNsfwContent = isNsfw;
+
+            // Pre-create cache directory once
+            System.IO.Directory.CreateDirectory(CacheDir);
+
+            _sharedHttpClient = _networkService.CreateOptimizedHttpClient();
 
             // Find current chapter index in the list
             if (_allChapters != null && chapter != null)
@@ -445,6 +467,7 @@ namespace Yomic.ViewModels
 
             BackCommand = ReactiveCommand.Create(() => 
             {
+                SaveProgress();
                 if (CustomBackAction != null) CustomBackAction();
                 else _mainViewModel.GoBack();
             });
@@ -533,6 +556,11 @@ namespace Yomic.ViewModels
             SetModeCommand = ReactiveCommand.Create<ReaderMode>(mode => 
             {
                 CurrentMode = mode;
+                if (_settingsService != null)
+                {
+                    _settingsService.DefaultReaderMode = (int)mode;
+                    _settingsService.Save();
+                }
             });
             
             NextChapterCommand = ReactiveCommand.Create(() => 
@@ -557,8 +585,8 @@ namespace Yomic.ViewModels
             });
             
             // Sync with MainViewModel
-            _mainViewModel.WhenAnyValue(x => x.IsFullscreen)
-                          .Subscribe(_ => this.RaisePropertyChanged(nameof(IsFullscreen)));
+            _disposables.Add(_mainViewModel.WhenAnyValue(x => x.IsFullscreen)
+                          .Subscribe(_ => this.RaisePropertyChanged(nameof(IsFullscreen))));
 
             // Refresh (reload current chapter pages)
             RefreshCommand = ReactiveCommand.Create(() =>
@@ -643,8 +671,13 @@ namespace Yomic.ViewModels
         public ReactiveCommand<Unit, Unit> ScrollUpCommand { get; }
         public ReactiveCommand<Unit, Unit> ScrollDownCommand { get; }
         
+        // Tracks exact scroll percentage (0.0-1.0) for Webtoon mode — set by the View in OnScrollChanged
+        public double CurrentScrollPercent { get; set; }
+
         // Event for View to handle scrolling
         public event EventHandler<int>? RequestScroll; // int: 1 for down, -1 for up
+        public event EventHandler<int>? RequestScrollToPage;
+        public event EventHandler<double>? RequestScrollToPercent;
 
         public bool IsFullscreen
         {
@@ -739,37 +772,46 @@ namespace Yomic.ViewModels
             var allPages = Pages.ToList();
             _ = System.Threading.Tasks.Task.Run(async () =>
             {
-                // Load outward from center: center+7, center-3, center+8, center-4, ...
-                for (int offset = PRELOAD_AHEAD + 1; offset < allPages.Count; offset++)
+                try
                 {
-                    if (token.IsCancellationRequested) break;
-
-                    int ahead = centerIndex + offset;
-                    int behind = centerIndex - offset;
-
-                    if (ahead < allPages.Count)
+                    // Load outward from center: center+7, center-3, center+8, center-4, ...
+                    for (int offset = PRELOAD_AHEAD + 1; offset < allPages.Count; offset++)
                     {
-                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                        {
-                            if (ahead < allPages.Count) allPages[ahead].Load();
-                        });
-                    }
-                    if (behind >= 0)
-                    {
-                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                        {
-                            if (behind >= 0 && behind < allPages.Count) allPages[behind].Load();
-                        });
-                    }
+                        if (token.IsCancellationRequested) break;
 
-                    // Small yield to let viewport pages get priority in the semaphore queue
-                    await System.Threading.Tasks.Task.Delay(30, token).ConfigureAwait(false);
+                        int ahead = centerIndex + offset;
+                        int behind = centerIndex - offset;
+
+                        var toLoad = new List<PageViewModel>();
+                        if (ahead < allPages.Count) toLoad.Add(allPages[ahead]);
+                        if (behind >= 0 && behind < allPages.Count) toLoad.Add(allPages[behind]);
+
+                        if (toLoad.Count > 0)
+                        {
+                            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                            {
+                                foreach (var p in toLoad) p.Load();
+                            });
+                        }
+
+                        // Small yield to let viewport pages get priority in the semaphore queue
+                        await System.Threading.Tasks.Task.Delay(30, token).ConfigureAwait(false);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // Suppress cancellation exceptions
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ReaderVM] Error in preloading: {ex.Message}");
                 }
             });
         }
 
         public void Dispose()
         {
+            _disposables.Dispose();
             // Cancel all ongoing downloads
             _cts.Cancel();
             
@@ -780,21 +822,7 @@ namespace Yomic.ViewModels
             }
             Pages.Clear();
 
-            // Force Garbage Collection to aggressively free up RAM asynchronously
-            System.Threading.Tasks.Task.Run(() =>
-            {
-                try
-                {
-                    GC.Collect();
-                    GC.WaitForPendingFinalizers();
-                    GC.Collect();
-                    System.Diagnostics.Debug.WriteLine("[ReaderVM] Asynchronous GC completed.");
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[ReaderVM] GC error: {ex.Message}");
-                }
-            });
+            _sharedHttpClient?.Dispose();
             
             _cts.Dispose();
             System.Diagnostics.Debug.WriteLine("[ReaderVM] Disposed.");
@@ -875,15 +903,49 @@ namespace Yomic.ViewModels
                             
                         if (files.Count > 0)
                         {
+                            int targetIndex = startAtLastPage ? Math.Max(0, files.Count - 1) : 0;
+                            double targetPercent = -1;
+                            if (!startAtLastPage && _libraryService != null)
+                            {
+                                long savedRaw = await _libraryService.GetLastPageReadRawAsync(_currentChapter.Url);
+                                if (savedRaw > 0)
+                                {
+                                    if (savedRaw > 1000) // Percentage (Webtoon)
+                                    {
+                                        targetPercent = savedRaw / 1_000_000.0;
+                                        targetIndex = (int)(targetPercent * Math.Max(1, files.Count - 1));
+                                    }
+                                    else // Page index (Paged/Dual)
+                                    {
+                                        targetIndex = (int)savedRaw;
+                                        targetPercent = (double)targetIndex / Math.Max(1, files.Count - 1);
+                                    }
+                                    targetIndex = Math.Clamp(targetIndex, 0, files.Count - 1);
+                                }
+                            }
+                            double capturedPercent = targetPercent;
+
                             Avalonia.Threading.Dispatcher.UIThread.Post(() => 
                             {
                                 Pages.Clear();
                                 foreach(var file in files)
                                 {
-                                    var pvm = new PageViewModel(file, _networkService, shouldBlur);
+                                    var pvm = new PageViewModel(file, _networkService, _sharedHttpClient, shouldBlur);
+                                    pvm.PropertyChanged += (s, e) => {
+                                        if (e.PropertyName == nameof(PageViewModel.IsLoading)) {
+                                            PrintConsoleReaderProgress();
+                                        }
+                                    };
                                     Pages.Add(pvm);
                                 }
-                                CurrentPageIndex = startAtLastPage ? Math.Max(0, Pages.Count - 1) : 0;
+                                CurrentPageIndex = targetIndex;
+                                if (IsWebtoon)
+                                {
+                                    if (capturedPercent > 0)
+                                        RequestScrollToPercent?.Invoke(this, capturedPercent);
+                                    else
+                                        RequestScrollToPercent?.Invoke(this, 0); // Always trigger restore flow for fade-in
+                                }
                             });
                             return; // Loaded from disk, exit
                         }
@@ -913,6 +975,28 @@ namespace Yomic.ViewModels
                 {
                     var urls = await source.GetPageListAsync(_currentChapter.Url);
                     
+                    int targetIndex = startAtLastPage ? Math.Max(0, urls.Count - 1) : 0;
+                    double targetPercent = -1;
+                    if (!startAtLastPage && _libraryService != null)
+                    {
+                        long savedRaw = await _libraryService.GetLastPageReadRawAsync(_currentChapter.Url);
+                        if (savedRaw > 0)
+                        {
+                            if (savedRaw > 1000) // Percentage (Webtoon)
+                            {
+                                targetPercent = savedRaw / 1_000_000.0;
+                                targetIndex = (int)(targetPercent * Math.Max(1, urls.Count - 1));
+                            }
+                            else // Page index (Paged/Dual)
+                            {
+                                targetIndex = (int)savedRaw;
+                                targetPercent = (double)targetIndex / Math.Max(1, urls.Count - 1);
+                            }
+                            targetIndex = Math.Clamp(targetIndex, 0, urls.Count - 1);
+                        }
+                    }
+                    double capturedPercent = targetPercent;
+
                     // Capture token before switching to UI thread, because _cts might get disposed while waiting in the UI thread queue.
                     var token = _cts.Token;
                     Avalonia.Threading.Dispatcher.UIThread.Post(() => 
@@ -924,15 +1008,28 @@ namespace Yomic.ViewModels
                         {
                             foreach(var url in urls)
                             {
-                                var pvm = new PageViewModel(url, _networkService, shouldBlur, token);
+                                var pvm = new PageViewModel(url, _networkService, _sharedHttpClient, shouldBlur, token);
+                                pvm.PropertyChanged += (s, e) => {
+                                    if (e.PropertyName == nameof(PageViewModel.IsLoading)) {
+                                        PrintConsoleReaderProgress();
+                                    }
+                                };
                                 Pages.Add(pvm);
                             }
-                            CurrentPageIndex = startAtLastPage ? Math.Max(0, Pages.Count - 1) : 0;
+                            CurrentPageIndex = targetIndex;
                             
                             // Mihon-style: Only preload pages around the current viewport position
                             // instead of eagerly loading ALL pages sequentially.
                             // This ensures the visible page loads instantly, with nearby pages buffered.
                             PreloadAroundIndex(CurrentPageIndex);
+
+                            if (IsWebtoon)
+                            {
+                                if (capturedPercent > 0)
+                                    RequestScrollToPercent?.Invoke(this, capturedPercent);
+                                else
+                                    RequestScrollToPercent?.Invoke(this, 0); // Always trigger restore flow for fade-in
+                            }
                         }
                         else
                         {
@@ -947,11 +1044,31 @@ namespace Yomic.ViewModels
             }
         }
 
+        private void PrintConsoleReaderProgress()
+        {
+            int total = Pages.Count;
+            if (total == 0) return;
+            int loaded = Pages.Count(p => !p.IsLoading);
+            
+            int barWidth = 20;
+            int filled = (int)((double)loaded / total * barWidth);
+            string bar = new string('█', filled) + new string('░', barWidth - filled);
+            int percent = (int)((double)loaded / total * 100);
+            
+            Console.Write($"\r[ReaderVM] Loading Pages... [{bar}] {loaded}/{total} ({percent}%)");
+            if (loaded == total)
+            {
+                Console.WriteLine();
+            }
+        }
+
         /// <summary>
         /// Switches to a new chapter in-place (for standalone windows)
         /// </summary>
         private void SwitchToChapter(ChapterItem newChapter, int newIndex, bool startAtLastPage)
         {
+            SaveProgress();
+
             // Cancel ongoing downloads before switching
             _cts.Cancel();
             _cts.Dispose();
@@ -1027,11 +1144,9 @@ namespace Yomic.ViewModels
                 System.Diagnostics.Debug.WriteLine($"[Preload] Found {urls.Count} pages to preload.");
 
                 // Step 2: Download each page in the background
-                var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                var cacheDir = System.IO.Path.Combine(appData, "Yomic", "Cache", "Reader");
-                System.IO.Directory.CreateDirectory(cacheDir);
+                var cacheDir = CacheDir;
 
-                using var client = _networkService.CreateOptimizedHttpClient();
+                var client = _sharedHttpClient;
 
                 foreach (var url in urls)
                 {
@@ -1059,12 +1174,8 @@ namespace Yomic.ViewModels
                         }
 
                         // Check hash and cache path
-                        string hashString;
-                        using (var md5 = System.Security.Cryptography.MD5.Create())
-                        {
-                            var hashBytes = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(url));
-                            hashString = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
-                        }
+                        var hashBytes = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(url));
+                        var hashString = Convert.ToHexString(hashBytes).Replace("-", "").ToLowerInvariant();
                         var cacheFilePath = System.IO.Path.Combine(cacheDir, hashString + ".cache");
 
                         // Skip if already in cache
@@ -1143,6 +1254,39 @@ namespace Yomic.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[Preload] Failed to preload next chapter: {ex.Message}");
+            }
+        }
+
+        private void SaveProgress()
+        {
+            if (_currentChapter == null || _libraryService == null || Pages.Count == 0) return;
+            try
+            {
+                long storedValue = 0;
+                if (IsWebtoon)
+                {
+                    double scrollPercent = CurrentScrollPercent;
+                    // Reset if at the very end of the chapter
+                    if (scrollPercent >= 0.995) scrollPercent = 0;
+                    // Encode as percent * 1,000,000 so we can distinguish from legacy page indices
+                    storedValue = (long)(scrollPercent * 1_000_000L);
+                }
+                else
+                {
+                    int pageIndex = CurrentPageIndex;
+                    // For Dual/Paged mode, if they reached the end (last page or last page in dual), reset to 0
+                    int threshold = IsDualPage ? Pages.Count - 2 : Pages.Count - 1;
+                    if (pageIndex >= threshold)
+                    {
+                        pageIndex = 0;
+                    }
+                    storedValue = pageIndex;
+                }
+                _libraryService.SaveLastPageRead(_currentChapter.Url, storedValue);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ReaderVM] Failed to save progress: {ex.Message}");
             }
         }
     }

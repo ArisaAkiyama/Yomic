@@ -28,10 +28,7 @@ namespace Yomic.Views
         {
             DetachLazyLoading();
 
-            var listBox = this.FindControl<ListBox>("LibraryListBox");
-            if (listBox == null) return;
-            
-            var scrollViewer = listBox.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+            var scrollViewer = this.FindControl<ScrollViewer>("LibraryScrollViewer");
             if (scrollViewer == null) return;
 
             _scrollSubscription = Observable
@@ -70,12 +67,23 @@ namespace Yomic.Views
             }
         }
 
+        private string GetResourceString(string key, string defaultValue)
+        {
+            if (this.TryFindResource(key, out var res) && res is string str)
+            {
+                return str;
+            }
+            return defaultValue;
+        }
+
         private async Task<bool> ShowDeleteFromDiskWarningAsync(MangaItem item)
         {
             var owner = TopLevel.GetTopLevel(this) as Window;
-            var dialog = new ConfirmDialog(
-                "Delete from Disk",
-                $"This will remove \"{item.Title}\" from your library and permanently delete its downloaded chapters from disk. This action cannot be undone.");
+            var title = GetResourceString("String.Dialog.DeleteDiskTitle", "Delete from Disk");
+            var format = GetResourceString("String.Dialog.DeleteDiskMsg", "This will remove \"{0}\" from your library and permanently delete its downloaded chapters from disk. This action cannot be undone.");
+            var message = string.Format(format, item.Title);
+            
+            var dialog = new ConfirmDialog(title, message);
 
             return owner != null && await dialog.ShowDialog<bool>(owner);
         }
@@ -83,9 +91,11 @@ namespace Yomic.Views
         private async Task<bool> ShowDeleteDownloadsWarningAsync(MangaItem item)
         {
             var owner = TopLevel.GetTopLevel(this) as Window;
-            var dialog = new ConfirmDialog(
-                "Delete All Downloads",
-                $"This will permanently delete all downloaded chapters of \"{item.Title}\" from disk. The manga will remain in your library. This action cannot be undone.");
+            var title = GetResourceString("String.Dialog.DeleteDownloadsTitle", "Delete All Downloads");
+            var format = GetResourceString("String.Dialog.DeleteDownloadsMsg", "This will permanently delete all downloaded chapters of \"{0}\" from disk. The manga will remain in your library. This action cannot be undone.");
+            var message = string.Format(format, item.Title);
+            
+            var dialog = new ConfirmDialog(title, message);
 
             return owner != null && await dialog.ShowDialog<bool>(owner);
         }

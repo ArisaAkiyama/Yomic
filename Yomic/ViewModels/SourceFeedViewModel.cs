@@ -12,6 +12,7 @@ using System.Reactive.Linq;
 using Yomic.Core.Services;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Controls;
 
 namespace Yomic.ViewModels
 {
@@ -111,7 +112,26 @@ namespace Yomic.ViewModels
             set => this.RaiseAndSetIfChanged(ref _totalPages, value);
         }
 
-        public string PageInfo => $"Page {CurrentPage} of {TotalPages}";
+        private string GetResourceString(string key, string defaultValue)
+        {
+            if (Avalonia.Application.Current != null && Avalonia.Application.Current.TryFindResource(key, out var res))
+            {
+                if (res is string str)
+                {
+                    return str;
+                }
+            }
+            return defaultValue;
+        }
+
+        public string PageInfo
+        {
+            get
+            {
+                var format = GetResourceString("String.PageInfoFormat", "Page {0} of {1}");
+                return string.Format(format, CurrentPage, TotalPages);
+            }
+        }
         public bool HasPrevPage => CurrentPage > 1;
         public bool HasNextPage => CurrentPage < TotalPages;
         
@@ -262,6 +282,10 @@ namespace Yomic.ViewModels
             _mainVm = mainVm;
             _settingsService = settingsService;
             _isListView = _settingsService.LibraryIsListView;
+            if (IsMangaDex)
+            {
+                _isEnglish = _settingsService.MangaDexLanguage == "en";
+            }
             _sourceManager = sourceManager;
             _imageCacheService = imageCacheService;
             _networkService = networkService; // Store for usage
@@ -407,6 +431,9 @@ namespace Yomic.ViewModels
                 {
                     LogService.Warning("SourceFeed", $"Could not find SelectedLanguage property on {sourceType.Name}");
                 }
+                
+                _settingsService.MangaDexLanguage = newLang;
+                _settingsService.Save();
                 
                 // Invalidate ALL caches for this source to force fresh data with new language
                 _sourceManager.InvalidateAllCachesForSource(_source.Id);
@@ -853,8 +880,16 @@ namespace Yomic.ViewModels
                     }
                 }
 
+                int pagesScanned = 0;
+                bool hitPageLimit = false;
                 while (matched.Count < requiredMatches && sourcePage <= sourceTotalPages)
                 {
+                    if (pagesScanned >= 10)
+                    {
+                        hitPageLimit = true;
+                        break;
+                    }
+                    pagesScanned++;
                     token.ThrowIfCancellationRequested();
 
                     var cacheKey = $"{_source.Id}:v14:{sourcePage}:{IsLatestMode}";
@@ -926,7 +961,14 @@ namespace Yomic.ViewModels
 
                     if (pageItemsToShow.Count == 0)
                     {
-                        ErrorMessage = $"No {StatusFilterText.ToLowerInvariant()} manga found on this page.";
+                        if (hitPageLimit)
+                        {
+                            ErrorMessage = "No matching manga found in the first 10 source pages. Try clearing some filters.";
+                        }
+                        else
+                        {
+                            ErrorMessage = $"No {StatusFilterText.ToLowerInvariant()} manga found on this page.";
+                        }
                     }
                 });
             }
@@ -1169,6 +1211,9 @@ namespace Yomic.ViewModels
             
             _gbFlag?.Dispose();
             _idFlag?.Dispose();
+
+            AvailableGenres.Clear();
+            AvailableFormats.Clear();
 
             System.Diagnostics.Debug.WriteLine("[SourceFeedVM] Disposed and memory references cleared.");
         }

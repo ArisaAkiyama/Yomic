@@ -67,10 +67,12 @@
             <StackPanel>
                 <Grid ColumnDefinitions="*, Auto">
                     <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                        <TextBlock Text="&#xE774;" FontFamily="Segoe Fluent Icons" FontSize="22" 
-                                   Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"
-                                   RenderOptions.TextRenderingMode="Antialias"/>
-                        <TextBlock Text="Browse Source" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
+                        <Viewbox Width="28" Height="28" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0 M3.6 9h16.8 M3.6 15h16.8 M11.5 3a17 17 0 0 0 0 18 M12.5 3a17 17 0 0 1 0 18" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                            </Canvas>
+                        </Viewbox>
+                        <TextBlock Text="{DynamicResource String.BrowseSources}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
 
                     </StackPanel>
                 </Grid>
@@ -81,7 +83,7 @@
             <Grid ColumnDefinitions="*, Auto">
                 <TextBox Grid.Column="0" Width="300" HorizontalAlignment="Left"
                           Text="{Binding SearchText}"
-                          Watermark="Search sources..." 
+                          Watermark="{DynamicResource String.SearchSources}" 
                           Background="{DynamicResource SidebarBackground}" Foreground="{DynamicResource PrimaryText}" 
                           CornerRadius="20" Padding="8,8,15,8"
                           BorderThickness="0" VerticalContentAlignment="Center" FontSize="13">
@@ -112,8 +114,11 @@
                          </Style>
                     </TextBox.Styles>
                     <TextBox.InnerLeftContent>
-                        <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource SecondaryText}" 
-                                   VerticalAlignment="Center" Margin="12,0,0,0" FontSize="14"/>
+                        <Viewbox Width="14" Height="14" VerticalAlignment="Center" Margin="12,0,0,0">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0 M21 21l-6 -6" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                            </Canvas>
+                        </Viewbox>
                     </TextBox.InnerLeftContent>
                 </TextBox>
 
@@ -126,28 +131,38 @@
                                 
                                 <MenuItem Header="Show All" Command="{Binding SetLanguageFilterCommand}" CommandParameter="ALL">
                                     <MenuItem.Icon>
-                                        <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource AccentColor}"
-                                                   IsVisible="{Binding SelectedLanguage, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='ALL'}"/>
+                                        <Viewbox Width="14" Height="14" VerticalAlignment="Center" IsVisible="{Binding SelectedLanguage, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='ALL'}">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Data="M5 12l5 5l10 -10" Stroke="{Binding $parent[MenuItem].Foreground}" StrokeThickness="2.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                            </Canvas>
+                                        </Viewbox>
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <MenuItem Header="Bahasa Indonesia" Command="{Binding SetLanguageFilterCommand}" CommandParameter="ID">
                                     <MenuItem.Icon>
-                                        <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource AccentColor}"
-                                                   IsVisible="{Binding SelectedLanguage, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='ID'}"/>
+                                        <Viewbox Width="14" Height="14" VerticalAlignment="Center" IsVisible="{Binding SelectedLanguage, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='ID'}">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Data="M5 12l5 5l10 -10" Stroke="{Binding $parent[MenuItem].Foreground}" StrokeThickness="2.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                            </Canvas>
+                                        </Viewbox>
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <MenuItem Header="English" Command="{Binding SetLanguageFilterCommand}" CommandParameter="EN">
                                     <MenuItem.Icon>
-                                        <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource AccentColor}"
-                                                   IsVisible="{Binding SelectedLanguage, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='EN'}"/>
+                                        <Viewbox Width="14" Height="14" VerticalAlignment="Center" IsVisible="{Binding SelectedLanguage, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='EN'}">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Data="M5 12l5 5l10 -10" Stroke="{Binding $parent[MenuItem].Foreground}" StrokeThickness="2.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                            </Canvas>
+                                        </Viewbox>
                                     </MenuItem.Icon>
                                 </MenuItem>
                             </MenuFlyout>
                         </Button.Flyout>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Text="&#xE71C;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
-                            <TextBlock Text="Filter" VerticalAlignment="Center" FontSize="13" FontWeight="Medium"/>
-                        </StackPanel>
+                        <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                            </Canvas>
+                        </Viewbox>
                     </Button>
                 </StackPanel>
             </Grid>
@@ -232,7 +247,7 @@
                                         <!-- Col 2: Name & Version -->
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left" Spacing="2">
                                             <TextBlock Text="{Binding Name}" Foreground="{DynamicResource PrimaryText}" FontWeight="SemiBold" FontSize="16"/>
-                                            <TextBlock Text="Supported Source" Foreground="{DynamicResource SecondaryText}" FontSize="12"/>
+                                            <TextBlock Text="{DynamicResource String.SupportedSource}" Foreground="{DynamicResource SecondaryText}" FontSize="12"/>
                                         </StackPanel>
 
                                         <!-- Col 3: Language Flags -->
@@ -265,13 +280,19 @@
                                                          <Setter Property="Background" Value="#20FF9900"/>
                                                      </Style>
                                                  </Button.Styles>
-                                                 <TextBlock Text="&#xE774;" FontFamily="Segoe Fluent Icons" 
-                                                            Foreground="{DynamicResource SecondaryText}" FontSize="16"
-                                                            VerticalAlignment="Center"/>
+                                                  <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                      <Canvas Width="24" Height="24">
+                                                          <Path Data="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0 M3.6 9h16.8 M3.6 15h16.8 M11.5 3a17 17 0 0 0 0 18 M12.5 3a17 17 0 0 1 0 18" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                      </Canvas>
+                                                  </Viewbox>
                                              </Button>
                                              
                                              <!-- Arrow -->
-                                             <TextBlock Text="&#xE76C;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource SecondaryText}" FontSize="16" VerticalAlignment="Center"/>
+                                              <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                  <Canvas Width="24" Height="24">
+                                                      <Path Data="M9 6l6 6l-6 6" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                  </Canvas>
+                                              </Viewbox>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -282,10 +303,14 @@
                 
                 <!-- Empty State (Online but no sources found) -->
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20" IsVisible="{Binding !HasSources}">
-                    <TextBlock Text="&#xE774;" FontFamily="Segoe Fluent Icons" FontSize="64" Foreground="#45475A" HorizontalAlignment="Center"/>
+                    <Viewbox Width="64" Height="64" HorizontalAlignment="Center">
+                        <Canvas Width="24" Height="24">
+                            <Path Data="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0 M3.6 9h16.8 M3.6 15h16.8 M11.5 3a17 17 0 0 0 0 18 M12.5 3a17 17 0 0 1 0 18" Stroke="#45475A" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                        </Canvas>
+                    </Viewbox>
                     <StackPanel Spacing="8">
-                        <TextBlock Text="No Sources Found" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Try changing the language filter to see more sources." Foreground="{DynamicResource SecondaryText}" FontSize="14" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{DynamicResource String.NoSourcesFound}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{DynamicResource String.NoSourcesFoundDesc}" Foreground="{DynamicResource SecondaryText}" FontSize="14" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </StackPanel>
             </Panel>
@@ -293,10 +318,14 @@
 
         <!-- Offline State -->
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20" IsVisible="{Binding IsOffline}">
-            <TextBlock Text="&#xEB55;" FontFamily="Segoe Fluent Icons" FontSize="64" Foreground="#F38BA8" HorizontalAlignment="Center"/>
+            <Viewbox Width="64" Height="64" HorizontalAlignment="Center">
+                <Canvas Width="24" Height="24">
+                    <Path Data="M12 18l.01 0 M9.172 15.172a4 4 0 0 1 5.656 0 M6.343 12.343a7.963 7.963 0 0 1 3.864 -2.14m4.163 .155a7.965 7.965 0 0 1 3.287 2 M3.515 9.515a12 12 0 0 1 3.544 -2.455m3.101 -.92a12 12 0 0 1 10.325 3.374 M3 3l18 18" Stroke="#F38BA8" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                </Canvas>
+            </Viewbox>
             <StackPanel Spacing="8">
-                <TextBlock Text="No Internet Connection" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
-                <TextBlock Text="You are currently offline. Please check your network settings." Foreground="{DynamicResource SecondaryText}" FontSize="14" HorizontalAlignment="Center"/>
+                <TextBlock Text="{DynamicResource String.NoInternetConnection}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
+                <TextBlock Text="{DynamicResource String.OfflineMessage}" Foreground="{DynamicResource SecondaryText}" FontSize="14" HorizontalAlignment="Center"/>
             </StackPanel>
         </StackPanel>
 
@@ -308,7 +337,7 @@
                     <TextBlock Text="{Binding BypassMessage}" 
                                Foreground="White" FontSize="18" FontWeight="SemiBold" 
                                HorizontalAlignment="Center"/>
-                    <TextBlock Text="Please do not close the browser window until finished." 
+                    <TextBlock Text="{DynamicResource String.BypassWindowWarning}" 
                                Foreground="#B0FFFFFF" FontSize="12" 
                                HorizontalAlignment="Center"/>
                 </StackPanel>

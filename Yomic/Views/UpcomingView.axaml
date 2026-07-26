@@ -16,12 +16,30 @@
             <Setter Property="Background" Value="Transparent"/>
         </Style>
         
-        <Style Selector="Border.UpdateCard">
-            <Setter Property="Background" Value="Transparent"/>
+        <!-- Hover transitions for the square grid cards -->
+        <Style Selector="Border.UpcomingCard">
+            <Setter Property="ZIndex" Value="1"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2"/>
+                </Transitions>
+            </Setter>
         </Style>
-        <Style Selector="Border.UpdateCard:pointerover">
-            <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+        <Style Selector="Border.UpcomingCard:pointerover">
+            <Setter Property="ZIndex" Value="10"/>
+            <Setter Property="BoxShadow" Value="0 8 16 0 #50000000"/>
             <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Border.UpcomingCard Image">
+            <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.35" Easing="CubicEaseOut"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.UpcomingCard:pointerover Image">
+            <Setter Property="RenderTransform" Value="scale(1.06)"/>
         </Style>
 
         <Style Selector="Button.header-action">
@@ -42,19 +60,24 @@
     <Panel>
         <Grid RowDefinitions="Auto, *">
             <!-- Header (Fixed) -->
-            <StackPanel Grid.Row="0" Margin="30,25,30,15">
+            <StackPanel Grid.Row="0" Margin="30,25,30,15" IsVisible="{Binding HasItems}">
                 <Grid ColumnDefinitions="*, Auto">
                     <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                        <TextBlock Text="&#xE787;" FontFamily="Segoe Fluent Icons" FontSize="24" 
-                                   Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"
-                                   RenderOptions.TextRenderingMode="Antialias"/>
-                        <TextBlock Text="Upcoming" FontSize="28" FontWeight="Bold" 
+                        <Viewbox Width="28" Height="28" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12 M16 3v4 M8 3v4 M4 11h16 M11 15h1 M12 15v3" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                            </Canvas>
+                        </Viewbox>
+                        <TextBlock Text="{DynamicResource String.UpcomingHeader}" FontSize="28" FontWeight="Bold" 
                                    Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
                         
                         <!-- Count Badge -->
                          <Border Background="{DynamicResource ControlBackground}" CornerRadius="10" Padding="10,3" IsVisible="{Binding HasItems}" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding UpcomingCount, StringFormat='{}{0} Series'}" 
-                                       Foreground="{DynamicResource SecondaryText}" FontSize="11" VerticalAlignment="Center" FontWeight="Medium"/>
+                            <TextBlock Foreground="{DynamicResource SecondaryText}" FontSize="11" VerticalAlignment="Center" FontWeight="Medium">
+                                <Run Text="{Binding UpcomingCount}"/>
+                                <Run Text=" "/>
+                                <Run Text="{DynamicResource String.Series}"/>
+                            </TextBlock>
                         </Border>
                     </StackPanel>
 
@@ -62,17 +85,20 @@
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" IsVisible="{Binding HasItems}">
                         <Button Command="{Binding RefreshCommand}"
                                 Classes="header-action"
-                                ToolTip.Tip="Refresh">
-                            <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" 
-                                       FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                ToolTip.Tip="{DynamicResource String.Refresh}">
+                            <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Button>
                     </StackPanel>
                 </Grid>
-                <TextBlock Text="Predicted chapter releases based on historical updates" Foreground="{DynamicResource SecondaryText}" Margin="0,4,0,0" FontSize="13" Opacity="0.8"/>
+                <TextBlock Text="{DynamicResource String.UpcomingDesc}" Foreground="{DynamicResource SecondaryText}" Margin="0,4,0,0" FontSize="13" Opacity="0.8"/>
             </StackPanel>
 
             <!-- Scrollable Content -->
-            <ScrollViewer Grid.Row="1" Padding="30,0,30,30">
+            <ScrollViewer Grid.Row="1" Padding="30,0,30,30" IsVisible="{Binding !IsRefreshing}">
                 <StackPanel>
                     <!-- Updates List (Grouped) -->
                     <ItemsControl ItemsSource="{Binding GroupedUpcoming}" IsVisible="{Binding !IsEmpty}" HorizontalAlignment="Stretch">
@@ -84,71 +110,79 @@
                                          <TextBlock Text="{Binding Header}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryAccent}" Opacity="0.9"/>
                                     </Border>
                                     
-                                    <!-- Items in Group -->
-                                    <ItemsControl ItemsSource="{Binding Items}">
+                                    <!-- Items in Group (Grid Mode using WrapPanel) -->
+                                    <ItemsControl ItemsSource="{Binding Items}" HorizontalAlignment="Center">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Button x:CompileBindings="False"
                                                         Command="{Binding OpenMangaCommand}" 
                                                         CommandParameter="{Binding}"
-                                                        Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" Padding="0" Margin="0,0,0,8">
+                                                        Background="Transparent" BorderThickness="0" Padding="0" Margin="8,0,8,16">
                                                     <Button.Template>
                                                         <ControlTemplate>
                                                             <ContentPresenter Content="{TemplateBinding Content}"/>
                                                         </ControlTemplate>
                                                     </Button.Template>
                                                     
-                                                    <Border Classes="UpdateCard" CornerRadius="12" Margin="0,0,0,6" ClipToBounds="True">
+                                                    <Border Classes="UpcomingCard" CornerRadius="12" Width="150" Height="150" ClipToBounds="True" BoxShadow="0 4 10 0 #30000000">
                                                         <Panel>
-                                                            <Border Background="#1AEF4444" IsVisible="{Binding IsSeverelyOverdue}"/>
-                                                            <Grid ColumnDefinitions="56, *, Auto" Margin="12,10">
-                                                                <!-- Col 1: Cover (Portrait 56x80) -->
-                                                                <Border Grid.Column="0" Width="56" Height="80" CornerRadius="6" ClipToBounds="True" Background="#181825" VerticalAlignment="Center">
-                                                                    <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}"
-                                                                           helpers:SecureImageLoader.DecodeWidth="300"
-                                                                           Stretch="UniformToFill" />
+                                                            <!-- Background Cover Image -->
+                                                            <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}"
+                                                                   helpers:SecureImageLoader.DecodeWidth="300"
+                                                                   Stretch="UniformToFill" />
+                                                                   
+                                                            <!-- Dark Gradient Mask for Text Readability -->
+                                                            <Border VerticalAlignment="Stretch" CornerRadius="12">
+                                                                <Border.Background>
+                                                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                                                        <GradientStop Offset="0.0" Color="#00000000"/>
+                                                                        <GradientStop Offset="0.4" Color="#20000000"/>
+                                                                        <GradientStop Offset="0.75" Color="#B0000000"/>
+                                                                        <GradientStop Offset="1.0" Color="#E50F0F15"/>
+                                                                    </LinearGradientBrush>
+                                                                </Border.Background>
+                                                            </Border>
+
+                                                            <!-- Red alert tint for severely overdue -->
+                                                            <Border Background="#25EF4444" IsVisible="{Binding IsSeverelyOverdue}"/>
+
+                                                            <!-- Top pill badges (Frequency + Overdue) -->
+                                                            <StackPanel Orientation="Horizontal" Spacing="4" Margin="8" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                                                <!-- Frequency badge -->
+                                                                <Border Background="#CF222230" CornerRadius="4" Padding="5,2" BorderBrush="#35ffffff" BorderThickness="1">
+                                                                    <TextBlock Text="{Binding ReleaseFrequency}" Foreground="#D0D0E0" FontSize="9" FontWeight="SemiBold"/>
                                                                 </Border>
-
-                                                                <!-- Col 2: Info -->
-                                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0" Spacing="6">
-                                                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                        <TextBlock Text="{Binding Title}" 
-                                                                                   Foreground="{DynamicResource PrimaryText}" FontWeight="Bold" FontSize="15"
-                                                                                   TextTrimming="CharacterEllipsis" MaxLines="1"
-                                                                                   VerticalAlignment="Center" MaxWidth="280"/>
-                                                                        <Border Background="#2A2A35" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
-                                                                            <TextBlock Text="{Binding ReleaseFrequency}" Foreground="#A0A0B0" FontSize="10" FontWeight="SemiBold"/>
-                                                                        </Border>
-                                                                        <Border IsVisible="{Binding IsOverdue}" Background="#1AEF4444" BorderBrush="#80EF4444" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
-                                                                            <TextBlock Text="OVERDUE" Foreground="#EF4444" FontSize="10" FontWeight="Bold"/>
-                                                                        </Border>
-                                                                    </StackPanel>
-
-                                                                <TextBlock Text="{Binding WaitingForChapter}" 
-                                                                           Foreground="{DynamicResource SecondaryText}" FontSize="12" Opacity="0.7"
-                                                                           TextTrimming="CharacterEllipsis" MaxLines="1"
-                                                                           VerticalAlignment="Center"/>
-                                                                
-                                                                <Panel>
-                                                                    <TextBlock Text="{Binding EstimatedRelease}" 
-                                                                               Foreground="#F87171" FontSize="13" FontWeight="SemiBold"
-                                                                               TextTrimming="CharacterEllipsis" MaxLines="1"
-                                                                               VerticalAlignment="Center"
-                                                                               IsVisible="{Binding IsOverdue}"/>
-                                                                    <TextBlock Text="{Binding EstimatedRelease}" 
-                                                                               Foreground="{DynamicResource PrimaryAccent}" FontSize="13" FontWeight="Medium"
-                                                                               TextTrimming="CharacterEllipsis" MaxLines="1"
-                                                                               VerticalAlignment="Center"
-                                                                               IsVisible="{Binding !IsOverdue}"/>
-                                                                </Panel>
+                                                                <!-- Overdue badge -->
+                                                                <Border IsVisible="{Binding IsOverdue}" Background="#E5EF4444" CornerRadius="4" Padding="5,2">
+                                                                    <TextBlock Text="OVERDUE" Foreground="White" FontSize="9" FontWeight="Bold"/>
+                                                                </Border>
                                                             </StackPanel>
 
-                                                            <!-- Col 3: Meta (Calendar Icon) -->
-                                                            <TextBlock Grid.Column="2" Text="&#xE787;" FontFamily="Segoe Fluent Icons" 
-                                                                       Foreground="{DynamicResource SecondaryText}" FontSize="20" 
-                                                                       VerticalAlignment="Center" HorizontalAlignment="Right" Margin="10,0,5,0"
-                                                                       Opacity="0.5"/>
-                                                        </Grid>
+                                                            <!-- Bottom text overlay (Title, Waiting Chapter, Release Date) -->
+                                                            <StackPanel VerticalAlignment="Bottom" Margin="10,8" Spacing="2">
+                                                                <!-- Title -->
+                                                                <TextBlock Text="{Binding Title}" Foreground="White" FontSize="12" FontWeight="Bold" 
+                                                                           MaxLines="1" TextTrimming="CharacterEllipsis"/>
+                                                                <!-- Chapter number -->
+                                                                <TextBlock Text="{Binding WaitingForChapter}" Foreground="#B0B0C0" FontSize="10" 
+                                                                           MaxLines="1" TextTrimming="CharacterEllipsis"/>
+                                                                <!-- Estimated release -->
+                                                                <Panel>
+                                                                    <TextBlock Text="{Binding EstimatedRelease}" Foreground="#F87171" FontSize="10" FontWeight="Bold" 
+                                                                               MaxLines="1" TextTrimming="CharacterEllipsis" IsVisible="{Binding IsOverdue}"/>
+                                                                    <TextBlock Text="{Binding EstimatedRelease}" Foreground="{DynamicResource PrimaryAccent}" FontSize="10" FontWeight="SemiBold" 
+                                                                               MaxLines="1" TextTrimming="CharacterEllipsis" IsVisible="{Binding !IsOverdue}"/>
+                                                                </Panel>
+                                                            </StackPanel>
+                                                            
+                                                            <!-- Severely overdue highlight border -->
+                                                            <Border BorderBrush="#EF4444" BorderThickness="1.5" CornerRadius="12" IsVisible="{Binding IsSeverelyOverdue}"/>
                                                         </Panel>
                                                     </Border>
                                                 </Button>
@@ -161,13 +195,53 @@
                     </ItemsControl>
                 </StackPanel>
             </ScrollViewer>
+
+            <!-- Skeleton Loading State (When Refreshing) -->
+            <ScrollViewer Grid.Row="1" Padding="30,0,30,30" VerticalScrollBarVisibility="Disabled" IsVisible="{Binding IsRefreshing}">
+                <StackPanel HorizontalAlignment="Center">
+                    <!-- Group Skeleton -->
+                    <StackPanel Margin="0,0,0,25" HorizontalAlignment="Stretch">
+                        <Border BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,15" Padding="0,0,0,8">
+                             <helpers:SkeletonCard Width="100" Height="18" CornerRadius="4" HorizontalAlignment="Left"/>
+                        </Border>
+                        
+                        <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                            <helpers:SkeletonCard Width="150" Height="150" CornerRadius="12" Margin="8,0,8,16"/>
+                            <helpers:SkeletonCard Width="150" Height="150" CornerRadius="12" Margin="8,0,8,16"/>
+                            <helpers:SkeletonCard Width="150" Height="150" CornerRadius="12" Margin="8,0,8,16"/>
+                            <helpers:SkeletonCard Width="150" Height="150" CornerRadius="12" Margin="8,0,8,16"/>
+                            <helpers:SkeletonCard Width="150" Height="150" CornerRadius="12" Margin="8,0,8,16"/>
+                            <helpers:SkeletonCard Width="150" Height="150" CornerRadius="12" Margin="8,0,8,16"/>
+                            <helpers:SkeletonCard Width="150" Height="150" CornerRadius="12" Margin="8,0,8,16"/>
+                        </WrapPanel>
+                    </StackPanel>
+                    
+                    <!-- Group Skeleton 2 -->
+                    <StackPanel Margin="0,0,0,25" HorizontalAlignment="Stretch">
+                        <Border BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,15" Padding="0,0,0,8">
+                             <helpers:SkeletonCard Width="130" Height="18" CornerRadius="4" HorizontalAlignment="Left"/>
+                        </Border>
+                        
+                        <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                            <helpers:SkeletonCard Width="150" Height="150" CornerRadius="12" Margin="8,0,8,16"/>
+                            <helpers:SkeletonCard Width="150" Height="150" CornerRadius="12" Margin="8,0,8,16"/>
+                            <helpers:SkeletonCard Width="150" Height="150" CornerRadius="12" Margin="8,0,8,16"/>
+                            <helpers:SkeletonCard Width="150" Height="150" CornerRadius="12" Margin="8,0,8,16"/>
+                        </WrapPanel>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
         </Grid>
 
         <!-- Empty State -->
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20" IsVisible="{Binding IsEmpty}">
-            <TextBlock Text="&#xE787;" FontFamily="Segoe Fluent Icons" FontSize="64" Foreground="#45475A" HorizontalAlignment="Center"/>
-            <TextBlock Text="No Upcoming Manga" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
-            <TextBlock Text="We don't have enough data to predict any upcoming chapters yet." Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+            <Viewbox Width="64" Height="64" HorizontalAlignment="Center">
+                <Canvas Width="24" Height="24">
+                    <Path Data="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12 M16 3v4 M8 3v4 M4 11h16 M11 15h1 M12 15v3" Stroke="#45475A" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                </Canvas>
+            </Viewbox>
+            <TextBlock Text="{DynamicResource String.NoUpcomingManga}" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
+            <TextBlock Text="{DynamicResource String.NoUpcomingMangaDesc}" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
         </StackPanel>
     </Panel>
 </UserControl>

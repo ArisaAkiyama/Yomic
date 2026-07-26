@@ -33,6 +33,13 @@ namespace Yomic.Views.Helpers
         public static int GetDecodeWidth(Image element) => element.GetValue(DecodeWidthProperty);
         public static void SetDecodeWidth(Image element, int value) => element.SetValue(DecodeWidthProperty, value);
 
+        // IsLoading: true while the bitmap is being fetched, false once done or on error
+        public static readonly AttachedProperty<bool> IsLoadingProperty =
+            AvaloniaProperty.RegisterAttached<SecureImageLoader, Image, bool>("IsLoading", false);
+
+        public static bool GetIsLoading(Image element) => element.GetValue(IsLoadingProperty);
+        public static void SetIsLoading(Image element, bool value) => element.SetValue(IsLoadingProperty, value);
+
         static SecureImageLoader()
         {
             UrlProperty.Changed.Subscribe(OnUrlChanged);
@@ -45,21 +52,24 @@ namespace Yomic.Views.Helpers
             var url = args.NewValue.Value;
             var referer = GetReferer(image);
 
-            // Cancel previous load if strictly needed (complexity), but simplest is "Last Writer Wins"
-            // For now, just set source to null or loading
-            image.Source = null; // Clear old image immediately
-            // Optional: Set a logical "Loading" state if we had a placeholder asset
+            // Clear previous image and mark as loading
+            image.Source = null;
+            SetIsLoading(image, true);
             
-            if (string.IsNullOrEmpty(url)) return;
+            if (string.IsNullOrEmpty(url))
+            {
+                SetIsLoading(image, false);
+                return;
+            }
 
             if (Service == null)
             {
                 System.Diagnostics.Debug.WriteLine("[SecureImageLoader] Service not initialized!");
+                SetIsLoading(image, false);
                 return;
             }
 
-            // Async Load
-            // Using Dispatcher.UIThread to invoke async but not block
+            // Async Load — fire-and-forget, last writer wins
             _ = LoadImageAsync(image, url, referer);
         }
 
@@ -78,14 +88,22 @@ namespace Yomic.Views.Helpers
                 {
                     if (GetUrl(image) == url)
                     {
-                        if (bitmap != null)
+                        try
                         {
-                            image.Source = bitmap;
+                            if (bitmap != null && bitmap.Size.Width > 0 && bitmap.Size.Height > 0)
+                            {
+                                image.Source = bitmap;
+                            }
+                            else
+                            {
+                                image.Source = null;
+                            }
                         }
-                        else
+                        catch
                         {
-                            // Set Error Placeholder if needed
+                            image.Source = null;
                         }
+                        SetIsLoading(image, false);
                     }
                 });
             }

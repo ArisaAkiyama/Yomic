@@ -15,6 +15,11 @@ namespace Yomic.Views
     public partial class ReaderView : UserControl
     {
         private ScrollViewer? _mainScroll;
+        // Scroll restoration: stores the target percent (0.0-1.0) while anchoring; -1 = inactive
+        private double _targetRestorePercent = -1;
+        private int _stableExtentCount = 0;
+        private DispatcherTimer? _restoreTimer; // Fallback to always reveal content after timeout
+        private ReaderViewModel? _oldVm;
         private ScrollViewer? MainScroll 
         {
             get 
@@ -74,10 +79,169 @@ namespace Yomic.Views
 
         private void OnDataContextChanged(object? sender, EventArgs e)
         {
+            if (_oldVm != null)
+            {
+                _oldVm.RequestScroll -= OnScrollRequested;
+                _oldVm.RequestScrollToPage -= OnScrollToPageRequested;
+                _oldVm.RequestScrollToPercent -= OnScrollToPercentRequested;
+                _oldVm.Pages.CollectionChanged -= OnPagesCollectionChanged;
+                _oldVm.PropertyChanged -= OnViewModelPropertyChanged;
+            }
+
             if (DataContext is ReaderViewModel vm)
             {
                 vm.RequestScroll += OnScrollRequested;
+                vm.RequestScrollToPage += OnScrollToPageRequested;
+                vm.RequestScrollToPercent += OnScrollToPercentRequested;
+                vm.Pages.CollectionChanged += OnPagesCollectionChanged;
+                vm.PropertyChanged += OnViewModelPropertyChanged;
+                _oldVm = vm;
+
+                // Instantly hide on open so user never flashes the cover page
+                var mainListBox = this.FindControl<ListBox>("MainListBox");
+                if (mainListBox != null) mainListBox.Opacity = 0;
             }
+            else
+            {
+                _oldVm = null;
+            }
+        }
+
+        private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ReaderViewModel.CurrentMode))
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (DataContext is ReaderViewModel vm)
+                    {
+                        var mainListBox = this.FindControl<ListBox>("MainListBox");
+                        if (mainListBox != null)
+                        {
+                            if (vm.IsWebtoon)
+                            {
+                                // Show the Webtoon list box when switching to Webtoon mode
+                                mainListBox.Opacity = 1;
+                                CancelScrollAnchor(); // Clear percentage restoration anchors
+
+                                // Sync scroll position to match current page index from single/dual mode
+                                if (vm.CurrentPageIndex >= 0 && vm.CurrentPageIndex < vm.Pages.Count)
+                                {
+                                    mainListBox.ScrollIntoView(vm.Pages[vm.CurrentPageIndex]);
+                                }
+                            }
+                            else
+                            {
+                                // Reset to 0 when switching away to preserve hidden state for next open
+                                mainListBox.Opacity = 0;
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        private void OnPagesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    var mainListBox = this.FindControl<ListBox>("MainListBox");
+                    if (mainListBox != null)
+                    {
+                        mainListBox.Opacity = 0;
+                    }
+                });
+            }
+        }
+
+        // Restore to a specific page index (legacy / paged-mode fallback)
+        private void OnScrollToPageRequested(object? sender, int pageIndex)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (DataContext is ReaderViewModel vm && vm.IsWebtoon)
+                {
+                    var mainListBox = this.FindControl<ListBox>("MainListBox");
+                    if (mainListBox != null && pageIndex >= 0 && pageIndex < vm.Pages.Count)
+                    {
+                        mainListBox.ScrollIntoView(vm.Pages[pageIndex]);
+                    }
+                }
+            }, DispatcherPriority.Loaded);
+        }
+
+        // Restore to an exact scroll percentage — the accurate path for Webtoon mode
+        private void OnScrollToPercentRequested(object? sender, double targetPercent)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (DataContext is ReaderViewModel vm && vm.IsWebtoon)
+                {
+                    // Use Opacity=0 (not IsVisible=false) so the ListBox still participates
+                    // in layout and emits ScrollChanged events — needed for the anchor to release.
+                    var mainListBox = this.FindControl<ListBox>("MainListBox");
+                    if (mainListBox != null) mainListBox.Opacity = 0;
+
+                    _targetRestorePercent = targetPercent;
+                    _stableExtentCount = 0;
+                    ApplyPercentScrollRestore();
+
+                    // Fallback: always reveal content after 1s even if extent never stabilizes
+                    _restoreTimer?.Stop();
+                    _restoreTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.0) };
+                    _restoreTimer.Tick += (s, e) =>
+                    {
+                        _restoreTimer?.Stop();
+                        _restoreTimer = null;
+                        ReleaseScrollAnchor();
+                    };
+                    _restoreTimer.Start();
+                }
+            }, DispatcherPriority.Loaded);
+        }
+
+        private void ApplyPercentScrollRestore()
+        {
+            if (MainScroll == null || _targetRestorePercent < 0) return;
+            double maxScroll = Math.Max(0, MainScroll.Extent.Height - MainScroll.Viewport.Height);
+            double targetY = _targetRestorePercent * maxScroll;
+            MainScroll.Offset = new Vector(MainScroll.Offset.X, targetY);
+        }
+
+        // Called when anchor naturally stabilizes — show content at the correct position
+        private void ReleaseScrollAnchor()
+        {
+            _restoreTimer?.Stop();
+            _restoreTimer = null;
+            ApplyPercentScrollRestore();
+            _targetRestorePercent = -1;
+
+            // Sync page indicator and scroll percent to the actual restored position
+            if (DataContext is ReaderViewModel vm && MainScroll != null && vm.Pages.Count > 0)
+            {
+                double maxScroll = Math.Max(1, MainScroll.Extent.Height - MainScroll.Viewport.Height);
+                double actualPercent = Math.Clamp(MainScroll.Offset.Y / maxScroll, 0.0, 1.0);
+                int estimatedIndex = Math.Clamp((int)(actualPercent * (vm.Pages.Count - 1)), 0, vm.Pages.Count - 1);
+                vm.CurrentScrollPercent = actualPercent;
+                vm.CurrentPageIndex = estimatedIndex;
+                vm.PreloadAroundIndex(estimatedIndex);
+            }
+
+            var mainListBox = this.FindControl<ListBox>("MainListBox");
+            if (mainListBox != null) mainListBox.Opacity = 1;
+        }
+
+        // Called when user manually interacts before anchor releases
+        private void CancelScrollAnchor()
+        {
+            if (_targetRestorePercent < 0) return;
+            _restoreTimer?.Stop();
+            _restoreTimer = null;
+            _targetRestorePercent = -1;
+            var mainListBox = this.FindControl<ListBox>("MainListBox");
+            if (mainListBox != null) mainListBox.Opacity = 1;
         }
 
         private void OnScrollRequested(object? sender, int direction)
@@ -111,6 +275,7 @@ namespace Yomic.Views
 
         private void OnReaderPointerWheelChanged(object? sender, PointerWheelEventArgs e)
         {
+            CancelScrollAnchor(); // User manually scrolled — release restore anchor
             if (DataContext is ReaderViewModel vm && vm.IsWebtoon && MainScroll != null)
             {
                 // Multiplier for faster scrolling (Adjust custom speed here)
@@ -285,6 +450,7 @@ namespace Yomic.Views
         private void OnSliderPointerPressed(object? sender, PointerPressedEventArgs e)
         {
             _isDraggingSlider = true;
+            CancelScrollAnchor(); // User manually interacted — release anchor
         }
 
         private void OnSliderPointerReleased(object? sender, PointerReleasedEventArgs e)
@@ -319,30 +485,59 @@ namespace Yomic.Views
             {
                 if (MainScroll == null || MainScroll.Extent.Height <= 0) return;
 
+                double maxScroll = Math.Max(1, MainScroll.Extent.Height - MainScroll.Viewport.Height);
+                double percent = MainScroll.Offset.Y / maxScroll;
+                percent = Math.Clamp(percent, 0.0, 1.0);
+
+                // Always track current scroll percent so SaveProgress() can capture it
+                vm.CurrentScrollPercent = percent;
+
+                // Percent-based restore anchor: keep reapplying target Y while images expand the extent
+                if (_targetRestorePercent >= 0)
+                {
+                    if (e.ExtentDelta.Y != 0)
+                    {
+                        // Extent grew (images loading) — re-apply percent offset, reset stability counter
+                        ApplyPercentScrollRestore();
+                        _stableExtentCount = 0;
+                    }
+                    else
+                    {
+                        _stableExtentCount++;
+
+                        // Smart early release: check if pages around target are done loading
+                        int targetIdx = (int)(_targetRestorePercent * Math.Max(1, vm.Pages.Count - 1));
+                        targetIdx = Math.Clamp(targetIdx, 0, vm.Pages.Count - 1);
+                        bool nearPagesLoaded = true;
+                        for (int i = Math.Max(0, targetIdx - 1); i <= Math.Min(vm.Pages.Count - 1, targetIdx + 2); i++)
+                        {
+                            if (vm.Pages[i].IsLoading) { nearPagesLoaded = false; break; }
+                        }
+
+                        // Release if near-target images are loaded, OR extent has been stable for 5+ events
+                        if (nearPagesLoaded || _stableExtentCount >= 5)
+                        {
+                            ReleaseScrollAnchor();
+                        }
+                    }
+                    return; // Don't sync slider/page-index during restore
+                }
+
                 // Sync Scroll -> Slider Index
                 // Mapping: 0 to MaxScroll -> 0 to (Count-1)
-                
-                double maxScroll = Math.Max(1, MainScroll.Extent.Height - MainScroll.Viewport.Height);
-                var percent = MainScroll.Offset.Y / maxScroll;
-                
-                // Clamp percent (can be slightly >1 or <0 due to rubber banding or rounding)
-                percent = Math.Clamp(percent, 0.0, 1.0);
-                
                 var estimatedIndex = (int)(percent * (vm.Pages.Count - 1));
-                
+
                 // Clamp Index
                 if (vm.Pages.Count > 0)
                 {
                     estimatedIndex = Math.Clamp(estimatedIndex, 0, vm.Pages.Count - 1);
-                    
+
                     if (vm.CurrentPageIndex != estimatedIndex)
                     {
                         vm.CurrentPageIndex = estimatedIndex;
                     }
 
                     // Mihon-style: trigger preload around the visible viewport
-                    // This ensures pages near the scroll position are always being loaded,
-                    // even if CurrentPageIndex didn't change (e.g., user scrolled within same page).
                     vm.PreloadAroundIndex(estimatedIndex);
                 }
             }
@@ -394,6 +589,7 @@ namespace Yomic.Views
 
         private void OnPanPointerPressed(object? sender, PointerPressedEventArgs e)
         {
+            CancelScrollAnchor(); // User manually dragged — release anchor
             var props = e.GetCurrentPoint(this).Properties;
             if (!props.IsLeftButtonPressed || MainScroll == null) return;
 

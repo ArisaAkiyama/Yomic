@@ -7,6 +7,7 @@ using Yomic.Core.Services;
 using Yomic.Core.Models;
 using ReactiveUI;
 using Avalonia.Threading;
+using Avalonia.Controls;
 using System.Collections.Generic;
 
 namespace Yomic.ViewModels
@@ -37,6 +38,18 @@ namespace Yomic.ViewModels
 
     public class UpcomingViewModel : ViewModelBase
     {
+        private string GetResourceString(string key, string defaultValue)
+        {
+            if (Avalonia.Application.Current != null && Avalonia.Application.Current.TryFindResource(key, out var res))
+            {
+                if (res is string str)
+                {
+                    return str;
+                }
+            }
+            return defaultValue;
+        }
+
         private readonly LibraryService _libraryService;
         private readonly MainWindowViewModel _mainVM;
 
@@ -62,6 +75,13 @@ namespace Yomic.ViewModels
             set => this.RaiseAndSetIfChanged(ref _isEmpty, value);
         }
 
+        private bool _isRefreshing;
+        public bool IsRefreshing
+        {
+            get => _isRefreshing;
+            set => this.RaiseAndSetIfChanged(ref _isRefreshing, value);
+        }
+
         public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
         public ReactiveCommand<UpcomingItem, Unit> OpenMangaCommand { get; }
 
@@ -78,6 +98,8 @@ namespace Yomic.ViewModels
 
         public async Task LoadUpcomingAsync()
         {
+            if (IsRefreshing) return;
+            IsRefreshing = true;
             try
             {
                 var libraryManga = await _libraryService.GetLibraryMangaAsync();
@@ -98,8 +120,8 @@ namespace Yomic.ViewModels
                 foreach (var m in upcomingManga)
                 {
                     // Calculate Frequency & Waiting For
-                    string frequency = "Unknown";
-                    string waitingFor = "New Chapter";
+                    string frequency = GetResourceString("String.Unknown", "Unknown");
+                    string waitingFor = GetResourceString("String.WaitingForNewChapter", "Waiting for New Chapter");
                     
                     long realNextUpdate = m.NextUpdate;
                     if (m.Chapters.Count > 0)
@@ -135,9 +157,9 @@ namespace Yomic.ViewModels
                             }
                             
                             if (maxChap > 0)
-                                waitingFor = $"Waiting for Chapter {maxChap + 1}";
+                                waitingFor = $"{GetResourceString("String.WaitingForChapter", "Waiting for Chapter")} {maxChap + 1}";
                             else
-                                waitingFor = "Waiting for New Chapter";
+                                waitingFor = GetResourceString("String.WaitingForNewChapter", "Waiting for New Chapter");
                         }
                         if (recentChapters.Count >= 3)
                         {
@@ -156,11 +178,11 @@ namespace Yomic.ViewModels
                                 realNextUpdate = recentChapters[0].DateUpload + medianDiff;
                                 
                                 double days = TimeSpan.FromMilliseconds(medianDiff).TotalDays;
-                                if (days <= 2.5) frequency = "Daily";
-                                else if (days <= 9.5) frequency = "Weekly";
-                                else if (days <= 16.5) frequency = "Bi-Weekly";
-                                else if (days <= 35) frequency = "Monthly";
-                                else frequency = "Irregular";
+                                if (days <= 2.5) frequency = GetResourceString("String.Daily", "Daily");
+                                else if (days <= 9.5) frequency = GetResourceString("String.Weekly", "Weekly");
+                                else if (days <= 16.5) frequency = GetResourceString("String.BiWeekly", "Bi-Weekly");
+                                else if (days <= 35) frequency = GetResourceString("String.Monthly", "Monthly");
+                                else frequency = GetResourceString("String.Irregular", "Irregular");
                             }
                         }
                     }
@@ -185,15 +207,15 @@ namespace Yomic.ViewModels
                     if (isOverdue)
                     {
                         groupName = "Overdue";
-                        item.EstimatedRelease = $"{daysOverdue} days overdue";
+                        item.EstimatedRelease = $"{daysOverdue} {GetResourceString("String.DaysOverdue", "days overdue")}";
                     }
                     else if (realNextUpdate < nextWeekEnd)
                     {
                         groupName = "Due Soon";
                         if (realNextUpdate < todayEnd)
-                            item.EstimatedRelease = "Today at " + date.ToString("hh:mm tt");
+                            item.EstimatedRelease = $"{GetResourceString("String.TodayAt", "Today at")} " + date.ToString("hh:mm tt");
                         else if (realNextUpdate < tomorrowEnd)
-                            item.EstimatedRelease = "Tomorrow at " + date.ToString("hh:mm tt");
+                            item.EstimatedRelease = $"{GetResourceString("String.TomorrowAt", "Tomorrow at")} " + date.ToString("hh:mm tt");
                         else
                             item.EstimatedRelease = date.ToString("dddd, MMM dd");
                     }
@@ -210,8 +232,8 @@ namespace Yomic.ViewModels
                     grouped[groupName].Add(item);
                 }
 
-                // Sorting the groups logically
-                var groupOrder = new[] { "Overdue", "Due Soon", "Upcoming" };
+                // Sorting the groups logically (Overdue at the bottom)
+                var groupOrder = new[] { "Due Soon", "Upcoming", "Overdue" };
                 
                 Dispatcher.UIThread.Post(() =>
                 {
@@ -220,10 +242,22 @@ namespace Yomic.ViewModels
                     {
                         if (grouped.ContainsKey(groupName))
                         {
+                            var sortedItems = groupName == "Overdue"
+                                ? grouped[groupName].OrderByDescending(i => i.NextUpdateEpoch)
+                                : grouped[groupName].OrderBy(i => i.NextUpdateEpoch);
+
+                            string localizedHeader = groupName switch
+                            {
+                                "Due Soon" => GetResourceString("String.Group.DueSoon", "Due Soon"),
+                                "Upcoming" => GetResourceString("String.Group.Upcoming", "Upcoming"),
+                                "Overdue" => GetResourceString("String.Group.Overdue", "Overdue"),
+                                _ => groupName
+                            };
+
                             GroupedUpcoming.Add(new UpcomingGroup
                             {
-                                Header = groupName,
-                                Items = new ObservableCollection<UpcomingItem>(grouped[groupName])
+                                Header = localizedHeader,
+                                Items = new ObservableCollection<UpcomingItem>(sortedItems)
                             });
                         }
                     }
@@ -236,6 +270,10 @@ namespace Yomic.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[UpcomingVM] Error loading upcoming manga: {ex}");
+            }
+            finally
+            {
+                Dispatcher.UIThread.Post(() => IsRefreshing = false);
             }
         }
 

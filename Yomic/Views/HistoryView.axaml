@@ -78,45 +78,60 @@
         <Panel IsVisible="{Binding !IsOffline}">
             <Grid RowDefinitions="Auto, *">
                 <!-- Header (Fixed) -->
-                <StackPanel Grid.Row="0" Margin="30,25,30,15">
+                <StackPanel Grid.Row="0" Margin="30,25,30,15" IsVisible="{Binding HasItems}">
                     <Grid ColumnDefinitions="*, Auto">
                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                            <TextBlock Text="&#xE81C;" FontFamily="Segoe Fluent Icons" FontSize="24" 
-                                       Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"
-                                       RenderOptions.TextRenderingMode="Antialias"/>
-                            <TextBlock Text="History" FontSize="28" FontWeight="Bold" 
+                            <Viewbox Width="28" Height="28" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M12 8l0 4l2 2 M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="{DynamicResource String.HistoryHeader}" FontSize="28" FontWeight="Bold" 
                                        Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
                             
 
                         </StackPanel>
 
-                         <!-- Refresh/Clear Actions -->
+                         <!-- Actions: Clear All | Refresh | Toggle -->
                          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" IsVisible="{Binding HasItems}">
+                             <!-- Clear All Button -->
+                             <Button Command="{Binding ClearHistoryCommand}"
+                                     Classes="header-action"
+                                     ToolTip.Tip="{DynamicResource String.DeleteAllHistory}">
+                                 <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                     <Canvas Width="24" Height="24">
+                                         <Path Data="M4 7l16 0 M10 11l0 6 M14 11l0 6 M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12 M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                     </Canvas>
+                                 </Viewbox>
+                             </Button>
+
+                             <!-- Refresh Button -->
+                             <Button Command="{Binding RefreshCommand}"
+                                     Classes="header-action"
+                                     ToolTip.Tip="{DynamicResource String.RefreshHistory}">
+                                 <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                     <Canvas Width="24" Height="24">
+                                         <Path Data="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                     </Canvas>
+                                 </Viewbox>
+                             </Button>
+
+                             <!-- Toggle View Mode Button -->
                              <Button Command="{Binding ToggleViewModeCommand}"
                                      Classes="header-action"
                                      ToolTip.Tip="Toggle View Mode (Grid/List)">
                                  <Panel>
-                                     <TextBlock Text="&#xE8FD;" FontFamily="Segoe Fluent Icons" 
-                                                FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                IsVisible="{Binding !IsListView}"/>
-                                     <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons" 
-                                                FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                IsVisible="{Binding IsListView}"/>
+                                     <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsListView}">
+                                         <Canvas Width="24" Height="24">
+                                             <Path Data="M9 6l11 0 M9 12l11 0 M9 18l11 0 M5 6l0 .01 M5 12l0 .01 M5 18l0 .01" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                         </Canvas>
+                                     </Viewbox>
+                                     <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsListView}">
+                                         <Canvas Width="24" Height="24">
+                                             <Path Data="M4 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4 M14 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4 M4 15a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4 M14 15a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                         </Canvas>
+                                     </Viewbox>
                                  </Panel>
-                             </Button>
-                             <Button Command="{Binding ClearHistoryCommand}"
-                                     Classes="header-action"
-                                     ToolTip.Tip="Delete All History">
-                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                         <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
-                                         <TextBlock Text="Clear All" VerticalAlignment="Center" FontSize="13" FontWeight="Medium"/>
-                                     </StackPanel>
-                             </Button>
-                             <Button Command="{Binding RefreshCommand}"
-                                     Classes="header-action"
-                                     ToolTip.Tip="Refresh History">
-                                     <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" 
-                                                FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                              </Button>
                          </StackPanel>
                     </Grid>
@@ -149,13 +164,17 @@
 
                                      <Button.ContextMenu>
                                          <ContextMenu>
-                                             <MenuItem Header="Remove from History" 
+                                             <MenuItem Header="{DynamicResource String.RemoveFromHistory}" 
                                                        x:CompileBindings="False"
                                                        Command="{Binding #root.DataContext.RemoveHistoryItemCommand}"
                                                        CommandParameter="{Binding}"
                                                        Foreground="#FF5555">
                                                  <MenuItem.Icon>
-                                                     <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons"/>
+                                                     <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                                                         <Canvas Width="24" Height="24">
+                                                             <Path Data="M4 7l16 0 M10 11l0 6 M14 11l0 6 M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12 M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" Stroke="#FF5555" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                         </Canvas>
+                                                     </Viewbox>
                                                  </MenuItem.Icon>
                                              </MenuItem>
                                          </ContextMenu>
@@ -188,7 +207,7 @@
                                                      <Border Background="#89B4FA" CornerRadius="6"
                                                              Padding="6,2"
                                                              IsVisible="{Binding IsNewBadgeVisible}">
-                                                         <TextBlock Text="NEW" Foreground="#1E1E2E"
+                                                         <TextBlock Text="{DynamicResource String.Badge.New}" Foreground="#1E1E2E"
                                                                     FontSize="10" FontWeight="Bold"/>
                                                      </Border>
                                                  </StackPanel>
@@ -254,13 +273,17 @@
                                          <Border CornerRadius="8" Padding="8" Background="Transparent">
                                              <Border.ContextMenu>
                                                  <ContextMenu>
-                                                     <MenuItem Header="Remove from History" 
+                                                     <MenuItem Header="{DynamicResource String.RemoveFromHistory}" 
                                                                x:CompileBindings="False"
                                                                Command="{Binding #root.DataContext.RemoveHistoryItemCommand}"
                                                                CommandParameter="{Binding}"
                                                                Foreground="#FF5555">
                                                          <MenuItem.Icon>
-                                                             <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons"/>
+                                                             <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                                                                 <Canvas Width="24" Height="24">
+                                                                     <Path Data="M4 7l16 0 M10 11l0 6 M14 11l0 6 M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12 M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" Stroke="#FF5555" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                                 </Canvas>
+                                                             </Viewbox>
                                                          </MenuItem.Icon>
                                                      </MenuItem>
                                                  </ContextMenu>
@@ -273,11 +296,11 @@
                                                            Stretch="UniformToFill"/>
                                                 </Border>
                                                 
-                                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="4">
-                                                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource PrimaryText}" 
+                                                <Grid Grid.Column="2" VerticalAlignment="Center" RowDefinitions="Auto, Auto">
+                                                    <TextBlock Grid.Row="0" Margin="0,0,0,4" Text="{Binding Title}" Foreground="{DynamicResource PrimaryText}" 
                                                                TextAlignment="Left" TextTrimming="CharacterEllipsis"
                                                                FontSize="14" FontWeight="SemiBold" MaxLines="1"/>
-                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6">
                                                         <TextBlock Text="{Binding SourceName}" Foreground="{DynamicResource SecondaryText}" 
                                                                    FontSize="12" Opacity="0.7" MaxLines="1" TextTrimming="CharacterEllipsis"
                                                                    IsVisible="{Binding SourceName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
@@ -287,12 +310,12 @@
                                                                    FontSize="12" Opacity="0.6" MaxLines="1"
                                                                    IsVisible="{Binding LastReadTime, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                                     </StackPanel>
-                                                </StackPanel>
+                                                </Grid>
 
                                                 <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                                     <Border Background="#89B4FA" CornerRadius="4" Padding="6,2"
                                                             IsVisible="{Binding IsNewBadgeVisible}">
-                                                        <TextBlock Text="NEW" Foreground="#1E1E2E" FontSize="10" FontWeight="Bold"/>
+                                                        <TextBlock Text="{DynamicResource String.Badge.New}" Foreground="#1E1E2E" FontSize="10" FontWeight="Bold"/>
                                                     </Border>
                                                      <Border Background="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.Instance}}" 
                                                              CornerRadius="4" Padding="6,2"
@@ -310,17 +333,21 @@
 
                         <StackPanel Margin="0,0,30,24" HorizontalAlignment="Center" Spacing="8" IsVisible="{Binding IsLoadingMore}">
                             <helpers:LoadingArcs Width="34" Height="34"/>
-                            <TextBlock Text="Loading more..." Foreground="{DynamicResource SecondaryText}" FontSize="12" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{DynamicResource String.LoadingMore}" Foreground="{DynamicResource SecondaryText}" FontSize="12" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
 
                 <!-- Empty State -->
                 <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20" IsVisible="{Binding !HasItems}">
-                    <TextBlock Text="&#xE81C;" FontFamily="Segoe Fluent Icons" FontSize="64" Foreground="#45475A" HorizontalAlignment="Center"/>
+                    <Viewbox Width="64" Height="64" HorizontalAlignment="Center">
+                        <Canvas Width="24" Height="24">
+                            <Path Data="M12 8l0 4l2 2 M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5" Stroke="#45475A" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                        </Canvas>
+                    </Viewbox>
                     <StackPanel Spacing="8">
-                        <TextBlock Text="No History Yet" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Read some manga to see them here." FontSize="14" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{DynamicResource String.NoHistory}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{DynamicResource String.NoHistoryDesc}" FontSize="14" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </StackPanel>
             </Grid>
@@ -350,7 +377,11 @@
 
         <!-- Offline State -->
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20" IsVisible="{Binding IsOffline}">
-            <TextBlock Text="&#xEB55;" FontFamily="Segoe Fluent Icons" FontSize="64" Foreground="#F38BA8" HorizontalAlignment="Center"/>
+            <Viewbox Width="64" Height="64" HorizontalAlignment="Center">
+                <Canvas Width="24" Height="24">
+                    <Path Data="M12 18l.01 0 M9.172 15.172a4 4 0 0 1 5.656 0 M6.343 12.343a7.963 7.963 0 0 1 3.864 -2.14m4.163 .155a7.965 7.965 0 0 1 3.287 2 M3.515 9.515a12 12 0 0 1 3.544 -2.455m3.101 -.92a12 12 0 0 1 10.325 3.374 M3 3l18 18" Stroke="#F38BA8" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                </Canvas>
+            </Viewbox>
             <StackPanel Spacing="8">
                 <TextBlock Text="No Internet Connection" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
                 <TextBlock Text="You are currently offline. Please check your network settings." Foreground="{DynamicResource SecondaryText}" FontSize="14" HorizontalAlignment="Center"/>

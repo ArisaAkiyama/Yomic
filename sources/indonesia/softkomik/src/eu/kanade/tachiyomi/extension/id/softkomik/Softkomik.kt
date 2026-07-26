@@ -164,13 +164,20 @@ class Softkomik : HttpSource() {
         return GET(url, headers)
     }
 
+    private val chapterNumRegex = Regex("""\d+(?:\.\d+)?""")
+
+    private fun parseChapterNumber(chapterStr: String): Float {
+        val match = chapterNumRegex.find(chapterStr)?.value
+        return match?.toFloatOrNull() ?: -1f
+    }
+
     override fun chapterListParse(response: Response): List<SChapter> {
         val dto = response.parseAs<ChapterListDto>()
         val slug = response.request.url.pathSegments[1]
         val isRequiredLogin = response.request.url.fragment?.contains(requiredLoginSuffix) == true
         return dto.chapter.map { chapter ->
             val chapterNumStr = chapter.chapter
-            val chapterNum = chapterNumStr.substringBefore(".").toFloatOrNull() ?: -1f
+            val chapterNum = parseChapterNumber(chapterNumStr)
             val displayNum = formatChapterDisplay(chapterNumStr)
             var chapterUrl = "/$slug/chapter/$chapterNumStr"
             if (isRequiredLogin) {
@@ -433,14 +440,7 @@ class Softkomik : HttpSource() {
     private fun resolveWebViewChapterSegment(url: HttpUrl): String? {
         val segments = url.pathSegments
         val chapterIndex = segments.indexOf("chapter")
-        val rawChapter = if (chapterIndex != -1) segments.getOrNull(chapterIndex + 1) else return null
-
-        val chapterNumber = rawChapter?.toIntOrNull()
-        return if (chapterNumber != null && chapterNumber < 100) {
-            chapterNumber.toString().padStart(3, '0')
-        } else {
-            rawChapter
-        }
+        return if (chapterIndex != -1) segments.getOrNull(chapterIndex + 1) else null
     }
 
     // because softkomik often changes their api session url,

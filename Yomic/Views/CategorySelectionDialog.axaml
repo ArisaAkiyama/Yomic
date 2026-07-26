@@ -12,7 +12,7 @@
     <Border Background="{DynamicResource PrimaryBackground}" CornerRadius="16" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" Padding="24">
         <Grid RowDefinitions="Auto, *, Auto">
             <!-- Header -->
-            <TextBlock Grid.Row="0" Text="Edit Categories" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,16"/>
+            <TextBlock Grid.Row="0" Text="{DynamicResource String.Category.EditCategories}" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,16"/>
             
             <!-- Category List -->
             <ScrollViewer Grid.Row="1" Margin="0,0,0,16">
@@ -23,7 +23,7 @@
             
             <!-- Actions -->
             <Grid Grid.Row="2" ColumnDefinitions="*, *">
-                <Button Grid.Column="0" Content="Cancel" Click="OnCancelClick" 
+                <Button Grid.Column="0" Content="{DynamicResource String.Cancel}" Click="OnCancelClick" 
                         HorizontalAlignment="Left" HorizontalContentAlignment="Center"
                         Background="Transparent" Foreground="{DynamicResource PrimaryText}" FontWeight="SemiBold"
                         CornerRadius="8" Padding="20,10" Cursor="Hand" BorderThickness="0">
@@ -33,7 +33,7 @@
                         </Style>
                     </Button.Styles>
                 </Button>
-                <Button Grid.Column="1" Content="Save" Click="OnSaveClick"
+                <Button Grid.Column="1" Content="{DynamicResource String.Save}" Click="OnSaveClick"
                         HorizontalAlignment="Right" HorizontalContentAlignment="Center"
                         Background="{DynamicResource PrimaryAccent}" Foreground="White" FontWeight="SemiBold"
                         CornerRadius="8" Padding="20,10" Cursor="Hand" BorderThickness="0">

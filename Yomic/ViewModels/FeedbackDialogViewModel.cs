@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 using ReactiveUI;
 using Avalonia.Media.Imaging;
+using Avalonia.Controls;
 
 namespace Yomic.ViewModels
 {
@@ -22,6 +23,7 @@ namespace Yomic.ViewModels
 
     public class FeedbackDialogViewModel : ViewModelBase
     {
+        private readonly Core.Services.SettingsService _settingsService;
         private string _feedbackText = string.Empty;
         public string FeedbackText
         {
@@ -34,7 +36,7 @@ namespace Yomic.ViewModels
             }
         }
 
-        public string CharacterCountText => $"{FeedbackText.Length}/1000";
+        public string CharacterCountText => $"{FeedbackText.Length}/10000";
 
         private FeedbackCategory _selectedCategory = FeedbackCategory.BugReport;
         public FeedbackCategory SelectedCategory
@@ -52,7 +54,9 @@ namespace Yomic.ViewModels
             set => this.RaiseAndSetIfChanged(ref _isSending, value);
         }
 
-        public bool CanSubmit => !string.IsNullOrWhiteSpace(FeedbackText) && FeedbackText.Length <= 1000 && !IsSending;
+        public bool HasSentFeedbackToday => _settingsService.LastFeedbackDate == DateTime.Today.ToString("yyyy-MM-dd");
+
+        public bool CanSubmit => !string.IsNullOrWhiteSpace(FeedbackText) && FeedbackText.Length <= 10000 && !IsSending && !HasSentFeedbackToday;
 
         public ReactiveCommand<Avalonia.Controls.Window, Unit> CancelCommand { get; }
         public ReactiveCommand<Avalonia.Controls.Window, Unit> SubmitCommand { get; }
@@ -62,15 +66,30 @@ namespace Yomic.ViewModels
         public const int MaxScreenshotCount = 3;
         public Func<int, Task<IReadOnlyList<FeedbackScreenshotAttachment>>>? OpenScreenshotPickerAsync { get; set; }
 
+        private string GetResourceString(string key, string defaultValue)
+        {
+            if (Avalonia.Application.Current != null && Avalonia.Application.Current.TryFindResource(key, out var value))
+            {
+                if (value is string str)
+                {
+                    return str;
+                }
+            }
+            return defaultValue;
+        }
+
         public ObservableCollection<FeedbackScreenshotAttachment> ScreenshotAttachments { get; } = new();
         public bool HasScreenshot => ScreenshotAttachments.Count > 0;
         public bool CanAttachMoreScreenshots => ScreenshotAttachments.Count < MaxScreenshotCount;
-        public string AttachScreenshotText => HasScreenshot ? $"Attach Screenshot ({ScreenshotAttachments.Count}/{MaxScreenshotCount})" : "Attach Screenshot";
+        public string AttachScreenshotText => HasScreenshot 
+            ? string.Format(GetResourceString("String.Feedback.AttachScreenshotWithCount", "Attach Screenshot ({0}/{1})"), ScreenshotAttachments.Count, MaxScreenshotCount) 
+            : GetResourceString("String.Feedback.AttachScreenshot", "Attach Screenshot");
 
         private readonly Action<string, NotificationType>? _showNotificationCallback;
 
-        public FeedbackDialogViewModel(Action<string, NotificationType>? showNotificationCallback = null)
+        public FeedbackDialogViewModel(Core.Services.SettingsService settingsService, Action<string, NotificationType>? showNotificationCallback = null)
         {
+            _settingsService = settingsService;
             _showNotificationCallback = showNotificationCallback;
 
             CancelCommand = ReactiveCommand.Create<Avalonia.Controls.Window>(window =>
@@ -88,6 +107,8 @@ namespace Yomic.ViewModels
                     var success = await SendEmailAsync(FeedbackText);
                     if (success)
                     {
+                        _settingsService.LastFeedbackDate = DateTime.Today.ToString("yyyy-MM-dd");
+                        _settingsService.Save();
                         window?.Close();
                     }
                 }
@@ -102,14 +123,14 @@ namespace Yomic.ViewModels
             {
                 if (OpenScreenshotPickerAsync == null)
                 {
-                    _showNotificationCallback?.Invoke("Screenshot picker is not available.", NotificationType.Error);
+                    _showNotificationCallback?.Invoke(GetResourceString("String.Feedback.PickerNotAvailable", "Screenshot picker is not available."), NotificationType.Error);
                     return;
                 }
 
                 var remainingSlots = MaxScreenshotCount - ScreenshotAttachments.Count;
                 if (remainingSlots <= 0)
                 {
-                    _showNotificationCallback?.Invoke($"You can attach up to {MaxScreenshotCount} screenshots.", NotificationType.Error);
+                    _showNotificationCallback?.Invoke(string.Format(GetResourceString("String.Feedback.MaxScreenshotsError", "You can attach up to {0} screenshots."), MaxScreenshotCount), NotificationType.Error);
                     return;
                 }
 
@@ -122,7 +143,7 @@ namespace Yomic.ViewModels
                     }
 
                     RaiseScreenshotStateChanged();
-                    _showNotificationCallback?.Invoke($"{attachments.Count} screenshot(s) attached.", NotificationType.Success);
+                    _showNotificationCallback?.Invoke(string.Format(GetResourceString("String.Feedback.ScreenshotsAttached", "{0} screenshot(s) attached."), attachments.Count), NotificationType.Success);
                 }
             });
 
@@ -154,7 +175,7 @@ namespace Yomic.ViewModels
 
                 if (url == "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE")
                 {
-                    _showNotificationCallback?.Invoke("Feedback URL is not configured.", NotificationType.Error);
+                    _showNotificationCallback?.Invoke(GetResourceString("String.Feedback.UrlNotConfigured", "Feedback URL is not configured."), NotificationType.Error);
                     return false;
                 }
 
@@ -210,14 +231,14 @@ namespace Yomic.ViewModels
                     if (isSuccess)
                     {
                         Console.WriteLine("[Feedback] Google Apps Script sent successfully!");
-                        _showNotificationCallback?.Invoke("Feedback sent successfully! Thank you.", NotificationType.Success);
+                        _showNotificationCallback?.Invoke(GetResourceString("String.Feedback.SuccessMessage", "Feedback sent successfully! Thank you."), NotificationType.Success);
                         return true;
                     }
                     else
                     {
                         string errorResponse = await response.Content.ReadAsStringAsync();
                         Console.WriteLine($"[Feedback] Google Apps Script error: {response.StatusCode} - {errorResponse}");
-                        _showNotificationCallback?.Invoke("Failed to send feedback. Please try again later.", NotificationType.Error);
+                        _showNotificationCallback?.Invoke(GetResourceString("String.Feedback.FailedMessage", "Failed to send feedback. Please try again later."), NotificationType.Error);
                         return false;
                     }
                 }
@@ -225,7 +246,7 @@ namespace Yomic.ViewModels
             catch (Exception ex)
             {
                 Console.WriteLine($"[Feedback] Error sending via Google Apps Script: {ex.Message}");
-                _showNotificationCallback?.Invoke("An error occurred while sending feedback.", NotificationType.Error);
+                _showNotificationCallback?.Invoke(GetResourceString("String.Feedback.ErrorMessage", "An error occurred while sending feedback."), NotificationType.Error);
                 return false;
             }
         }

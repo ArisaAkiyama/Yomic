@@ -58,7 +58,7 @@
                             <TextBlock Text="&#xE895;" FontFamily="Segoe Fluent Icons" FontSize="24" 
                                        Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"
                                        RenderOptions.TextRenderingMode="Antialias"/>
-                            <TextBlock Text="Updates" FontSize="28" FontWeight="Bold" 
+                            <TextBlock Text="{DynamicResource String.Updates}" FontSize="28" FontWeight="Bold" 
                                        Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
                             
                         </StackPanel>
@@ -68,17 +68,17 @@
                             <!-- Clear Cache / Updates Button -->
                             <Button Command="{Binding ClearUpdatesCommand}"
                                     Classes="header-action"
-                                    ToolTip.Tip="Clear Updates">
+                                    ToolTip.Tip="{DynamicResource String.Updates.ClearAll}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Clear All" VerticalAlignment="Center" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="{DynamicResource String.Updates.ClearAll}" VerticalAlignment="Center" FontSize="13" FontWeight="Medium"/>
                                 </StackPanel>
                             </Button>
 
                             <!-- Refresh Button -->
                             <Button Command="{Binding RefreshCommand}"
                                     Classes="header-action"
-                                    ToolTip.Tip="Sync Library">
+                                    ToolTip.Tip="{DynamicResource String.Updates.Sync}">
                                 <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" 
                                            FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Button>
@@ -88,7 +88,7 @@
                     <Border IsVisible="False" Background="#1AFFB900" BorderBrush="#FFB900" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,15,0,0">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <TextBlock Text="&#xE7BA;" FontFamily="Segoe Fluent Icons" Foreground="#FFB900" FontSize="14" VerticalAlignment="Center" Margin="0,0,0,0"/>
-                            <TextBlock Text="Avoid excessive mass synchronization to prevent IP bans by bot protection (like Cloudflare)."
+                            <TextBlock Text="{DynamicResource String.Updates.Warning}"
                                        Foreground="{DynamicResource PrimaryText}"
                                        FontSize="12"
                                        TextWrapping="Wrap"
@@ -99,8 +99,8 @@
                 </StackPanel>
 
                 <!-- Scrollable Content -->
-                <ScrollViewer Grid.Row="1" Padding="30,0,30,30">
-                    <StackPanel>
+                <ScrollViewer Grid.Row="1">
+                    <StackPanel Margin="30,0,30,30">
 
                     <!-- Updates List (Grouped) -->
                     <ItemsControl ItemsSource="{Binding GroupedUpdates}" IsVisible="{Binding !IsEmpty}" HorizontalAlignment="Stretch">
@@ -128,7 +128,7 @@
                                                     
                                                     <Button.ContextMenu>
                                                         <ContextMenu>
-                                                            <MenuItem Header="Mark previous as read" 
+                                                            <MenuItem Header="{DynamicResource String.Updates.MarkPreviousRead}" 
                                                                       Command="{Binding DataContext.MarkPrevReadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                                       CommandParameter="{Binding}"/>
                                                         </ContextMenu>
@@ -144,16 +144,17 @@
                                                             </Border>
 
                                                             <!-- Col 2: Info -->
-                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0" Spacing="6">
+                                                            <Grid Grid.Column="1" VerticalAlignment="Center" Margin="16,0" RowDefinitions="Auto, Auto">
                                                                 <!-- Title -->
-                                                                <TextBlock Classes.read="{Binding IsRead}"
+                                                                <TextBlock Grid.Row="0" Classes.read="{Binding IsRead}"
                                                                            Text="{Binding MangaRef.Title}" 
                                                                            Foreground="{DynamicResource PrimaryText}" FontWeight="Bold" FontSize="15"
                                                                            TextTrimming="CharacterEllipsis" MaxLines="1"
+                                                                           Margin="0,0,0,6"
                                                                            VerticalAlignment="Center"/>
                                                                 
                                                                 <!-- Chapter Name Row -->
-                                                                <Grid ColumnDefinitions="Auto, *, Auto" HorizontalAlignment="Stretch">
+                                                                <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto" HorizontalAlignment="Stretch">
                                                                     <!-- Unread Dot (Mihon style) -->
                                                                     <Border Grid.Column="0" Width="8" Height="8" CornerRadius="4" 
                                                                             Background="{DynamicResource PrimaryAccent}" 
@@ -175,14 +176,14 @@
                                                                             Margin="8,0,0,0" 
                                                                             VerticalAlignment="Center"
                                                                             IsVisible="{Binding HasAdditionalChapters}">
-                                                                        <TextBlock Text="{Binding AdditionalChaptersCount, StringFormat='+{0} more'}" 
+                                                                        <TextBlock Text="{Binding AdditionalChaptersText}" 
                                                                                    Foreground="#FFFFFF" 
                                                                                    FontSize="10" 
                                                                                    FontWeight="Bold"
                                                                                    VerticalAlignment="Center"/>
                                                                     </Border>
                                                                 </Grid>
-                                                            </StackPanel>
+                                                            </Grid>
 
                                                             <!-- Col 3: Meta (Timestamp) -->
                                                             <TextBlock Grid.Column="2" Text="{Binding Date}" 
@@ -208,17 +209,17 @@
                   <!-- Case 1: Library Is Empty -->
                    <StackPanel Spacing="10" IsVisible="{Binding IsLibraryEmpty}">
                        <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="64" Foreground="#45475A" HorizontalAlignment="Center"/>
-                       <TextBlock Text="Updates is Empty" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
-                       <TextBlock Text="Add manga to your library to see updates here." Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
-                       <Button Command="{Binding GoToLibraryCommand}" Content="Go to Library" HorizontalAlignment="Center" Background="#0078D7" Foreground="#FFFFFF" Padding="20,10" CornerRadius="8" Margin="0,15,0,0"/>
+                       <TextBlock Text="{DynamicResource String.Updates.Empty}" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
+                       <TextBlock Text="{DynamicResource String.Updates.EmptyDesc}" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                       <Button Command="{Binding GoToLibraryCommand}" Content="{DynamicResource String.Welcome.GoToLibrary}" HorizontalAlignment="Center" Background="#0078D7" Foreground="#FFFFFF" Padding="20,10" CornerRadius="8" Margin="0,15,0,0"/>
                    </StackPanel>
 
                   <!-- Case 2: Library Has Items but No Updates -->
                   <StackPanel Spacing="10" IsVisible="{Binding !IsLibraryEmpty}">
                        <TextBlock Text="&#xE9D5;" FontFamily="Segoe Fluent Icons" FontSize="64" Foreground="#45475A" HorizontalAlignment="Center"/>
-                       <TextBlock Text="No Recent Updates" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
-                       <TextBlock Text="New chapters from your library will appear here." Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
-                       <Button Command="{Binding RefreshCommand}" Content="Check Now" HorizontalAlignment="Center" Background="#0078D7" Foreground="#FFFFFF" Padding="20,10" CornerRadius="8" Margin="0,15,0,0"/>
+                       <TextBlock Text="{DynamicResource String.Updates.NoRecent}" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
+                       <TextBlock Text="{DynamicResource String.Updates.NoRecentDesc}" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                       <Button Command="{Binding RefreshCommand}" Content="{DynamicResource String.Updates.CheckNow}" HorizontalAlignment="Center" Background="#0078D7" Foreground="#FFFFFF" Padding="20,10" CornerRadius="8" Margin="0,15,0,0"/>
                   </StackPanel>
             </StackPanel>
         </Panel>
@@ -227,8 +228,8 @@
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20" IsVisible="{Binding IsOffline}">
             <TextBlock Text="&#xEB55;" FontFamily="Segoe Fluent Icons" FontSize="64" Foreground="#F38BA8" HorizontalAlignment="Center"/>
             <StackPanel Spacing="8">
-                <TextBlock Text="No Internet Connection" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
-                <TextBlock Text="You are currently offline. Please check your network settings." Foreground="{DynamicResource SecondaryText}" FontSize="14" HorizontalAlignment="Center"/>
+                <TextBlock Text="{DynamicResource String.Updates.Offline}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
+                <TextBlock Text="{DynamicResource String.Updates.OfflineDesc}" Foreground="{DynamicResource SecondaryText}" FontSize="14" HorizontalAlignment="Center"/>
             </StackPanel>
         </StackPanel>
 

@@ -12,6 +12,7 @@ namespace Yomic.Core.Sources
         string Language { get; } // e.g. "EN", "ID"
         bool IsHasMorePages { get; } // For pagination check
         bool IsNsfw => false; // Default interface method so it doesn't break existing extensions
+        int RateLimitDelayMs => 1000; // Jeda waktu per request (ms) untuk menghindari ban IP
 
         
         // Metadata

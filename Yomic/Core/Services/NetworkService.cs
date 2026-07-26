@@ -8,7 +8,7 @@ using Avalonia.Threading;
 
 namespace Yomic.Core.Services
 {
-    public class NetworkService : ReactiveObject
+    public class NetworkService : ReactiveObject, IDisposable
     {
         private bool _isOnline = true;
         public bool IsOnline
@@ -27,7 +27,7 @@ namespace Yomic.Core.Services
         // Debounce/Grace period settings
         private int _consecutiveFailures = 0;
         private const int FailureThreshold = 3; // Ditingkatkan agar lebih kebal lag spike
-        private const int PollingIntervalSeconds = 5; // Cek setiap 5 detik agar tidak spam
+        private const int PollingIntervalSeconds = 60; // Cek setiap 60 detik agar tidak spam
 
         private readonly SettingsService _settingsService;
 
@@ -57,7 +57,7 @@ namespace Yomic.Core.Services
                         {
                             IsOnline = false;
                             StatusChanged?.Invoke(this, false);
-                            _consecutiveFailures = FailureThreshold; // Sync failure count
+                             Interlocked.Exchange(ref _consecutiveFailures, FailureThreshold); // Sync failure count
                             LogService.Warning("Network", "Immediate Offline via OS Event.");
                         }
                     });
@@ -109,7 +109,7 @@ namespace Yomic.Core.Services
                 if (isConnected)
                 {
                     // Success: reset failure counter and immediately go online
-                    _consecutiveFailures = 0;
+                    Interlocked.Exchange(ref _consecutiveFailures, 0);
                     
                     if (!IsOnline)
                     {
@@ -121,11 +121,11 @@ namespace Yomic.Core.Services
                 else
                 {
                     // Failure: increment counter
-                    _consecutiveFailures++;
-                    LogService.Debug("Network", $"Connectivity check failed. Consecutive failures: {_consecutiveFailures}/{FailureThreshold}");
+                     var currentFailures = Interlocked.Increment(ref _consecutiveFailures);
+                     LogService.Debug("Network", $"Connectivity check failed. Consecutive failures: {currentFailures}/{FailureThreshold}");
                     
                     // Only go offline if threshold exceeded
-                    if (_consecutiveFailures >= FailureThreshold && IsOnline)
+                     if (Volatile.Read(ref _consecutiveFailures) >= FailureThreshold && IsOnline)
                     {
                         IsOnline = false;
                         StatusChanged?.Invoke(this, false);
@@ -144,7 +144,7 @@ namespace Yomic.Core.Services
                     var reply = await ping.SendPingAsync("8.8.8.8", 2000);
                     if (reply.Status == System.Net.NetworkInformation.IPStatus.Success)
                     {
-                        _consecutiveFailures = 0;
+                        Interlocked.Exchange(ref _consecutiveFailures, 0);
                         if (!IsOnline)
                         {
                             IsOnline = true;
@@ -157,10 +157,10 @@ namespace Yomic.Core.Services
                 catch { }
 
                 // Jika Ping juga gagal, maka benar-benar dihitung sebagai kegagalan
-                _consecutiveFailures++;
-                LogService.Debug("Network", $"Check exception: {ex.Message}. Consecutive failures: {_consecutiveFailures}/{FailureThreshold}");
+                var currentFailures = Interlocked.Increment(ref _consecutiveFailures);
+                LogService.Debug("Network", $"Check exception: {ex.Message}. Consecutive failures: {currentFailures}/{FailureThreshold}");
                 
-                if (_consecutiveFailures >= FailureThreshold && IsOnline)
+                if (Volatile.Read(ref _consecutiveFailures) >= FailureThreshold && IsOnline)
                 {
                     IsOnline = false;
                     StatusChanged?.Invoke(this, false);
@@ -181,100 +181,135 @@ namespace Yomic.Core.Services
                  throw new System.Net.WebException("Application is in Offline Mode.");
              }
 
-             System.Net.Http.SocketsHttpHandler handler = new System.Net.Http.SocketsHttpHandler
+             System.Net.Http.HttpMessageHandler handler;
+             int dohProvider = _settingsService.DnsOverHttpsProvider;
+
+             if (dohProvider == 0 && OperatingSystem.IsWindows())
              {
-                // Custom connection logic to use DoH resolved IP
-                ConnectCallback = async (context, token) =>
-                {
-                    var host = context.DnsEndPoint.Host;
-                    System.Net.IPAddress? ipAddress = null;
+                 handler = new System.Net.Http.WinHttpHandler
+                 {
+                     AutomaticDecompression = System.Net.DecompressionMethods.All,
+                     EnableMultipleHttp2Connections = true,
+                     SendTimeout = TimeSpan.FromSeconds(60),
+                     ReceiveDataTimeout = TimeSpan.FromSeconds(60)
+                 };
+             }
+             else
+             {
+                 handler = new System.Net.Http.SocketsHttpHandler
+                 {
+                     // Custom connection logic to use DoH resolved IP
+                     ConnectCallback = async (context, token) =>
+                     {
+                         var host = context.DnsEndPoint.Host;
+                         System.Net.IPAddress? ipAddress = null;
+                         
+                         if (dohProvider == 0)
+                         {
+                             // If DoH is disabled, just fallback immediately
+                             var entry = await System.Net.Dns.GetHostEntryAsync(host, token);
+                             ipAddress = entry.AddressList.FirstOrDefault();
+                         }
+                         else
+                         {
+                             // List of DoH providers (IPv4)
+                             string[] dohQueries = dohProvider switch
+                             {
+                                 1 => new[] { "https://1.1.1.1/dns-query?name={0}&type=A", "https://cloudflare-dns.com/dns-query?name={0}&type=A" }, // Cloudflare
+                                 2 => new[] { "https://8.8.8.8/resolve?name={0}&type=A", "https://dns.google/resolve?name={0}&type=A" }, // Google
+                                 3 => new[] { "https://dns.adguard-dns.com/resolve?name={0}&type=A", "https://94.140.14.14/resolve?name={0}&type=A" }, // AdGuard
+                                 _ => new[] { "https://8.8.8.8/resolve?name={0}&type=A" } // Fallback
+                             };
+                         
+                             using var dohClient = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(2) };
 
-                    int dohProvider = _settingsService.DnsOverHttpsProvider;
-                    
-                    if (dohProvider == 0)
-                    {
-                        // If DoH is disabled, just fallback immediately
-                        var entry = await System.Net.Dns.GetHostEntryAsync(host, token);
-                        ipAddress = entry.AddressList.FirstOrDefault();
-                    }
-                    else
-                    {
-                        // List of DoH providers (IPv4)
-                        string[] dohQueries = dohProvider switch
-                        {
-                            1 => new[] { "https://1.1.1.1/dns-query?name={0}&type=A", "https://cloudflare-dns.com/dns-query?name={0}&type=A" }, // Cloudflare
-                            2 => new[] { "https://8.8.8.8/resolve?name={0}&type=A", "https://dns.google/resolve?name={0}&type=A" }, // Google
-                            3 => new[] { "https://dns.adguard-dns.com/resolve?name={0}&type=A", "https://94.140.14.14/resolve?name={0}&type=A" }, // AdGuard
-                            _ => new[] { "https://8.8.8.8/resolve?name={0}&type=A" } // Fallback
-                        };
-                    
-                    using var dohClient = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+                             foreach (var template in dohQueries)
+                             {
+                                 try
+                                 {
+                                     string dohUrl = string.Format(template, host);
+                                     var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, dohUrl);
+                                     request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/dns-json"));
+                                     
+                                     var response = await dohClient.SendAsync(request, token);
+                                     if (response.IsSuccessStatusCode)
+                                     {
+                                         var json = await response.Content.ReadAsStringAsync(token);
+                                         var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
+                                         var answers = obj["Answer"];
+                                         
+                                         if (answers != null)
+                                         {
+                                             foreach (var ans in answers)
+                                             {
+                                                 var ipStr = ans["data"]?.ToString();
+                                                 if (System.Net.IPAddress.TryParse(ipStr, out var parsedIp))
+                                                 {
+                                                     ipAddress = parsedIp;
+                                                     break; 
+                                                 }
+                                             }
+                                             
+                                             if (ipAddress != null) break;
+                                         }
+                                     }
+                                 }
+                                 catch (Exception ex)
+                                 {
+                                     LogService.Debug("NetworkService", $"DoH query failed: {ex.Message}");
+                                 }
+                             }
+                         }
 
-                    foreach (var template in dohQueries)
-                    {
-                        try
-                        {
-                            string dohUrl = string.Format(template, host);
-                            var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, dohUrl);
-                            request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/dns-json"));
-                            
-                            var response = await dohClient.SendAsync(request, token);
-                            if (response.IsSuccessStatusCode)
-                            {
-                                var json = await response.Content.ReadAsStringAsync(token);
-                                var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
-                                var answers = obj["Answer"];
-                                
-                                if (answers != null)
-                                {
-                                    foreach (var ans in answers)
-                                    {
-                                        var ipStr = ans["data"]?.ToString();
-                                        if (System.Net.IPAddress.TryParse(ipStr, out var parsedIp))
-                                        {
-                                            ipAddress = parsedIp;
-                                            break; 
-                                        }
-                                    }
-                                    
-                                    if (ipAddress != null) break;
-                                }
-                            }
-                        }
-                        catch {}
-                    }
-                    }
+                         // Fallback to standard DNS
+                         if (ipAddress == null)
+                         {
+                             var entry = await System.Net.Dns.GetHostEntryAsync(host, token);
+                             ipAddress = entry.AddressList.FirstOrDefault();
+                         }
+                         
+                         if (ipAddress == null) throw new Exception($"Could not resolve host: {host}");
 
-                    // Fallback to standard DNS
-                    if (ipAddress == null)
-                    {
-                        var entry = await System.Net.Dns.GetHostEntryAsync(host, token);
-                        ipAddress = entry.AddressList.FirstOrDefault();
-                    }
-                    
-                    if (ipAddress == null) throw new Exception($"Could not resolve host: {host}");
-
-                     var socket = new System.Net.Sockets.Socket(System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
-                    try
-                    {
-                        await socket.ConnectAsync(ipAddress, context.DnsEndPoint.Port, token);
-                        return new System.Net.Sockets.NetworkStream(socket, ownsSocket: true);
-                    }
-                    catch
-                    {
-                        socket.Dispose();
-                        throw;
-                    }
-                },
-                SslOptions = new System.Net.Security.SslClientAuthenticationOptions
-                {
-                    RemoteCertificateValidationCallback = delegate { return true; },
-                    EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
-                },
-                PooledConnectionLifetime = TimeSpan.FromMinutes(2),
-                AutomaticDecompression = System.Net.DecompressionMethods.All,
-                UseCookies = true
-             };
+                         var socket = new System.Net.Sockets.Socket(System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+                         try
+                         {
+                             await socket.ConnectAsync(ipAddress, context.DnsEndPoint.Port, token);
+                             return new System.Net.Sockets.NetworkStream(socket, ownsSocket: true);
+                         }
+                         catch
+                         {
+                             socket.Dispose();
+                             throw;
+                         }
+                     },
+                     SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+                     {
+                         RemoteCertificateValidationCallback = (sender, cert, chain, errors) =>
+                         {
+                             if (errors == System.Net.Security.SslPolicyErrors.None) return true;
+                             if (cert != null)
+                             {
+                                 var subject = cert.Subject;
+                                 if (subject.Contains("ryzukomik", StringComparison.OrdinalIgnoreCase) ||
+                                     subject.Contains("komikcast", StringComparison.OrdinalIgnoreCase) ||
+                                     subject.Contains("komiku", StringComparison.OrdinalIgnoreCase) ||
+                                     subject.Contains("shinigami", StringComparison.OrdinalIgnoreCase) ||
+                                     subject.Contains("kiryuu", StringComparison.OrdinalIgnoreCase) ||
+                                     subject.Contains("komikindo", StringComparison.OrdinalIgnoreCase) ||
+                                     subject.Contains("mangaku", StringComparison.OrdinalIgnoreCase))
+                                 {
+                                     return true;
+                                 }
+                             }
+                             return false;
+                         },
+                         EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
+                     },
+                     PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+                     AutomaticDecompression = System.Net.DecompressionMethods.All,
+                     UseCookies = true
+                 };
+             }
             
             var client = new System.Net.Http.HttpClient(handler);
             client.Timeout = TimeSpan.FromSeconds(60);
@@ -318,7 +353,7 @@ namespace Yomic.Core.Services
                 }
                 
                 // Reset failure counter
-                _consecutiveFailures = 0;
+                Interlocked.Exchange(ref _consecutiveFailures, 0);
                 
                 // Wait a moment for network to stabilize
                 await Task.Delay(500);
@@ -341,5 +376,10 @@ namespace Yomic.Core.Services
         /// Event raised when connections are reset. UI can subscribe to refresh data.
         /// </summary>
         public event EventHandler? ConnectionReset;
+        public void Dispose()
+        {
+            _pollingTimer?.Dispose();
+            _connectivityClient?.Dispose();
+        }
     }
 }

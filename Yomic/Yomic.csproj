@@ -2,24 +2,27 @@
   <PropertyGroup>
     <OutputType Condition="'$(Configuration)' == 'Release'">WinExe</OutputType>
     <OutputType Condition="'$(Configuration)' == 'Debug'">Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <AssemblyName>Yomic</AssemblyName>
-    <Version>1.5.0</Version>
-    <AssemblyVersion>1.5.0.0</AssemblyVersion>
-    <FileVersion>1.5.0.0</FileVersion>
+    <Version>1.7.0</Version>
+    <AssemblyVersion>1.7.0.0</AssemblyVersion>
+    <FileVersion>1.7.0.0</FileVersion>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <!-- Exclude nested project folders to prevent duplicate compilation and attribute errors -->
     <DefaultItemExcludes>$(DefaultItemExcludes);Extensions\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Autoupdater.NET.Official" Version="1.9.2" />
     <PackageReference Include="Avalonia" Version="11.3.11" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.11" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.8" />
     <PackageReference Include="Avalonia.Skia.Lottie" Version="11.0.0" />
+    <PackageReference Include="Avalonia.Svg.Skia" Version="11.3.0" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.11" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.11" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
@@ -27,12 +30,18 @@
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.3.0.6" />
+    <PackageReference Include="BitFaster.Caching" Version="2.6.0" />
+    <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.2" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="MemoryPack" Version="1.21.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.2" />
+    <PackageReference Include="SharpZipLib" Version="1.4.2" />
+    <PackageReference Include="SkiaSharp" Version="4.150.1" />
     <PackageReference Include="SourceGear.sqlite3" Version="3.50.4.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -40,6 +49,8 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="PuppeteerSharp" Version="20.2.5" />
+    <PackageReference Include="System.IO.Hashing" Version="10.0.10" />
+    <PackageReference Include="System.Net.Http.WinHttpHandler" Version="10.0.10" />
     <PackageReference Include="Tmds.DBus.Protocol" Version="0.93.0" />
   </ItemGroup>
 
@@ -47,7 +58,7 @@
     <ProjectReference Include="..\Yomic.Shared\Yomic.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <AvaloniaResource Include="Assets\**" />
+    <AvaloniaResource Include="Assets\**" Exclude="Assets\**\*.axaml" />
   </ItemGroup>
   <ItemGroup>
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />

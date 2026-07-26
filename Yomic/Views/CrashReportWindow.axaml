@@ -1,0 +1,39 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Yomic.Views.CrashReportWindow"
+        Title="{DynamicResource String.CrashReport.Title}"
+        Width="600" Height="450"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource PrimaryBackground}"
+        Foreground="{DynamicResource PrimaryText}">
+    <Grid RowDefinitions="Auto, *, Auto" Margin="24">
+        <!-- Title and description -->
+        <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,16">
+            <TextBlock Text="{DynamicResource String.CrashReport.Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}"/>
+            <TextBlock Text="{DynamicResource String.CrashReport.Description}" FontSize="13" Foreground="{DynamicResource SecondaryText}" TextWrapping="Wrap"/>
+        </StackPanel>
+        
+        <!-- Code editor style log display -->
+        <TextBox Grid.Row="1" 
+                 Name="LogTextBox"
+                 AcceptsReturn="True" 
+                 TextWrapping="Wrap"
+                 Background="{DynamicResource SidebarBackground}"
+                 Foreground="{DynamicResource PrimaryText}"
+                 BorderThickness="1"
+                 BorderBrush="{DynamicResource SeparatorBrush}"
+                 Padding="12"
+                 FontSize="12"
+                 FontFamily="Consolas, Courier New, monospace"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+
+        <!-- Actions -->
+        <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto, Auto" Margin="0,16,0,0">
+            <Button Grid.Column="0" Content="{DynamicResource String.SendFeedback}" Click="OnSendFeedbackClick" Background="{DynamicResource AccentColor}" Foreground="White" CornerRadius="4" Padding="16,8" FontWeight="SemiBold"/>
+            <StackPanel Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="12">
+                <Button Content="{DynamicResource String.Ok}" Click="OnOkClick" Background="{DynamicResource AccentColor}" Foreground="White" CornerRadius="4" Padding="20,8" FontWeight="SemiBold"/>
+                <Button Content="{DynamicResource String.Cancel}" Click="OnCancelClick" Background="{DynamicResource HoverBackground}" CornerRadius="4" Padding="20,8"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

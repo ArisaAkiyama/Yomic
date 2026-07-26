@@ -28,10 +28,10 @@
             <!-- Slide 1: Intro -->
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
                 <Image Source="avares://Yomic/Assets/yo-app.png" Width="96" Height="96" HorizontalAlignment="Center"/>
-                <TextBlock Text="Welcome to Yomic" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
-                <TextBlock Text="The ultimate manga reader for your desktop." FontSize="18" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                <TextBlock Text="{DynamicResource String.Welcome.Title}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
+                <TextBlock Text="{DynamicResource String.Welcome.Subtitle}" FontSize="18" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
                 
-                <Button Command="{Binding FinishCommand}" Content="Go to Library" 
+                <Button Command="{Binding FinishCommand}" Content="{DynamicResource String.Welcome.GoToLibrary}" 
                         Background="{DynamicResource PrimaryAccent}" Foreground="#1E1E2E" Padding="40,15" CornerRadius="12" FontSize="16" FontWeight="Bold" Margin="0,40,0,0"
                         HorizontalAlignment="Center" MinWidth="200" HorizontalContentAlignment="Center">
                     <Button.Styles>
@@ -45,22 +45,30 @@
             
             <!-- Slide 2: Storage -->
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
-                <TextBlock Text="&#xE8B7;" FontFamily="Segoe Fluent Icons" FontSize="64" Foreground="#FAB387" HorizontalAlignment="Center"/>
-                <TextBlock Text="Where should we store your downloads?" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
-                <TextBlock Text="Choose a location for your manga library." FontSize="16" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                <Viewbox Width="64" Height="64" HorizontalAlignment="Center">
+                    <Canvas Width="24" Height="24">
+                        <Path Data="M5 4h4l2 3h9a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" Stroke="#FAB387" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                    </Canvas>
+                </Viewbox>
+                <TextBlock Text="{DynamicResource String.Welcome.StorageTitle}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
+                <TextBlock Text="{DynamicResource String.Welcome.StorageSubtitle}" FontSize="16" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
                 
                 <Border Background="{DynamicResource CardBackground}" CornerRadius="8" Padding="15" Margin="0,20,0,0" Width="400">
                     <Grid ColumnDefinitions="*, Auto">
                         <TextBlock Text="D:/Komik/Downloads" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryText}"/>
-                        <Button Grid.Column="1" Content="Change" Background="{DynamicResource PrimaryAccent}" Foreground="#1E1E2E"/>
+                        <Button Grid.Column="1" Content="{DynamicResource String.Change}" Background="{DynamicResource PrimaryAccent}" Foreground="#1E1E2E"/>
                     </Grid>
                 </Border>
             </StackPanel>
             
             <!-- Slide 3: Extensions -->
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
-                <TextBlock Text="&#xE74C;" FontFamily="Segoe Fluent Icons" FontSize="64" Foreground="#A6E3A1" HorizontalAlignment="Center"/>
-                <TextBlock Text="Install your first extension" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
+                <Viewbox Width="64" Height="64" HorizontalAlignment="Center">
+                    <Canvas Width="24" Height="24">
+                        <Path Data="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9zm0 12l8 -4.5M12 15l0 6 M12 15l-8 -4.5 M20 7.5l-8 4.5l-8 -4.5" Stroke="#A6E3A1" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                    </Canvas>
+                </Viewbox>
+                <TextBlock Text="{DynamicResource String.Welcome.ExtensionTitle}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
                 
                 <StackPanel Orientation="Horizontal" Spacing="20" Margin="0,30,0,0">
 
@@ -69,7 +77,7 @@
                         <StackPanel Spacing="15">
                             <TextBlock Text="B" FontWeight="Bold" FontSize="32" HorizontalAlignment="Center" Foreground="#5865F2"/>
                             <TextBlock Text="Bato.to" HorizontalAlignment="Center" Foreground="{DynamicResource PrimaryText}"/>
-                             <Button Content="Install" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Background="{DynamicResource PrimaryAccent}" Foreground="#1E1E2E"/>
+                             <Button Content="{DynamicResource String.Install}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Background="{DynamicResource PrimaryAccent}" Foreground="#1E1E2E"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -77,11 +85,15 @@
             
             <!-- Slide 4: Ready -->
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
-                <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" FontSize="64" Foreground="#94E2D5" HorizontalAlignment="Center"/>
-                <TextBlock Text="All Set!" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
-                <TextBlock Text="You are ready to start reading." FontSize="18" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                <Viewbox Width="64" Height="64" HorizontalAlignment="Center">
+                    <Canvas Width="24" Height="24">
+                        <Path Data="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M9 12l2 2l4 -4" Stroke="#94E2D5" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                    </Canvas>
+                </Viewbox>
+                <TextBlock Text="{DynamicResource String.Welcome.AllSet}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
+                <TextBlock Text="{DynamicResource String.Welcome.ReadyDesc}" FontSize="18" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
                 
-                <Button Command="{Binding FinishCommand}" Content="Go to Library" 
+                <Button Command="{Binding FinishCommand}" Content="{DynamicResource String.Welcome.GoToLibrary}" 
                         Background="{DynamicResource PrimaryAccent}" Foreground="#1E1E2E" Padding="30,15" CornerRadius="8" FontSize="16" FontWeight="Bold" Margin="0,30,0,0"/>
             </StackPanel>
             

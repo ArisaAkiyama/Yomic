@@ -2,6 +2,12 @@
 
 All notable changes to **Yomic** will be documented in this file.
 
+## [1.7.0] - 2026-07-23
+
+### Changed
+- Updated application version to 1.7.0.
+- Built new installer package for distribution.
+
 ## [1.3.0] - Major Update & UI Overhaul
 
 Update Details：

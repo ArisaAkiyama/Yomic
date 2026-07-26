@@ -174,7 +174,8 @@ namespace Yomic
                     try
                     {
                         context.Database.Migrate();
-                        System.Diagnostics.Debug.WriteLine($"[App] Database migrated successfully.");
+                        context.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA cache_size=-10000; PRAGMA temp_store=MEMORY; PRAGMA busy_timeout=10000;");
+                        System.Diagnostics.Debug.WriteLine($"[App] Database migrated & WAL mode applied successfully.");
                     }
                     catch (System.Exception ex)
                     {
@@ -228,6 +229,21 @@ namespace Yomic
                 {
                     DataContext = new MainWindowViewModel(sourceManager, libraryService, networkService, downloadService, settingsService, imageCacheService, secureImageService),
                 };
+
+                // Check for app updates asynchronously in background
+                if (System.OperatingSystem.IsWindows())
+                {
+                    try
+                    {
+                        AutoUpdaterDotNET.AutoUpdater.ShowSkipButton = false;
+                        AutoUpdaterDotNET.AutoUpdater.ShowRemindLaterButton = true;
+                        AutoUpdaterDotNET.AutoUpdater.Start("https://raw.githubusercontent.com/ArisaAkiyama/yomic/main/update.xml");
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Yomic.Core.Services.LogService.Warning("AutoUpdater", $"Failed to check for updates: {ex.Message}");
+                    }
+                }
             }
 
             base.OnFrameworkInitializationCompleted();

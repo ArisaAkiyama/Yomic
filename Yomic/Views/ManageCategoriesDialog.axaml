@@ -14,7 +14,7 @@
         <Grid RowDefinitions="Auto, *, Auto, Auto">
             <!-- Header -->
             <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,16">
-                <TextBlock Grid.Column="0" Text="Manage Categories" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="{DynamicResource String.Category.ManageCategories}" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
                 <Button Grid.Column="1" Content="✕" Click="OnCloseClick" 
                         Background="Transparent" Foreground="{DynamicResource SecondaryText}" Padding="8,4" FontSize="16" Cursor="Hand" BorderThickness="0">
                     <Button.Styles>
@@ -36,10 +36,18 @@
                                     <Grid ColumnDefinitions="Auto, Auto, Auto, *, Auto, Auto, Auto, Auto">
                                         <!-- Reorder Buttons -->
                                         <Button Grid.Column="0" Click="OnUpClick" Width="28" Height="28" Background="Transparent" Margin="0,0,2,0" Cursor="Hand" BorderThickness="0" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
-                                            <TextBlock Text="&#xE70E;" FontFamily="Segoe Fluent Icons" FontSize="11" Foreground="{DynamicResource SecondaryText}"/>
+                                            <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="M6 15l6 -6l6 6" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
                                         </Button>
                                         <Button Grid.Column="1" Click="OnDownClick" Width="28" Height="28" Background="Transparent" Margin="0,0,8,0" Cursor="Hand" BorderThickness="0" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
-                                            <TextBlock Text="&#xE70D;" FontFamily="Segoe Fluent Icons" FontSize="11" Foreground="{DynamicResource SecondaryText}"/>
+                                            <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="M6 9l6 6l6 -6" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
                                         </Button>
                                         
                                         <!-- Color Indicator -->
@@ -49,23 +57,54 @@
                                         <TextBlock Grid.Column="3" Text="{Binding Name}" Foreground="{DynamicResource PrimaryText}" FontSize="14" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                         
                                         <!-- Default Toggle Button -->
-                                        <Button Grid.Column="4" Click="OnDefaultClick" Background="Transparent" Width="32" Height="32" Cursor="Hand" BorderThickness="0" Margin="0,0,4,0" ToolTip.Tip="Set as Default" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
-                                            <TextBlock Text="{Binding StarIcon}" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{Binding StarColor}"/>
+                                        <Button Grid.Column="4" Click="OnDefaultClick" Background="Transparent" Width="32" Height="32" Cursor="Hand" BorderThickness="0" Margin="0,0,4,0" ToolTip.Tip="{DynamicResource String.Category.SetAsDefault}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
+                                            <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <!-- Filled star will still use Fill, so we bind Stroke but some Tabler filled icons might need Fill. Wait, the filled star SVG is a closed path. Let's just set Stroke and Fill appropriately. Wait, the hollow star uses Stroke. Actually, if we bind Fill to StarColor and Stroke to StarColor, it will look fine for both. Actually the filled star in tabler uses 'fill="currentColor"' usually, while outline uses 'stroke="currentColor" fill="none"'.
+                                                    Let's bind BOTH Fill and Stroke to StarColor. But wait, outline star with Fill will be a solid blob. 
+                                                    Wait! Tabler filled icons are built to work with Fill. Outline icons work with Stroke.
+                                                    Actually, I can just use Data="{Binding StarIcon}" Stroke="{Binding StarColor}" StrokeThickness="2" Fill="Transparent". Wait, if the filled star is drawn with a Path that has a closed area, 'Stroke' and 'Fill' behave differently.
+                                                    Let me check Tabler's filled star SVG: M8.243 ... z. It's a closed path. 
+                                                    If we do Fill="Transparent" and Stroke="...", it will just be an outline!
+                                                    Ah, that's right. The filled icon needs Fill="{Binding StarColor}" Stroke="Transparent", and the outline needs Stroke="{Binding StarColor}" Fill="Transparent".
+                                                    But this is dynamic. How do we toggle both properties? 
+                                                    Wait, I can use a MultiBinding? No, I can add two properties in C#: StarFill and StarStroke!
+                                                    Let's just change `ManageCategoriesDialog.axaml.cs` to handle that. Let's do that in a bit. For now, let's assume I'll bind them.
+                                                    Actually, wait, I can just use TWO paths and toggle their visibility! 
+                                                    No, we already have `{Binding StarIcon}`. Let's just bind `Fill="{Binding StarFill}" Stroke="{Binding StarStroke}"`.
+                                                    Wait, if I just use `Fill="{Binding StarColor}" Stroke="{Binding StarColor}"` on the same `<Path>`? If I fill the outline star, it becomes a blob.
+                                                    Yes, let's update C# to have `StarFill` and `StarStroke`.
+                                                    -->
+                                                    <Path Data="{Binding StarIcon}" Stroke="{Binding StarStroke}" StrokeThickness="2" Fill="{Binding StarFill}" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
                                         </Button>
 
                                         <!-- Exclude from Update Toggle Button -->
                                         <Button Grid.Column="5" Click="OnExcludeClick" Background="Transparent" Width="32" Height="32" Cursor="Hand" BorderThickness="0" Margin="0,0,8,0" ToolTip.Tip="{Binding ExcludeToolTip}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
-                                            <TextBlock Text="{Binding ExcludeIcon}" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{Binding ExcludeColor}"/>
+                                            <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="{Binding ExcludeIcon}" Stroke="{Binding ExcludeColor}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
                                         </Button>
                                         
                                         <!-- Edit Button -->
-                                        <Button Grid.Column="6" Click="OnEditRowClick" Background="Transparent" Width="32" Height="32" Cursor="Hand" BorderThickness="0" Margin="0,0,4,0" ToolTip.Tip="Edit" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
-                                            <TextBlock Text="&#xE70F;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{DynamicResource SecondaryText}"/>
+                                        <Button Grid.Column="6" Click="OnEditRowClick" Background="Transparent" Width="32" Height="32" Cursor="Hand" BorderThickness="0" Margin="0,0,4,0" ToolTip.Tip="{DynamicResource String.Edit}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
+                                            <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4 M13.5 6.5l4 4" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
                                         </Button>
                                         
                                         <!-- Delete Button -->
-                                        <Button Grid.Column="7" Click="OnDeleteRowClick" Background="Transparent" Width="32" Height="32" Cursor="Hand" BorderThickness="0" ToolTip.Tip="Delete" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
-                                            <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="{DynamicResource SecondaryText}"/>
+                                        <Button Grid.Column="7" Click="OnDeleteRowClick" Background="Transparent" Width="32" Height="32" Cursor="Hand" BorderThickness="0" ToolTip.Tip="{DynamicResource String.Delete}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
+                                            <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="M4 7l16 0 M10 11l0 6 M14 11l0 6 M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12 M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
                                         </Button>
                                     </Grid>
                                 </Border>
@@ -75,7 +114,7 @@
                 </ScrollViewer>
                 
                 <!-- Empty State -->
-                <TextBlock x:Name="EmptyStateText" Text="No custom categories yet. Create your first category below!" 
+                <TextBlock x:Name="EmptyStateText" Text="{DynamicResource String.Category.EmptyState}" 
                            Foreground="{DynamicResource SecondaryText}" FontSize="13" FontStyle="Italic"
                            HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="False"/>
             </Grid>
@@ -84,15 +123,15 @@
             
             <!-- Add / Edit Pane -->
             <StackPanel Grid.Row="3" Spacing="12">
-                <TextBlock x:Name="PaneTitle" Text="Create Category" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}"/>
+                <TextBlock x:Name="PaneTitle" Text="{DynamicResource String.Category.CreateCategory}" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}"/>
                 
                 <Grid ColumnDefinitions="*, Auto" Height="36">
-                    <TextBox x:Name="CategoryNameInput" Watermark="Category name..." CornerRadius="8" Margin="0,0,8,0"
+                    <TextBox x:Name="CategoryNameInput" Watermark="{DynamicResource String.Category.Watermark}" CornerRadius="8" Margin="0,0,8,0"
                              Background="{DynamicResource PrimaryBackground}" Foreground="{DynamicResource PrimaryText}" 
                              BorderBrush="{DynamicResource ControlBorder}" BorderThickness="1" MaxLength="30"
                              VerticalAlignment="Stretch" VerticalContentAlignment="Center"
                              PropertyChanged="OnNameInputPropertyChanged" KeyDown="OnNameInputKeyDown"/>
-                    <Button Grid.Column="1" x:Name="ActionButton" Content="Add" Click="OnActionClick"
+                    <Button Grid.Column="1" x:Name="ActionButton" Content="{DynamicResource String.Add}" Click="OnActionClick"
                             Background="{DynamicResource PrimaryAccent}" Foreground="White" FontWeight="SemiBold"
                             CornerRadius="8" Width="85" VerticalAlignment="Stretch"
                             VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
@@ -110,20 +149,20 @@
                 </Grid>
 
                 <!-- Warning Text -->
-                <TextBlock x:Name="WarningTextBlock" Text="A category with this name already exists." 
+                <TextBlock x:Name="WarningTextBlock" Text="{DynamicResource String.Category.AlreadyExists}" 
                            Foreground="{DynamicResource ErrorColor}" FontSize="12" Margin="4,-6,0,0" IsVisible="False"/>
                 
                 <!-- Palette -->
                 <Grid ColumnDefinitions="Auto, *, Auto">
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                        <TextBlock Text="Color:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryText}" FontSize="13"/>
+                        <TextBlock Text="{DynamicResource String.Category.Color}" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryText}" FontSize="13"/>
                         <WrapPanel x:Name="ColorsPalette" Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0,0,0">
                             <!-- Predefined colors populated dynamically -->
                         </WrapPanel>
                     </StackPanel>
                     
                     <!-- Cancel Edit Button (Hidden in normal mode) -->
-                    <Button Grid.Column="2" x:Name="CancelEditButton" Content="Cancel Edit" Click="OnCancelEditClick" IsVisible="False"
+                    <Button Grid.Column="2" x:Name="CancelEditButton" Content="{DynamicResource String.Category.CancelEdit}" Click="OnCancelEditClick" IsVisible="False"
                             Background="Transparent" Foreground="{DynamicResource ErrorColor}" FontSize="13" FontWeight="SemiBold" Cursor="Hand" BorderThickness="0">
                         <Button.Styles>
                             <Style Selector="Button:pointerover /template/ ContentPresenter">

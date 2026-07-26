@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Controls;
 
 namespace Yomic.Views
@@ -28,6 +29,9 @@ namespace Yomic.Views
 
                 vm.RequestExportLogsDialog -= OpenExportLogsDialog;
                 vm.RequestExportLogsDialog += OpenExportLogsDialog;
+
+                vm.RequestLanguageRestartConfirmation -= OpenLanguageRestartConfirmation;
+                vm.RequestLanguageRestartConfirmation += OpenLanguageRestartConfirmation;
             }
         }
 
@@ -38,13 +42,14 @@ namespace Yomic.Views
 
             var file = await topLevel.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
             {
-                Title = "Save Yomic Backup",
-                DefaultExtension = "yomicbk",
+                Title = GetResourceString("String.Dialog.BackupSaveTitle", "Save Yomic Backup"),
+                SuggestedFileName = $"Yomic_Backup_{DateTime.Now:yyyy-MM-dd_HHmmss}.zip",
+                DefaultExtension = "zip",
                 FileTypeChoices = new[]
                 {
-                    new Avalonia.Platform.Storage.FilePickerFileType("Yomic Backup") { Patterns = new[] { "*.yomicbk" } },
-                    new Avalonia.Platform.Storage.FilePickerFileType("Zip Archive") { Patterns = new[] { "*.zip" } },
-                    new Avalonia.Platform.Storage.FilePickerFileType("All Files") { Patterns = new[] { "*.*" } }
+                    new Avalonia.Platform.Storage.FilePickerFileType("Zip Archive (*.zip)") { Patterns = new[] { "*.zip" } },
+                    new Avalonia.Platform.Storage.FilePickerFileType("Yomic Backup (*.yomicbk)") { Patterns = new[] { "*.yomicbk" } },
+                    new Avalonia.Platform.Storage.FilePickerFileType("All Files (*.*)") { Patterns = new[] { "*.*" } }
                 }
             });
 
@@ -57,11 +62,22 @@ namespace Yomic.Views
             }
         }
 
+        private string GetResourceString(string key, string defaultValue)
+        {
+            if (this.TryFindResource(key, out var res) && res is string str)
+            {
+                return str;
+            }
+            return defaultValue;
+        }
+
         private async void OpenRestoreDialog()
         {
             if (this.VisualRoot is Window parentWindow)
             {
-                var dialog = new ConfirmDialog("Restore Backup", "Restoring a backup will replace all your current database, library, and settings. Make sure you have a recent backup if needed. Do you want to continue?");
+                var title = GetResourceString("String.Dialog.RestoreTitle", "Restore Backup");
+                var message = GetResourceString("String.Dialog.RestoreMsg", "Restoring a backup will replace all your current database, library, and settings. Make sure you have a recent backup if needed. Do you want to continue?");
+                var dialog = new ConfirmDialog(title, message);
                 
                 var mainVM = parentWindow.DataContext as Yomic.ViewModels.MainWindowViewModel;
                 if (mainVM != null) mainVM.IsDialogOverlayVisible = true;
@@ -78,13 +94,13 @@ namespace Yomic.Views
 
             var files = await topLevel.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
             {
-                Title = "Restore Yomic Backup",
+                Title = GetResourceString("String.Dialog.RestorePickerTitle", "Restore Yomic Backup"),
                 AllowMultiple = false,
                 FileTypeFilter = new[]
                 {
-                    new Avalonia.Platform.Storage.FilePickerFileType("Yomic Backup") { Patterns = new[] { "*.yomicbk" } },
-                    new Avalonia.Platform.Storage.FilePickerFileType("Zip Archive") { Patterns = new[] { "*.zip" } },
-                    new Avalonia.Platform.Storage.FilePickerFileType("All Files") { Patterns = new[] { "*.*" } }
+                    new Avalonia.Platform.Storage.FilePickerFileType("Zip Archive (*.zip)") { Patterns = new[] { "*.zip" } },
+                    new Avalonia.Platform.Storage.FilePickerFileType("Yomic Backup (*.yomicbk)") { Patterns = new[] { "*.yomicbk" } },
+                    new Avalonia.Platform.Storage.FilePickerFileType("All Files (*.*)") { Patterns = new[] { "*.*" } }
                 }
             });
 
@@ -102,7 +118,9 @@ namespace Yomic.Views
         {
             if (this.VisualRoot is Window parentWindow)
             {
-                var dialog = new ConfirmDialog("Clear All Data", "Are you absolutely sure you want to reset all data? This action is irreversible and will delete your entire local library and settings.");
+                var title = GetResourceString("String.Dialog.ClearDataTitle", "Clear All Data");
+                var message = GetResourceString("String.Dialog.ClearDataMsg", "Are you absolutely sure you want to reset all data? This action is irreversible and will delete your entire local library and settings.");
+                var dialog = new ConfirmDialog(title, message);
                 
                 var mainVM = parentWindow.DataContext as Yomic.ViewModels.MainWindowViewModel;
                 if (mainVM != null) mainVM.IsDialogOverlayVisible = true;
@@ -122,7 +140,9 @@ namespace Yomic.Views
         {
             if (this.VisualRoot is Window parentWindow)
             {
-                var dialog = new ConfirmDialog("Clear Read History & Cache", "Are you sure you want to clear your reading history and image cache? All chapters will be marked as unread and memory will be freed up.");
+                var title = GetResourceString("String.Dialog.ClearHistoryTitle", "Clear Read History & Cache");
+                var message = GetResourceString("String.Dialog.ClearHistoryMsg", "Are you sure you want to clear your reading history and image cache? All chapters will be marked as unread and memory will be freed up.");
+                var dialog = new ConfirmDialog(title, message);
                 
                 var mainVM = parentWindow.DataContext as Yomic.ViewModels.MainWindowViewModel;
                 if (mainVM != null) mainVM.IsDialogOverlayVisible = true;
@@ -157,6 +177,41 @@ namespace Yomic.Views
             if (file != null && DataContext is Yomic.ViewModels.SettingsViewModel vm)
             {
                 await vm.ProcessExportLogsAsync(file.Path.LocalPath);
+            }
+        }
+
+        private async void OpenLanguageRestartConfirmation(string selectedLang)
+        {
+            if (this.VisualRoot is Window parentWindow)
+            {
+                var title = parentWindow.FindResource("String.RestartRequired") as string ?? "Restart Required";
+                var message = parentWindow.FindResource("String.RestartMessage") as string ?? "The application needs to restart to apply the new language. Do you want to restart now?";
+
+                var dialog = new ConfirmDialog(title, message);
+
+                var mainVM = parentWindow.DataContext as Yomic.ViewModels.MainWindowViewModel;
+                if (mainVM != null) mainVM.IsDialogOverlayVisible = true;
+
+                var result = await dialog.ShowDialog<bool>(parentWindow);
+
+                if (mainVM != null) mainVM.IsDialogOverlayVisible = false;
+
+                if (result)
+                {
+                    var processPath = System.Environment.ProcessPath;
+                    if (!string.IsNullOrEmpty(processPath))
+                    {
+                        System.Diagnostics.Process.Start(processPath);
+                        System.Environment.Exit(0);
+                    }
+                }
+                else
+                {
+                    if (DataContext is Yomic.ViewModels.SettingsViewModel vm)
+                    {
+                        vm.RevertLanguageSelection();
+                    }
+                }
             }
         }
     }

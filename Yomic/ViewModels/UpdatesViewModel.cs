@@ -8,6 +8,7 @@ using Yomic.Core.Models;
 using ReactiveUI;
 using Avalonia.Threading;
 using System.Collections.Generic;
+using Avalonia.Controls;
 
 namespace Yomic.ViewModels
 {
@@ -195,10 +196,21 @@ namespace Yomic.ViewModels
 
                 // Group by actual Upload Date (or fallback to Fetch Date) for accurate UI timeline
                 var groups = chapters
-                    .GroupBy(c => GetTimeHeader(c.DateUpload > 0 ? c.DateUpload : c.DateFetch))
+                    .GroupBy(c => GetTimeHeaderKey(c.DateUpload > 0 ? c.DateUpload : c.DateFetch))
+                    // To ensure the headers output in correct chronological order:
+                    .OrderBy(g => 
+                    {
+                        switch(g.Key) {
+                            case "Today": return 0;
+                            case "Yesterday": return 1;
+                            case "This Week": return 2;
+                            case "This Month": return 3;
+                            default: return 4;
+                        }
+                    })
                     .Select(g => new UpdatesGroupParams
                     {
-                        Header = g.Key,
+                        Header = GetLocalizedTimeHeader(g.Key),
                         // Within each timeframe group, deduplicate by Manga, preferring the most recently uploaded
                         Items = new ObservableCollection<ChapterItem>(g
                             .GroupBy(c => c.MangaId)
@@ -225,17 +237,6 @@ namespace Yomic.ViewModels
                             .OrderByDescending(item => item.DateUpload)
                             .ToList())
                     })
-                    // To ensure the headers output in correct chronological order:
-                    .OrderBy(g => 
-                    {
-                        switch(g.Header) {
-                            case "Today": return 0;
-                            case "Yesterday": return 1;
-                            case "This Week": return 2;
-                            case "This Month": return 3;
-                            default: return 4;
-                        }
-                    })
                     .ToList();
 
                 Dispatcher.UIThread.Post(() =>
@@ -247,6 +248,70 @@ namespace Yomic.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[UpdatesVM] Error loading: {ex}");
+            }
+        }
+
+        private string GetResourceString(string key, string defaultValue)
+        {
+            if (Avalonia.Application.Current != null && Avalonia.Application.Current.TryFindResource(key, out var res))
+            {
+                if (res is string str)
+                {
+                    return str;
+                }
+            }
+            return defaultValue;
+        }
+
+        private string GetTimeHeaderKey(long dateFetch)
+        {
+            var date = DateTimeOffset.FromUnixTimeMilliseconds(dateFetch);
+            var now = DateTimeOffset.Now;
+            
+            if (date.Date == now.Date) return "Today";
+            if (date.Date == now.AddDays(-1).Date) return "Yesterday";
+            if (date > now.AddDays(-7)) return "This Week";
+            if (date > now.AddDays(-30)) return "This Month";
+            return "Older";
+        }
+
+        private string GetLocalizedTimeHeader(string key)
+        {
+            switch (key)
+            {
+                case "Today": return GetResourceString("String.TimeHeader.Today", "Today");
+                case "Yesterday": return GetResourceString("String.TimeHeader.Yesterday", "Yesterday");
+                case "This Week": return GetResourceString("String.TimeHeader.ThisWeek", "This Week");
+                case "This Month": return GetResourceString("String.TimeHeader.ThisMonth", "This Month");
+                default: return GetResourceString("String.TimeHeader.Older", "Older");
+            }
+        }
+
+        private string GetTimeAgo(long dateFetch)
+        {
+            if (dateFetch <= 0) return GetResourceString("String.TimeAgo.Unknown", "Unknown");
+
+            var date = DateTimeOffset.FromUnixTimeMilliseconds(dateFetch);
+            var now = DateTimeOffset.Now;
+
+            // Failsafe for Unix Epoch 1970 dates (which are near 0 but might be slightly shifted by timezone)
+            if (date.Year <= 1970) return GetResourceString("String.TimeAgo.Unknown", "Unknown");
+            
+            var diff = now - date;
+            
+            if (diff.TotalMinutes < 60)
+            {
+                var val = (int)Math.Max(1, diff.TotalMinutes);
+                return string.Format(GetResourceString("String.TimeAgo.Minutes", "{0}m ago"), val);
+            }
+            if (diff.TotalHours < 24)
+            {
+                var val = (int)diff.TotalHours;
+                return string.Format(GetResourceString("String.TimeAgo.Hours", "{0}h ago"), val);
+            }
+            {
+                var val = (int)diff.TotalDays;
+                return string.Format(GetResourceString("String.TimeAgo.Days", "{0}d ago"), val);
             }
         }
 
@@ -302,35 +367,6 @@ namespace Yomic.ViewModels
              {
                  IsRefreshing = false;
              }
-        }
-
-        private string GetTimeHeader(long dateFetch)
-        {
-            var date = DateTimeOffset.FromUnixTimeMilliseconds(dateFetch);
-            var now = DateTimeOffset.Now;
-            
-            if (date.Date == now.Date) return "Today";
-            if (date.Date == now.AddDays(-1).Date) return "Yesterday";
-            if (date > now.AddDays(-7)) return "This Week";
-            if (date > now.AddDays(-30)) return "This Month";
-            return "Older";
-        }
-
-        private string GetTimeAgo(long dateFetch)
-        {
-            if (dateFetch <= 0) return "Unknown";
-
-            var date = DateTimeOffset.FromUnixTimeMilliseconds(dateFetch);
-            var now = DateTimeOffset.Now;
-
-            // Failsafe for Unix Epoch 1970 dates (which are near 0 but might be slightly shifted by timezone)
-            if (date.Year <= 1970) return "Unknown";
-            
-            var diff = now - date;
-            
-            if (diff.TotalMinutes < 60) return $"{(int)Math.Max(1, diff.TotalMinutes)}m ago";
-            if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
-            return $"{(int)diff.TotalDays}d ago";
         }
 
         public void Dispose()

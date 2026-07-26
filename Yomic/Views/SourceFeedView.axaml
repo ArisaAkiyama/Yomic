@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:Yomic.ViewModels"
              xmlns:helpers="clr-namespace:Yomic.Views.Helpers"
+             xmlns:controls="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
              x:Class="Yomic.Views.SourceFeedView"
              x:DataType="vm:SourceFeedViewModel"
@@ -103,26 +104,29 @@
          </Style>
 
          <Style Selector="Button.header-action.accent">
-             <Setter Property="Foreground" Value="#0078D7"/>
+             <Setter Property="Foreground" Value="#FFFFFF"/>
          </Style>
          <Style Selector="Button.header-action.accent:pointerover">
-             <Setter Property="Foreground" Value="#3395FF"/>
+             <Setter Property="Foreground" Value="#FFFFFF"/>
          </Style>
 
 
      </UserControl.Styles>
 
      <Grid RowDefinitions="Auto, *, Auto">
-         <!-- Header / Search Bar -->
-         <Border Grid.Row="0" Padding="20" Background="{DynamicResource PrimaryBackground}">
-             <StackPanel>
+          <!-- Header / Search Bar (Aligned with LibraryView) -->
+          <StackPanel Grid.Row="0" Margin="30,25,30,15">
                   <!-- Title Row -->
                  <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,15">
-                     <Button Command="{Binding BackCommand}" HotKey="Escape" Classes="BackBtn">
-                         <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons" FontSize="20" VerticalAlignment="Center"/>
-                     </Button>
+                      <Button Command="{Binding BackCommand}" HotKey="Escape" Classes="BackBtn">
+                          <Viewbox Width="20" Height="20" VerticalAlignment="Center">
+                              <Canvas Width="24" Height="24">
+                                  <Path Data="M5 12l14 0 M5 12l6 6 M5 12l6 -6" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                              </Canvas>
+                          </Viewbox>
+                      </Button>
                      <StackPanel Orientation="Horizontal" Spacing="10">
-                         <TextBlock Text="Browse Source" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
+                         <TextBlock Text="{DynamicResource String.BrowseSource}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
                          <TextBlock Text="—" FontSize="18" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center" Opacity="0.5"/>
                          <Border Width="28" Height="28" CornerRadius="8" Background="{Binding IconColor}" ClipToBounds="True" VerticalAlignment="Center">
                               <Panel>
@@ -144,7 +148,7 @@
                          <!-- Modern Enhanced Search Bar (Library Style) -->
                           <TextBox Grid.Column="0" HorizontalAlignment="Stretch"
                                    x:Name="SearchBox"
-                                   Watermark="Search manga..." CornerRadius="20"
+                                   Watermark="{DynamicResource String.SearchManga}" CornerRadius="20"
                                    Text="{Binding SearchText}"
                                    Background="{DynamicResource SidebarBackground}" Foreground="{DynamicResource PrimaryText}" BorderThickness="0"
                                    Padding="8,8,15,8" VerticalContentAlignment="Center" FontSize="13">
@@ -196,14 +200,11 @@
                                              <Setter Property="Opacity" Value="0.7"/>
                                          </Style>
                                      </Button.Styles>
-                                     <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource SecondaryText}" 
-                                                VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="14">
-                                         <TextBlock.Transitions>
-                                             <Transitions>
-                                                 <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
-                                             </Transitions>
-                                         </TextBlock.Transitions>
-                                     </TextBlock>
+                                      <Viewbox Width="14" Height="14" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                          <Canvas Width="24" Height="24">
+                                              <Path Data="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0 M21 21l-6 -6" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                          </Canvas>
+                                      </Viewbox>
                                  </Button>
                              </TextBox.InnerLeftContent>
                          </TextBox>
@@ -215,12 +216,16 @@
                                      Classes="header-action"
                                      ToolTip.Tip="Toggle View Mode (Grid/List)">
                                      <Panel>
-                                         <TextBlock Text="&#xE8FD;" FontFamily="Segoe Fluent Icons" 
-                                                    FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                    IsVisible="{Binding !IsListView}"/>
-                                         <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons" 
-                                                    FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                    IsVisible="{Binding IsListView}"/>
+                                          <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsListView}">
+                                              <Canvas Width="24" Height="24">
+                                                  <Path Data="M9 6l11 0 M9 12l11 0 M9 18l11 0 M5 6l0 .01 M5 12l0 .01 M5 18l0 .01" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                              </Canvas>
+                                          </Viewbox>
+                                          <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsListView}">
+                                              <Canvas Width="24" Height="24">
+                                                  <Path Data="M4 4h6v6h-6z M14 4h6v6h-6z M4 14h6v6h-6z M14 14h6v6h-6z" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                              </Canvas>
+                                          </Viewbox>
                                      </Panel>
                              </Button>
 
@@ -228,7 +233,11 @@
                              <Button Command="{Binding RefreshCommand}" 
                                      Classes="header-action"
                                      ToolTip.Tip="Refresh (Bypass Cache)">
-                                     <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                      <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                          <Canvas Width="24" Height="24">
+                                              <Path Data="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -5v5h5 M4 13a8.1 8.1 0 0 0 15.5 2m.5 5v-5h-5" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                          </Canvas>
+                                      </Viewbox>
                              </Button>
 
                              <!-- Language Toggle (Flag Only) - MangaDex Only -->
@@ -255,24 +264,37 @@
                                          <!-- Filter by Status -->
                                          <MenuItem Header="Filter by Status" IsVisible="{Binding IsStatusFilterVisible}">
                                              <MenuItem.Icon>
-                                                 <TextBlock Text="&#xE71C;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
+                                                  <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                      <Canvas Width="24" Height="24">
+                                                          <Path Data="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                      </Canvas>
+                                                  </Viewbox>
                                              </MenuItem.Icon>
                                              <MenuItem Header="All Statuses" Command="{Binding SetStatusFilterCommand}" CommandParameter="{x:Static vm:SourceStatusFilterMode.All}">
                                                  <MenuItem.Icon>
-                                                     <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource AccentColor}"
-                                                                IsVisible="{Binding IsStatusAllSelected}"/>
+                                                      <Viewbox Width="14" Height="14" VerticalAlignment="Center" IsVisible="{Binding IsStatusAllSelected}">
+                                                          <Canvas Width="24" Height="24">
+                                                              <Path Data="M5 12l5 5l10 -10" Stroke="{Binding $parent[MenuItem].Foreground}" StrokeThickness="2.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                          </Canvas>
+                                                      </Viewbox>
                                                  </MenuItem.Icon>
                                              </MenuItem>
                                              <MenuItem Header="Ongoing" Command="{Binding SetStatusFilterCommand}" CommandParameter="{x:Static vm:SourceStatusFilterMode.Ongoing}">
                                                  <MenuItem.Icon>
-                                                     <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource AccentColor}"
-                                                                IsVisible="{Binding IsStatusOngoingSelected}"/>
+                                                      <Viewbox Width="14" Height="14" VerticalAlignment="Center" IsVisible="{Binding IsStatusOngoingSelected}">
+                                                          <Canvas Width="24" Height="24">
+                                                              <Path Data="M5 12l5 5l10 -10" Stroke="{Binding $parent[MenuItem].Foreground}" StrokeThickness="2.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                          </Canvas>
+                                                      </Viewbox>
                                                  </MenuItem.Icon>
                                              </MenuItem>
                                              <MenuItem Header="Completed" Command="{Binding SetStatusFilterCommand}" CommandParameter="{x:Static vm:SourceStatusFilterMode.Completed}">
                                                  <MenuItem.Icon>
-                                                     <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource AccentColor}"
-                                                                IsVisible="{Binding IsStatusCompletedSelected}"/>
+                                                      <Viewbox Width="14" Height="14" VerticalAlignment="Center" IsVisible="{Binding IsStatusCompletedSelected}">
+                                                          <Canvas Width="24" Height="24">
+                                                              <Path Data="M5 12l5 5l10 -10" Stroke="{Binding $parent[MenuItem].Foreground}" StrokeThickness="2.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                          </Canvas>
+                                                      </Viewbox>
                                                  </MenuItem.Icon>
                                              </MenuItem>
                                          </MenuItem>
@@ -280,7 +302,11 @@
                                          <!-- Filter by Genre -->
                                          <MenuItem Header="Filter by Genre" StaysOpenOnClick="True" IsVisible="{Binding IsGenreFilterVisible}">
                                              <MenuItem.Icon>
-                                                 <TextBlock Text="&#xE8EC;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
+                                                  <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                      <Canvas Width="24" Height="24">
+                                                          <Path Data="M7.5 7.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0 M3 6a3 3 0 0 1 3 -3h4a3 3 0 0 1 2.12 .88l8 8a3 3 0 0 1 0 4.24l-4 4a3 3 0 0 1 -4.24 0l-8 -8A3 3 0 0 1 3 10V6z" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                      </Canvas>
+                                                  </Viewbox>
                                              </MenuItem.Icon>
                                              <MenuItem.Styles>
                                                  <Style Selector="MenuItem > MenuItem">
@@ -320,7 +346,11 @@
                                          <!-- Filter by Format -->
                                          <MenuItem Header="Filter by Format" StaysOpenOnClick="True" IsVisible="{Binding IsFormatFilterVisible}">
                                              <MenuItem.Icon>
-                                                 <TextBlock Text="&#xE8F1;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
+                                                  <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                      <Canvas Width="24" Height="24">
+                                                          <Path Data="M4 4h6v6h-6z M14 4h6v6h-6z M4 14h6v6h-6z M17 17m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                      </Canvas>
+                                                  </Viewbox>
                                              </MenuItem.Icon>
                                              <MenuItem.Styles>
                                                  <Style Selector="MenuItem > MenuItem">
@@ -358,10 +388,11 @@
                                          </MenuItem>
                                      </MenuFlyout>
                                  </Button.Flyout>
-                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                     <TextBlock Text="&#xE71C;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
-                                     <TextBlock Text="Filter" FontWeight="Medium" VerticalAlignment="Center" FontSize="13"/>
-                                 </StackPanel>
+                                 <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                      <Canvas Width="24" Height="24">
+                                          <Path Data="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                      </Canvas>
+                                  </Viewbox>
                              </Button>
 
                              <!-- Latest Updates Toggle -->
@@ -369,10 +400,11 @@
                                      Classes="header-action"
                                      Classes.accent="{Binding IsLatestMode}"
                                      ToolTip.Tip="Toggle Latest Updates">
-                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                     <TextBlock Text="&#xE823;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
-                                     <TextBlock Text="Latest" FontWeight="Medium" VerticalAlignment="Center" FontSize="13"/>
-                                 </StackPanel>
+                                  <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                      <Canvas Width="24" Height="24">
+                                          <Path Data="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0 M12 7v5l3 3" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                      </Canvas>
+                                  </Viewbox>
                              </Button>
                          </StackPanel>
                      </Grid>
@@ -395,7 +427,6 @@
                      </Grid>
                  </Grid>
              </StackPanel>
-         </Border>
 
          <!-- Content -->
          <Panel Grid.Row="1" IsVisible="{Binding !IsBusy}">
@@ -412,7 +443,11 @@
                   <!-- BLOCKED STATE UI (MangaDex) -->
                   <Border Grid.Row="1" Background="#1E1E2E" IsVisible="{Binding IsMangaDexBlocked}" ZIndex="20" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                       <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="20">
-                          <TextBlock Text="&#xE730;" FontFamily="Segoe Fluent Icons" FontSize="64" Foreground="#F38BA8" HorizontalAlignment="Center"/>
+                           <Viewbox Width="64" Height="64" HorizontalAlignment="Center">
+                               <Canvas Width="24" Height="24">
+                                   <Path Data="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3 M10 10l4 4 M14 10l-4 4" Stroke="#F38BA8" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                               </Canvas>
+                           </Viewbox>
                           <TextBlock Text="MangaDex is Blocked" FontSize="24" FontWeight="Bold" Foreground="#F38BA8" HorizontalAlignment="Center"/>
                           <TextBlock Text="It seems your network is blocking access to MangaDex." Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
                           
@@ -448,7 +483,11 @@
                          </MultiBinding>
                       </StackPanel.IsVisible>
 
-                     <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons" FontSize="48" Foreground="#45475A" HorizontalAlignment="Center"/>
+                      <Viewbox Width="48" Height="48" HorizontalAlignment="Center">
+                          <Canvas Width="24" Height="24">
+                              <Path Data="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0 M21 21l-6 -6" Stroke="#45475A" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                          </Canvas>
+                      </Viewbox>
                      <TextBlock Text="Manga Not Found" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
                      <TextBlock Text="It seems the network connection is poor or blocked (Cloudflare/Error). Please refresh." FontSize="16" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
                   </StackPanel>
@@ -461,11 +500,11 @@
                            ScrollViewer.AllowAutoHide="False"
                            Padding="0,0,0,20"
                            IsVisible="{Binding !IsListView}">
-                      <ListBox.ItemsPanel>
-                          <ItemsPanelTemplate>
-                              <WrapPanel Orientation="Horizontal" ItemWidth="175" ItemHeight="310" HorizontalAlignment="Center"/>
-                          </ItemsPanelTemplate>
-                      </ListBox.ItemsPanel>
+                       <ListBox.ItemsPanel>
+                           <ItemsPanelTemplate>
+                               <WrapPanel Orientation="Horizontal" ItemWidth="175" ItemHeight="310" HorizontalAlignment="Center"/>
+                           </ItemsPanelTemplate>
+                       </ListBox.ItemsPanel>
                       
                       <ListBox.Styles>
                           <Style Selector="ListBoxItem">
@@ -492,57 +531,60 @@
                                           <Setter Property="Opacity" Value="1.0"/>
                                       </Style>
                                    </Button.Styles>
-                                   
-                                  <StackPanel Width="150" Spacing="10">
-                                      <!-- Cover Image -->
-                                      <Border Classes="MangaCard" Height="225" CornerRadius="12" 
-                                              Background="{DynamicResource SidebarBackground}" ClipToBounds="True"
-                                              BoxShadow="0 4 10 0 #40000000">
-                                          <Grid>
-                                              <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}" 
-                                                     helpers:SecureImageLoader.DecodeWidth="300"
-                                                     Stretch="UniformToFill"/>
-                                              
-                                               <!-- Status Ribbon (Top-Left) -->
-                                               <Border HorizontalAlignment="Left" VerticalAlignment="Top" 
-                                                       Width="100" Height="18" Margin="-32,9,0,0"
-                                                       Background="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.Instance}}"
-                                                       IsVisible="{Binding Status, Converter={x:Static vm:StatusToColorConverter.StatusToVisibility}}">
-                                                   <Border.RenderTransform>
-                                                       <RotateTransform Angle="-45"/>
-                                                   </Border.RenderTransform>
-                                                   <TextBlock Text="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.ToUpperConverter}}" 
-                                                              FontSize="8" FontWeight="900" Foreground="White"
-                                                              HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
-                                               </Border>
+                                   <StackPanel Width="150" Spacing="10">
+                                       <!-- Cover Image -->
+                                       <Border Classes="MangaCard" Height="225" CornerRadius="12" 
+                                               Background="{DynamicResource SidebarBackground}" ClipToBounds="True"
+                                               BoxShadow="0 4 10 0 #40000000">
+                                           <Grid>
+                                               <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}" 
+                                                      helpers:SecureImageLoader.DecodeWidth="300"
+                                                      Stretch="UniformToFill"/>
+                                               
+                                                <!-- Status Ribbon (Top-Left) -->
+                                                <Border HorizontalAlignment="Left" VerticalAlignment="Top" 
+                                                        Width="100" Height="18" Margin="-32,9,0,0"
+                                                        Background="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.Instance}}"
+                                                        IsVisible="{Binding Status, Converter={x:Static vm:StatusToColorConverter.StatusToVisibility}}">
+                                                    <Border.RenderTransform>
+                                                        <RotateTransform Angle="-45"/>
+                                                    </Border.RenderTransform>
+                                                    <TextBlock Text="{Binding StatusString, Converter={x:Static vm:StatusToColorConverter.ToUpperConverter}}" 
+                                                               FontSize="8" FontWeight="900" Foreground="White"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                                                </Border>
 
-                                              <!-- Time Overlay (Bottom) -->
-                                              <Panel VerticalAlignment="Bottom" IsVisible="{Binding LastUpdateString, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                                                  <!-- Gradient Shadow for readability -->
-                                                  <Border Height="60" VerticalAlignment="Bottom">
-                                                      <Border.Background>
-                                                          <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
-                                                              <GradientStop Offset="0" Color="#00000000"/>
-                                                              <GradientStop Offset="1" Color="#D0000000"/>
-                                                          </LinearGradientBrush>
-                                                      </Border.Background>
-                                                  </Border>
-                                                  
-                                                  <!-- Text -->
-                                                  <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,10,10" VerticalAlignment="Bottom">
-                                                      <TextBlock Text="&#xE916;" FontFamily="Segoe Fluent Icons" FontSize="10" Foreground="#0078D7" VerticalAlignment="Center"/>
-                                                      <TextBlock Text="{Binding LastUpdateString}" Foreground="#0078D7" 
-                                                                 FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
-                                                  </StackPanel>
-                                              </Panel>
-                                          </Grid>
-                                      </Border>
-                                      
-                                      <!-- Title Below Image -->
-                                      <TextBlock Text="{Binding Title}" Foreground="{DynamicResource PrimaryText}" 
-                                                 TextAlignment="Left" TextTrimming="CharacterEllipsis"
-                                                 FontSize="14" FontWeight="Medium" MaxLines="2"/>
-                                  </StackPanel>
+                                               <!-- Time Overlay (Bottom) -->
+                                               <Panel VerticalAlignment="Bottom" IsVisible="{Binding LastUpdateString, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                                   <!-- Gradient Shadow for readability -->
+                                                   <Border Height="60" VerticalAlignment="Bottom">
+                                                       <Border.Background>
+                                                           <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
+                                                               <GradientStop Offset="0" Color="#00000000"/>
+                                                               <GradientStop Offset="1" Color="#D0000000"/>
+                                                           </LinearGradientBrush>
+                                                       </Border.Background>
+                                                   </Border>
+                                                   
+                                                   <!-- Text -->
+                                                   <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,10,10" VerticalAlignment="Bottom">
+                                                       <Viewbox Width="10" Height="10" VerticalAlignment="Center">
+                                                           <Canvas Width="24" Height="24">
+                                                               <Path Data="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12 M16 3v4 M8 3v4 M4 11h16 M11 15h1 M12 15v3" Stroke="#0078D7" StrokeThickness="3.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                           </Canvas>
+                                                       </Viewbox>
+                                                       <TextBlock Text="{Binding LastUpdateString}" Foreground="#0078D7" 
+                                                                  FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                   </StackPanel>
+                                               </Panel>
+                                           </Grid>
+                                       </Border>
+                                       
+                                       <!-- Title Below Image -->
+                                       <TextBlock Text="{Binding Title}" Foreground="{DynamicResource PrimaryText}" 
+                                                  TextAlignment="Left" TextTrimming="CharacterEllipsis"
+                                                  FontSize="14" FontWeight="Medium" MaxLines="2"/>
+                                   </StackPanel>
                                </Button>
                           </DataTemplate>
                       </ListBox.ItemTemplate>
@@ -645,8 +687,12 @@
                                     Classes="PageBtn"
                                     IsEnabled="{Binding HasPrevPage}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBlock Text="&#xE892;" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center" FontSize="16"/>
-                                    <TextBlock Text="Previous" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                     <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                          <Canvas Width="24" Height="24">
+                                              <Path Data="M15 6l-6 6l6 6" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                          </Canvas>
+                                      </Viewbox>
+                                      <TextBlock Text="{DynamicResource String.Previous}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
     
@@ -657,7 +703,7 @@
                                     FontWeight="Bold" 
                                     FontSize="14"
                                     Cursor="Hand"
-                                    ToolTip.Tip="Jump to a specific page">
+                                    ToolTip.Tip="{DynamicResource String.JumpToPageTooltip}">
                                 <Button.Styles>
                                     <Style Selector="Button:pointerover /template/ ContentPresenter">
                                         <Setter Property="Background" Value="#15FFFFFF"/>
@@ -668,11 +714,11 @@
                                     <Flyout Placement="Top">
                                         <Border Background="{DynamicResource SidebarBackground}" CornerRadius="12" Padding="16" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" BoxShadow="0 10 30 0 #80000000">
                                             <StackPanel Spacing="16">
-                                                <TextBlock Text="Jump to Page" Foreground="{DynamicResource PrimaryText}" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{DynamicResource String.JumpToPage}" Foreground="{DynamicResource PrimaryText}" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center"/>
                                                 
                                                 <TextBox Width="180" 
                                                          Text="{Binding TargetPageInput}" 
-                                                         Watermark="Enter page #..."
+                                                         Watermark="{DynamicResource String.EnterPageWatermark}"
                                                          CornerRadius="8"
                                                          Padding="10,6"
                                                          Background="{DynamicResource PrimaryBackground}"
@@ -695,8 +741,12 @@
                                                                 </Style>
                                                             </Button.Styles>
                                                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                                                <TextBlock Text="Go" VerticalAlignment="Center"/>
-                                                                <TextBlock Text="&#xE893;" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center" FontSize="12"/>
+                                                                <TextBlock Text="{DynamicResource String.Go}" VerticalAlignment="Center"/>
+                                                                <Viewbox Width="12" Height="12" VerticalAlignment="Center">
+                                                                    <Canvas Width="24" Height="24">
+                                                                        <Path Data="M9 6l6 6l-6 6" Stroke="White" StrokeThickness="2.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                                    </Canvas>
+                                                                </Viewbox>
                                                             </StackPanel>
                                                         </Button>
                                                     </TextBox.InnerRightContent>
@@ -712,8 +762,12 @@
                                     Classes="PageBtn"
                                     IsEnabled="{Binding HasNextPage}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBlock Text="Next" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    <TextBlock Text="&#xE893;" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center" FontSize="16"/>
+                                    <TextBlock Text="{DynamicResource String.Next}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                     <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                         <Canvas Width="24" Height="24">
+                                             <Path Data="M9 6l6 6l-6 6" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                         </Canvas>
+                                     </Viewbox>
                                 </StackPanel>
                             </Button>
                         </StackPanel>
@@ -723,79 +777,107 @@
              <!-- </ScrollViewer> -->
         </Panel>
 
-        <!-- Skeleton Loading (replaces dark overlay) -->
+        <!-- Skeleton Loading (aligned 100% with manga grid) -->
         <Border Grid.Row="1" IsVisible="{Binding IsBusy}">
-            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+            <WrapPanel Orientation="Horizontal" ItemWidth="175" ItemHeight="310" HorizontalAlignment="Center">
                 <!-- 1 -->
-                <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
-                    <Border Classes="SkeletonCard" Height="225" Width="150"/>
-                    <Border Classes="SkeletonText" Width="120" Height="14"/>
-                </StackPanel>
+                <Button Background="Transparent" Padding="0" Margin="10,0,10,20" IsHitTestVisible="False">
+                    <StackPanel Width="150" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" CornerRadius="12"/>
+                        <Border Classes="SkeletonText" Width="120" Height="14" CornerRadius="4"/>
+                    </StackPanel>
+                </Button>
                 <!-- 2 -->
-                <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
-                    <Border Classes="SkeletonCard" Height="225" Width="150"/>
-                    <Border Classes="SkeletonText" Width="100" Height="14"/>
-                </StackPanel>
+                <Button Background="Transparent" Padding="0" Margin="10,0,10,20" IsHitTestVisible="False">
+                    <StackPanel Width="150" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" CornerRadius="12"/>
+                        <Border Classes="SkeletonText" Width="100" Height="14" CornerRadius="4"/>
+                    </StackPanel>
+                </Button>
                 <!-- 3 -->
-                <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
-                    <Border Classes="SkeletonCard" Height="225" Width="150"/>
-                    <Border Classes="SkeletonText" Width="130" Height="14"/>
-                </StackPanel>
+                <Button Background="Transparent" Padding="0" Margin="10,0,10,20" IsHitTestVisible="False">
+                    <StackPanel Width="150" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" CornerRadius="12"/>
+                        <Border Classes="SkeletonText" Width="130" Height="14" CornerRadius="4"/>
+                    </StackPanel>
+                </Button>
                 <!-- 4 -->
-                <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
-                    <Border Classes="SkeletonCard" Height="225" Width="150"/>
-                    <Border Classes="SkeletonText" Width="110" Height="14"/>
-                </StackPanel>
+                <Button Background="Transparent" Padding="0" Margin="10,0,10,20" IsHitTestVisible="False">
+                    <StackPanel Width="150" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" CornerRadius="12"/>
+                        <Border Classes="SkeletonText" Width="110" Height="14" CornerRadius="4"/>
+                    </StackPanel>
+                </Button>
                 <!-- 5 -->
-                <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
-                    <Border Classes="SkeletonCard" Height="225" Width="150"/>
-                    <Border Classes="SkeletonText" Width="140" Height="14"/>
-                </StackPanel>
+                <Button Background="Transparent" Padding="0" Margin="10,0,10,20" IsHitTestVisible="False">
+                    <StackPanel Width="150" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" CornerRadius="12"/>
+                        <Border Classes="SkeletonText" Width="140" Height="14" CornerRadius="4"/>
+                    </StackPanel>
+                </Button>
                 <!-- 6 -->
-                <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
-                    <Border Classes="SkeletonCard" Height="225" Width="150"/>
-                    <Border Classes="SkeletonText" Width="125" Height="14"/>
-                </StackPanel>
+                <Button Background="Transparent" Padding="0" Margin="10,0,10,20" IsHitTestVisible="False">
+                    <StackPanel Width="150" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" CornerRadius="12"/>
+                        <Border Classes="SkeletonText" Width="125" Height="14" CornerRadius="4"/>
+                    </StackPanel>
+                </Button>
                 <!-- 7 -->
-                <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
-                    <Border Classes="SkeletonCard" Height="225" Width="150"/>
-                    <Border Classes="SkeletonText" Width="95" Height="14"/>
-                </StackPanel>
+                <Button Background="Transparent" Padding="0" Margin="10,0,10,20" IsHitTestVisible="False">
+                    <StackPanel Width="150" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" CornerRadius="12"/>
+                        <Border Classes="SkeletonText" Width="95" Height="14" CornerRadius="4"/>
+                    </StackPanel>
+                </Button>
                 <!-- 8 -->
-                <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
-                    <Border Classes="SkeletonCard" Height="225" Width="150"/>
-                    <Border Classes="SkeletonText" Width="135" Height="14"/>
-                </StackPanel>
+                <Button Background="Transparent" Padding="0" Margin="10,0,10,20" IsHitTestVisible="False">
+                    <StackPanel Width="150" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" CornerRadius="12"/>
+                        <Border Classes="SkeletonText" Width="135" Height="14" CornerRadius="4"/>
+                    </StackPanel>
+                </Button>
                 <!-- 9 -->
-                <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
-                    <Border Classes="SkeletonCard" Height="225" Width="150"/>
-                    <Border Classes="SkeletonText" Width="115" Height="14"/>
-                </StackPanel>
+                <Button Background="Transparent" Padding="0" Margin="10,0,10,20" IsHitTestVisible="False">
+                    <StackPanel Width="150" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" CornerRadius="12"/>
+                        <Border Classes="SkeletonText" Width="115" Height="14" CornerRadius="4"/>
+                    </StackPanel>
+                </Button>
                 <!-- 10 -->
-                <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
-                    <Border Classes="SkeletonCard" Height="225" Width="150"/>
-                    <Border Classes="SkeletonText" Width="105" Height="14"/>
-                </StackPanel>
+                <Button Background="Transparent" Padding="0" Margin="10,0,10,20" IsHitTestVisible="False">
+                    <StackPanel Width="150" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" CornerRadius="12"/>
+                        <Border Classes="SkeletonText" Width="105" Height="14" CornerRadius="4"/>
+                    </StackPanel>
+                </Button>
                 <!-- 11 -->
-                <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
-                    <Border Classes="SkeletonCard" Height="225" Width="150"/>
-                    <Border Classes="SkeletonText" Width="120" Height="14"/>
-                </StackPanel>
+                <Button Background="Transparent" Padding="0" Margin="10,0,10,20" IsHitTestVisible="False">
+                    <StackPanel Width="150" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" CornerRadius="12"/>
+                        <Border Classes="SkeletonText" Width="120" Height="14" CornerRadius="4"/>
+                    </StackPanel>
+                </Button>
                 <!-- 12 -->
-                <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
-                    <Border Classes="SkeletonCard" Height="225" Width="150"/>
-                    <Border Classes="SkeletonText" Width="130" Height="14"/>
-                </StackPanel>
+                <Button Background="Transparent" Padding="0" Margin="10,0,10,20" IsHitTestVisible="False">
+                    <StackPanel Width="150" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" CornerRadius="12"/>
+                        <Border Classes="SkeletonText" Width="130" Height="14" CornerRadius="4"/>
+                    </StackPanel>
+                </Button>
                 <!-- 13 -->
-                <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
-                    <Border Classes="SkeletonCard" Height="225" Width="150"/>
-                    <Border Classes="SkeletonText" Width="110" Height="14"/>
-                </StackPanel>
+                <Button Background="Transparent" Padding="0" Margin="10,0,10,20" IsHitTestVisible="False">
+                    <StackPanel Width="150" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" CornerRadius="12"/>
+                        <Border Classes="SkeletonText" Width="110" Height="14" CornerRadius="4"/>
+                    </StackPanel>
+                </Button>
                 <!-- 14 -->
-                <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
-                    <Border Classes="SkeletonCard" Height="225" Width="150"/>
-                    <Border Classes="SkeletonText" Width="120" Height="14"/>
-                </StackPanel>
+                <Button Background="Transparent" Padding="0" Margin="10,0,10,20" IsHitTestVisible="False">
+                    <StackPanel Width="150" Spacing="8">
+                        <Border Classes="SkeletonCard" Height="225" CornerRadius="12"/>
+                        <Border Classes="SkeletonText" Width="120" Height="14" CornerRadius="4"/>
+                    </StackPanel>
+                </Button>
             </WrapPanel>
         </Border>
      </Grid>

@@ -3,6 +3,7 @@ using System;
 using System.Reactive;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 
 namespace Yomic.ViewModels
 {
@@ -72,17 +73,31 @@ namespace Yomic.ViewModels
             }
         }
         
+        private string GetResourceString(string key, string defaultValue)
+        {
+            if (Avalonia.Application.Current != null && Avalonia.Application.Current.TryFindResource(key, out var res))
+            {
+                if (res is string str)
+                {
+                    return str;
+                }
+            }
+            return defaultValue;
+        }
+
         public string StatusString 
         {
             get
             {
                 return Status switch
                 {
-                    1 => "Ongoing",
-                    2 => "Completed",
-                    5 => "Hiatus",
-                    6 => "Cancelled",
-                    _ => "Unknown"
+                    1 => GetResourceString("String.Status.Ongoing", "Ongoing"),
+                    2 => GetResourceString("String.Status.Completed", "Completed"),
+                    3 => GetResourceString("String.Status.Licensed", "Licensed"),
+                    4 => GetResourceString("String.Status.PublishingFinished", "Publishing Finished"),
+                    5 => GetResourceString("String.Status.Cancelled", "Cancelled"),
+                    6 => GetResourceString("String.Status.Hiatus", "Hiatus"),
+                    _ => GetResourceString("String.Status.Unknown", "Unknown")
                 };
             }
         }
@@ -103,10 +118,22 @@ namespace Yomic.ViewModels
                 var time = DateTimeOffset.FromUnixTimeMilliseconds(LastUpdate);
                 var diff = DateTimeOffset.Now - time;
                 
-                if (diff.TotalMinutes < 1) return "Just now";
-                if (diff.TotalMinutes < 60) return $"{Math.Max(1, (int)diff.TotalMinutes)}m ago";
-                if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
-                if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d ago";
+                if (diff.TotalMinutes < 1) return GetResourceString("String.TimeAgo.JustNow", "Just now");
+                if (diff.TotalMinutes < 60)
+                {
+                    var val = (int)Math.Max(1, diff.TotalMinutes);
+                    return string.Format(GetResourceString("String.TimeAgo.Minutes", "{0}m ago"), val);
+                }
+                if (diff.TotalHours < 24)
+                {
+                    var val = (int)diff.TotalHours;
+                    return string.Format(GetResourceString("String.TimeAgo.Hours", "{0}h ago"), val);
+                }
+                if (diff.TotalDays < 7)
+                {
+                    var val = (int)diff.TotalDays;
+                    return string.Format(GetResourceString("String.TimeAgo.Days", "{0}d ago"), val);
+                }
                 return time.ToString("dd MMM yyyy");
             }
         }
@@ -333,23 +360,27 @@ namespace Yomic.ViewModels
             CurrentPage = new MangaDetailViewModel(item, this, _sourceManager, _libraryService, _networkService, _downloadService, _imageCacheService);
         }
 
+        private bool IsMainTabViewModel(ViewModelBase? page)
+        {
+            if (page == null) return false;
+            return page == _libraryVM || page == _browseVM || page == _settingsVM ||
+                   page == _updatesVM || page == _upcomingVM || page == _historyVM ||
+                   page == _downloadsVM || page == _extensionsVM || page == _welcomeVM;
+        }
+
         public void GoToLibrary()
         {
             if (CurrentPage != LibraryVM)
             {
                 var oldPage = CurrentPage;
                 ClearStack();
-                _historyVM = null;
-                _browseVM = null;
-                _updatesVM = null;
-                _downloadsVM = null;
-                _extensionsVM = null;
-                
                 CurrentPage = LibraryVM;
-                DisposeDelayed(oldPage);
+                if (oldPage != null && !IsMainTabViewModel(oldPage))
+                {
+                    DisposeDelayed(oldPage);
+                }
             }
-            // Always refresh
-            _ = LibraryVM.RefreshLibrary();
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => _ = LibraryVM.RefreshLibrary());
         }
 
         public void GoToReader(ChapterItem? chapter = null, System.Collections.Generic.List<ChapterItem>? allChapters = null, long sourceId = 3, string mangaTitle = "", string mangaUrl = "", bool isNsfw = false, string mangaThumbnail = "")
@@ -370,13 +401,13 @@ namespace Yomic.ViewModels
             {
                 var oldPage = CurrentPage;
                 ClearStack();
-                _browseVM = null; // Re-init current if needed
                 CurrentPage = BrowseVM;
-                DisposeDelayed(oldPage);
+                if (oldPage != null && !IsMainTabViewModel(oldPage))
+                {
+                    DisposeDelayed(oldPage);
+                }
             }
         }
-
-
 
         private SettingsViewModel? _settingsVM;
         public SettingsViewModel SettingsVM
@@ -388,7 +419,12 @@ namespace Yomic.ViewModels
         {
             if (CurrentPage != SettingsVM)
             {
+                var oldPage = CurrentPage;
                 CurrentPage = SettingsVM;
+                if (oldPage != null && !IsMainTabViewModel(oldPage))
+                {
+                    DisposeDelayed(oldPage);
+                }
             }
         }
 
@@ -404,15 +440,13 @@ namespace Yomic.ViewModels
             {
                 var oldPage = CurrentPage;
                 ClearStack();
-                _updatesVM = null; // Fresh re-init
                 CurrentPage = UpdatesVM;
-                DisposeDelayed(oldPage);
-                // Load from DB first
-                _ = UpdatesVM.LoadUpdatesAsync();
+                if (oldPage != null && !IsMainTabViewModel(oldPage))
+                {
+                    DisposeDelayed(oldPage);
+                }
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => _ = UpdatesVM.LoadUpdatesAsync());
             }
-            
-            // Auto Update from Web when Sidebar button is clicked
-            // UpdatesVM.RefreshCommand.Execute().Subscribe();
         }
 
         private UpcomingViewModel? _upcomingVM;
@@ -427,10 +461,12 @@ namespace Yomic.ViewModels
             {
                 var oldPage = CurrentPage;
                 ClearStack();
-                _upcomingVM = null;
                 CurrentPage = UpcomingVM;
-                DisposeDelayed(oldPage);
-                _ = UpcomingVM.LoadUpcomingAsync();
+                if (oldPage != null && !IsMainTabViewModel(oldPage))
+                {
+                    DisposeDelayed(oldPage);
+                }
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => _ = UpcomingVM.LoadUpcomingAsync());
             }
         }
 
@@ -446,11 +482,20 @@ namespace Yomic.ViewModels
             {
                 var oldPage = CurrentPage;
                 ClearStack();
-                _historyVM = null; // Fresh re-init
                 CurrentPage = HistoryVM;
-                DisposeDelayed(oldPage);
-                // Always refresh history when navigating to it
-                _ = HistoryVM.LoadHistory();
+                if (oldPage != null && !IsMainTabViewModel(oldPage))
+                {
+                    DisposeDelayed(oldPage);
+                }
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => _ = HistoryVM.LoadHistory());
+            }
+        }
+
+        public void RefreshHistory()
+        {
+            if (_historyVM != null)
+            {
+                _ = _historyVM.LoadHistory();
             }
         }
 
@@ -466,9 +511,11 @@ namespace Yomic.ViewModels
             {
                 var oldPage = CurrentPage;
                 ClearStack();
-                _downloadsVM = null;
                 CurrentPage = DownloadsVM;
-                DisposeDelayed(oldPage);
+                if (oldPage != null && !IsMainTabViewModel(oldPage))
+                {
+                    DisposeDelayed(oldPage);
+                }
             }
         }
 
@@ -484,9 +531,11 @@ namespace Yomic.ViewModels
             {
                 var oldPage = CurrentPage;
                 ClearStack();
-                _extensionsVM = null;
                 CurrentPage = ExtensionsVM;
-                DisposeDelayed(oldPage);
+                if (oldPage != null && !IsMainTabViewModel(oldPage))
+                {
+                    DisposeDelayed(oldPage);
+                }
             }
         }
 
@@ -531,6 +580,20 @@ namespace Yomic.ViewModels
         public async Task RunStartupTasksAsync()
         {
             if (IsFirstRun) return;
+
+            // Preload available remote extensions in background so they are instantly ready when opening Extensions view
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Delay(300);
+                    await ExtensionsVM.PreloadRemoteExtensionsAsync();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Startup] Extension preload error: {ex.Message}");
+                }
+            });
 
             // App Update Check
             if (_settingsService.CheckAppUpdateOnStart)
@@ -595,7 +658,7 @@ namespace Yomic.ViewModels
 
         private async void DisposeDelayed(ViewModelBase? page)
         {
-            if (page is not IDisposable disposable) return;
+            if (page == null || IsMainTabViewModel(page) || page is not IDisposable disposable) return;
             
             // Give the UI enough time to detach (300ms is snappier than 500ms)
             await Task.Delay(300);
@@ -621,7 +684,7 @@ namespace Yomic.ViewModels
                         CleanupMemory();
                     }
                     catch (TaskCanceledException) {}
-                }, token);
+                });
             }
             catch (Exception ex)
             {

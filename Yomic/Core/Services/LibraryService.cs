@@ -17,7 +17,7 @@ namespace Yomic.Core.Services
         {
             using var context = new MangaDbContext();
             return await context.Mangas
-                                .Include(m => m.Chapters)
+                                .Include(m => m.Chapters.Where(c => !c.Read || c.IsNew))
                                 .Include(m => m.Categories)
                                 .Where(m => m.Favorite)
                                 .OrderBy(m => m.Title)
@@ -29,7 +29,7 @@ namespace Yomic.Core.Services
             using var context = new MangaDbContext();
             // Fetch non-favorite items that have been read/viewed
             return await context.Mangas
-                                .Include(m => m.Chapters)
+                                .Include(m => m.Chapters.Where(c => !c.Read || c.IsNew))
                                 .Where(m => !m.Favorite && m.LastViewed > 0)
                                 .OrderByDescending(m => m.LastViewed)
                                 .ToListAsync();
@@ -71,13 +71,7 @@ namespace Yomic.Core.Services
                         manga.Title = originalTitle.Substring(6).Trim();
                 }
 
-                Console.WriteLine("========================================");
-                Console.WriteLine($"[Library] SAVING TO DATABASE: {manga.Title}");
-                Console.WriteLine($" - Author   : {manga.Author}");
-                Console.WriteLine($" - Status   : {manga.Status}");
-                Console.WriteLine($" - Synopsis : {(manga.Description != null && manga.Description.Length > 50 ? manga.Description.Substring(0, 50) + "..." : manga.Description)}");
-                Console.WriteLine($" - Chapters : {chapterCount} (Detected)");
-                Console.WriteLine("========================================");
+                LogService.Info("Library", $"Saving to database: {manga.Title}");
 
                 using var context = new MangaDbContext();
                 
@@ -149,7 +143,7 @@ namespace Yomic.Core.Services
                     // Update details — always update ThumbnailUrl if a new valid one is provided
                     if (!string.IsNullOrEmpty(manga.ThumbnailUrl) && existing.ThumbnailUrl != manga.ThumbnailUrl) 
                     {
-                        System.Console.WriteLine($"[LibraryService] Updating cover for {manga.Title}: {existing.ThumbnailUrl} -> {manga.ThumbnailUrl}");
+                        LogService.Debug("LibraryService", $"Updating cover for {manga.Title}");
                         existing.ThumbnailUrl = manga.ThumbnailUrl;
                     }
                     if (!string.IsNullOrEmpty(manga.Title) && manga.Title != "Unknown") 
@@ -199,79 +193,41 @@ namespace Yomic.Core.Services
         }
         public async Task RemoveFromLibraryAsync(Manga manga, bool deleteFiles = false)
         {
-             using var context = new MangaDbContext();
-             Manga? existing = null;
+             try
+             {
+                 using var context = new MangaDbContext();
+                 Manga? existing = null;
 
-             // Prioritize ID lookup if available
-             if (manga.Id > 0)
-             {
-                 existing = await context.Mangas.FindAsync(manga.Id);
-             }
-             
-             // Fallback to URL lookup if ID not found or invalid
-             if (existing == null)
-             {
-                 existing = await context.Mangas.FirstOrDefaultAsync(m => m.Url == manga.Url && m.Source == manga.Source);
-             }
-
-             if (existing != null)
-             {
-                 existing.Favorite = false;
-                 context.Update(existing);
-                 await context.SaveChangesAsync();
-                 
-                 LogService.Info("Library", $"Removed from library (Unfavorited): {existing.Title}");
-                 
-                 if (deleteFiles)
+                 // Prioritize ID lookup if available
+                 if (manga.Id > 0)
                  {
-                     try 
+                     existing = await context.Mangas.FindAsync(manga.Id);
+                 }
+                 
+                 // Fallback to URL lookup if ID not found or invalid
+                 if (existing == null)
+                 {
+                     existing = await context.Mangas.FirstOrDefaultAsync(m => m.Url == manga.Url && m.Source == manga.Source);
+                 }
+
+                 if (existing != null)
+                 {
+                     existing.Favorite = false;
+                     context.Update(existing);
+                     await context.SaveChangesAsync();
+                     
+                     LogService.Info("Library", $"Removed from library (Unfavorited): {existing.Title}");
+                     
+                     if (deleteFiles)
                      {
-                        var mangaDir = DownloadPathService.GetMangaDirectory(existing);
-
-                        if (System.IO.Directory.Exists(mangaDir))
-                        {
-                            System.IO.Directory.Delete(mangaDir, true);
-                            LogService.Success("Library", $"Deleted files for: {existing.Title}");
-                        }
-
-                        // Mark all chapters as not downloaded in the DB
-                        var dbChapters = await context.Chapters.Where(c => c.MangaId == existing.Id && c.IsDownloaded).ToListAsync();
-
-                        // Fallback for "Unknown" title bug
-                        var fallbackDir = System.IO.Path.Combine(DownloadPathService.GetSourceDirectory(existing.Source), "Unknown");
-                        if (System.IO.Directory.Exists(fallbackDir))
-                        {
-                            foreach (var c in dbChapters)
-                            {
-                                var safeChap = DownloadPathService.SanitizePathSegment(c.Name);
-                                var hashedChap = DownloadPathService.GetChapterDirectoryName(c.Name, c.Url);
-                                foreach (var chapDir in new[]
-                                {
-                                    System.IO.Path.Combine(fallbackDir, hashedChap),
-                                    System.IO.Path.Combine(fallbackDir, hashedChap + DownloadPathService.TempSuffix),
-                                    System.IO.Path.Combine(fallbackDir, safeChap),
-                                    System.IO.Path.Combine(fallbackDir, safeChap + DownloadPathService.TempSuffix)
-                                })
-                                {
-                                    if (System.IO.Directory.Exists(chapDir)) System.IO.Directory.Delete(chapDir, true);
-                                }
-                            }
-                            // Clean up Unknown folder if empty
-                            try { if (!System.IO.Directory.EnumerateFileSystemEntries(fallbackDir).Any()) System.IO.Directory.Delete(fallbackDir, false); } catch { }
-                        }
-
-                        foreach (var c in dbChapters)
-                        {
-                            c.IsDownloaded = false;
-                        }
-                        context.Chapters.UpdateRange(dbChapters);
-                        await context.SaveChangesAsync();
-                     }
-                     catch (Exception ex)
-                     {
-                         LogService.Warning("Library", $"Error deleting files: {ex.Message}");
+                         await DeleteMangaFilesInternalAsync(context, existing);
+                         await context.SaveChangesAsync();
                      }
                  }
+             }
+             catch (Exception ex)
+             {
+                 LogService.Error("LibraryService", $"Error removing manga from library: {ex.Message}", ex);
              }
         }
 
@@ -290,52 +246,58 @@ namespace Yomic.Core.Services
 
              if (existing != null)
              {
-                 try 
-                 {
-                    var mangaDir = DownloadPathService.GetMangaDirectory(existing);
+                 await DeleteMangaFilesInternalAsync(context, existing);
+                 await context.SaveChangesAsync();
+             }
+        }
 
-                    if (System.IO.Directory.Exists(mangaDir))
-                    {
-                        System.IO.Directory.Delete(mangaDir, true);
-                        LogService.Success("Library", $"Deleted downloaded files for: {existing.Title}");
-                    }
+        private async Task DeleteMangaFilesInternalAsync(MangaDbContext context, Manga existing)
+        {
+             try 
+             {
+                var mangaDir = DownloadPathService.GetMangaDirectory(existing);
 
-                    // Mark all chapters as not downloaded in the DB
-                    var dbChapters = await context.Chapters.Where(c => c.MangaId == existing.Id && c.IsDownloaded).ToListAsync();
+                if (System.IO.Directory.Exists(mangaDir))
+                {
+                    System.IO.Directory.Delete(mangaDir, true);
+                    LogService.Success("Library", $"Deleted files for: {existing.Title}");
+                }
 
-                    // Fallback for "Unknown" title bug
-                    var fallbackDir = System.IO.Path.Combine(DownloadPathService.GetSourceDirectory(existing.Source), "Unknown");
-                    if (System.IO.Directory.Exists(fallbackDir))
-                    {
-                        foreach (var c in dbChapters)
-                        {
-                            var safeChap = DownloadPathService.SanitizePathSegment(c.Name);
-                            var hashedChap = DownloadPathService.GetChapterDirectoryName(c.Name, c.Url);
-                            foreach (var chapDir in new[]
-                            {
-                                System.IO.Path.Combine(fallbackDir, hashedChap),
-                                System.IO.Path.Combine(fallbackDir, hashedChap + DownloadPathService.TempSuffix),
-                                System.IO.Path.Combine(fallbackDir, safeChap),
-                                System.IO.Path.Combine(fallbackDir, safeChap + DownloadPathService.TempSuffix)
-                            })
-                            {
-                                if (System.IO.Directory.Exists(chapDir)) System.IO.Directory.Delete(chapDir, true);
-                            }
-                        }
-                        try { if (!System.IO.Directory.EnumerateFileSystemEntries(fallbackDir).Any()) System.IO.Directory.Delete(fallbackDir, false); } catch { }
-                    }
+                // Mark all chapters as not downloaded in the DB
+                var dbChapters = await context.Chapters.Where(c => c.MangaId == existing.Id && c.IsDownloaded).ToListAsync();
 
+                // Fallback for "Unknown" title bug
+                var fallbackDir = System.IO.Path.Combine(DownloadPathService.GetSourceDirectory(existing.Source), "Unknown");
+                if (System.IO.Directory.Exists(fallbackDir))
+                {
                     foreach (var c in dbChapters)
                     {
-                        c.IsDownloaded = false;
+                        var safeChap = DownloadPathService.SanitizePathSegment(c.Name);
+                        var hashedChap = DownloadPathService.GetChapterDirectoryName(c.Name, c.Url);
+                        foreach (var chapDir in new[]
+                        {
+                            System.IO.Path.Combine(fallbackDir, hashedChap),
+                            System.IO.Path.Combine(fallbackDir, hashedChap + DownloadPathService.TempSuffix),
+                            System.IO.Path.Combine(fallbackDir, safeChap),
+                            System.IO.Path.Combine(fallbackDir, safeChap + DownloadPathService.TempSuffix)
+                        })
+                        {
+                            if (System.IO.Directory.Exists(chapDir)) System.IO.Directory.Delete(chapDir, true);
+                        }
                     }
-                    context.Chapters.UpdateRange(dbChapters);
-                    await context.SaveChangesAsync();
-                 }
-                 catch (Exception ex)
-                 {
-                     LogService.Warning("Library", $"Error deleting files: {ex.Message}");
-                 }
+                    // Clean up Unknown folder if empty
+                    try { if (!System.IO.Directory.EnumerateFileSystemEntries(fallbackDir).Any()) System.IO.Directory.Delete(fallbackDir, false); } catch { }
+                }
+
+                foreach (var c in dbChapters)
+                {
+                    c.IsDownloaded = false;
+                }
+                context.Chapters.UpdateRange(dbChapters);
+             }
+             catch (Exception ex)
+             {
+                 LogService.Warning("Library", $"Error deleting files: {ex.Message}");
              }
         }
 
@@ -401,10 +363,10 @@ namespace Yomic.Core.Services
 
         // Global lock for Database writes to prevent SQLite "database is locked" errors during parallel updates
         private static readonly System.Threading.SemaphoreSlim _dbLock = new(1, 1);
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<long, System.Threading.SemaphoreSlim> _sourceSemaphores = new();
 
-        public async Task<int> UpdateChaptersAsync(Manga manga, List<Chapter> chapters, bool isInitialLoad = false)
+        public async Task<int> UpdateChaptersAsync(Manga manga, List<Chapter> chapters, bool isInitialLoad = false, bool skipPrune = false)
         {
-            await _dbLock.WaitAsync();
             try
             {
                 using var context = new MangaDbContext();
@@ -414,197 +376,181 @@ namespace Yomic.Core.Services
                 
                 if (dbManga != null)
                 {
-                    // Advanced Sync Strategy (Soft Sync + Prune):
-                    // 1. Identify Existing vs New vs Missing
-                    // 2. Update Existing (Name, etc)
-                    // 3. Add New
-                    // 4. Remove Missing (Ghost chapters) - ONLY if not downloaded
-                    
-                    // FIX: Duplicate URL Crash (ArgumentException)
-                    // Occasionally, some sources or prior sync failures might have created duplicate rows in DB.
-                    // We identify them, keep the most "complete" one (downloaded), and prune the rest.
-                    var allDbChapters = dbManga.Chapters.ToList();
-                    var dbChaptersDict = new Dictionary<string, Chapter>();
-                    var duplicatesToRemove = new List<Chapter>();
-
-                    foreach (var group in allDbChapters.GroupBy(c => c.Url))
-                    {
-                        var list = group.OrderByDescending(c => c.IsDownloaded).ThenByDescending(c => c.Id).ToList();
-                        dbChaptersDict[group.Key] = list[0];
-                        
-                        if (list.Count > 1)
-                        {
-                            duplicatesToRemove.AddRange(list.Skip(1));
-                        }
-                    }
-
-                    if (duplicatesToRemove.Any())
-                    {
-                        Console.WriteLine($"[LibraryService] Cleaning up {duplicatesToRemove.Count} duplicate chapters for {dbManga.Title}");
-                        context.Chapters.RemoveRange(duplicatesToRemove);
-                    }
-                    var newChapters = new List<Chapter>();
                     long now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    
-                    // FIX: Feed Spam (Initial Load)
-                    // If DB has 0 chapters, this is the First Fetch.
-                    // We should NOT mark these as "New Updates" (DateFetch = 0).
-                    bool isEmptyLibrary = dbManga.Chapters.Count == 0;
-                    
-                    // Track URLs found in source to identify missing ones later
-                    var sourceUrls = new HashSet<string>();
-
-                    // FIX: Duplicate Incoming (Source Side)
-                    // Some sources might return the same chapter URL twice in one list.
-                    var uniqueIncoming = chapters.GroupBy(c => c.Url).Select(g => g.First()).ToList();
-
-                    foreach (var ch in uniqueIncoming)
-                    {
-                        sourceUrls.Add(ch.Url);
-                        
-                        if (dbChaptersDict.TryGetValue(ch.Url, out var existingChapter))
-                        {
-                            // UPDATE EXISTING
-                            // Fix "Rename" issues (e.g. "Ch. 1" -> "Chapter 1")
-                            if (existingChapter.Name != ch.Name)
-                            {
-                                existingChapter.Name = ch.Name;
-                            }
-                            
-                            // Fix metadata if it was optimistically created by SetChapterReadStatusAsync
-                            if (existingChapter.ChapterNumber < 0 && ch.ChapterNumber >= 0)
-                            {
-                                existingChapter.ChapterNumber = ch.ChapterNumber;
-                            }
-                            if (existingChapter.DateUpload == 0 && ch.DateUpload > 0)
-                            {
-                                existingChapter.DateUpload = ch.DateUpload;
-                            }
-                        }
-                        else
-                        {
-                            // ADD NEW
-                            ch.Id = 0; // Fix UNIQUE constraint failure (ensure EF Core auto-generates PK)
-                            ch.MangaId = dbManga.Id;
-                            // Mark as "Old" (0) if this is the first time fetching chapters for this manga
-                            ch.DateFetch = (isInitialLoad || isEmptyLibrary) ? 0 : now; 
-
-                            // NEW BADGE LOGIC
-                            // Only mark as New if:
-                            // 1. Not initial load
-                            // 2. Library is not empty (has history)
-                            if (!isInitialLoad && !isEmptyLibrary)
-                            {
-                                // Find max from existing DB chapters
-                                float maxExistingNum = 0;
-                                long maxExistingDate = 0;
-                                if (dbManga.Chapters.Any())
-                                {
-                                    maxExistingNum = dbManga.Chapters.Max(c => c.ChapterNumber);
-                                    maxExistingDate = dbManga.Chapters.Max(c => c.DateUpload);
-                                }
-                                
-                                bool isHigherNumber = ch.ChapterNumber > maxExistingNum;
-                                bool isNewerDate = ch.DateUpload > 0 && maxExistingDate > 0 && ch.DateUpload > maxExistingDate;
-                                bool isNewPart = !dbChaptersDict.ContainsKey(ch.Url) && (maxExistingNum > 0 || maxExistingDate > 0);
-
-                                if (isHigherNumber || isNewerDate || isNewPart)
-                                {
-                                    ch.IsNew = true;
-                                    // Mark Manga as having new chapters (Persistent Flag)
-                                    dbManga.HasNewChapters = true;
-                                }
-                                else 
-                                {
-                                    ch.IsNew = false;
-                                }
-                            }
-                            else
-                            {
-                                ch.IsNew = false;
-                            }
-                            
-                            newChapters.Add(ch);
-                        }
-                    }
-
-                    // PRUNE MISSING (Fix Ghost Chapters)
-                    // If a URL is in DB but NOT in Source -> It's deleted/renamed on server.
-                    // We delete it ONLY if it is NOT downloaded.
-                    var missingChapters = dbManga.Chapters.Where(c => !sourceUrls.Contains(c.Url)).ToList();
-                    int prunedCount = 0;
-                    
-                    foreach (var missing in missingChapters)
-                    {
-                        if (!missing.IsDownloaded)
-                        {
-                            context.Chapters.Remove(missing);
-                            prunedCount++;
-                        }
-                    }
-
-                    if (newChapters.Count > 0)
-                    {
-                        await context.Chapters.AddRangeAsync(newChapters);
-                        Console.WriteLine($"[Library] SYNC: {newChapters.Count} new, {prunedCount} pruned, {dbManga.Chapters.Count - newChapters.Count - prunedCount} updated/verified.");
-                    }
-                    else if (prunedCount > 0)
-                    {
-                        Console.WriteLine($"[Library] SYNC: {prunedCount} ghost chapters removed.");
-                    }
-                    
-                    // Update LastUpdate timestamp for the Manga
-                    dbManga.LastUpdate = now;
-                    
-                    // Calculate NextUpdate Prediction (Upcoming Calendar)
-                    if (dbManga.Chapters.Count >= 3)
-                    {
-                            var recentChapters = dbManga.Chapters
-                                .Where(c => c.DateUpload > 0)
-                                .OrderByDescending(c => c.DateUpload)
-                                .Take(10)
-                                .ToList();
-
-                            if (recentChapters.Count >= 3)
-                            {
-                                var diffs = new List<long>();
-                                for (int i = 0; i < recentChapters.Count - 1; i++)
-                                {
-                                    long diff = recentChapters[i].DateUpload - recentChapters[i + 1].DateUpload;
-                                    if (diff > 0 && diff < 31536000000) // Sanity check: ignore > 1 year diffs
-                                    {
-                                        diffs.Add(diff);
-                                    }
-                                }
-                                
-                                if (diffs.Count > 0)
-                                {
-                                    diffs.Sort();
-                                    long medianDiff = diffs[diffs.Count / 2];
-                                    if (diffs.Count % 2 == 0)
-                                    {
-                                        medianDiff = (diffs[(diffs.Count / 2) - 1] + diffs[diffs.Count / 2]) / 2;
-                                    }
-                                    dbManga.NextUpdate = recentChapters[0].DateUpload + medianDiff;
-                                }
-                            }
-                    }
-
+                    int newCount = SyncChaptersInternal(context, dbManga, chapters, isInitialLoad, skipPrune, now);
+                    UpdateMangaUpdateSchedule(dbManga, now);
                     await context.SaveChangesAsync();
-                    return newChapters.Count;
+                    return newCount;
                 }
                 return 0;
             }
             catch (Exception ex)
             {
-                 System.Diagnostics.Debug.WriteLine($"[LibraryService] Error updating chapters: {ex}");
-                 return 0;
-            }
-            finally
-            {
-                _dbLock.Release();
+                System.Diagnostics.Debug.WriteLine($"[LibraryService] Error updating chapters: {ex}");
+                return 0;
             }
         }
+
+        private int SyncChaptersInternal(MangaDbContext context, Manga dbManga, List<Chapter> chapters, bool isInitialLoad, bool skipPrune, long now)
+        {
+            // FIX: Duplicate URL Crash (ArgumentException)
+            var allDbChapters = dbManga.Chapters.ToList();
+            var dbChaptersDict = new Dictionary<string, Chapter>();
+            var duplicatesToRemove = new List<Chapter>();
+
+            foreach (var group in allDbChapters.GroupBy(c => c.Url))
+            {
+                var list = group.OrderByDescending(c => c.IsDownloaded).ThenByDescending(c => c.Id).ToList();
+                dbChaptersDict[group.Key] = list[0];
+                
+                if (list.Count > 1)
+                {
+                    duplicatesToRemove.AddRange(list.Skip(1));
+                }
+            }
+
+            if (duplicatesToRemove.Any())
+            {
+                LogService.Debug("LibraryService", $"Cleaning up {duplicatesToRemove.Count} duplicate chapters for {dbManga.Title}");
+                context.Chapters.RemoveRange(duplicatesToRemove);
+                foreach (var dup in duplicatesToRemove)
+                {
+                    dbManga.Chapters.Remove(dup);
+                }
+            }
+
+            var newChapters = new List<Chapter>();
+            bool isEmptyLibrary = dbManga.Chapters.Count == 0;
+            var sourceUrls = new HashSet<string>();
+            var uniqueIncoming = chapters.GroupBy(c => c.Url).Select(g => g.First()).ToList();
+
+            float maxExistingNum = 0;
+            long maxExistingDate = 0;
+            if (!isInitialLoad && !isEmptyLibrary && dbManga.Chapters.Any())
+            {
+                maxExistingNum = dbManga.Chapters.Max(c => c.ChapterNumber);
+                maxExistingDate = dbManga.Chapters.Max(c => c.DateUpload);
+            }
+
+            foreach (var ch in uniqueIncoming)
+            {
+                sourceUrls.Add(ch.Url);
+                
+                if (dbChaptersDict.TryGetValue(ch.Url, out var existingChapter))
+                {
+                    if (existingChapter.Name != ch.Name)
+                    {
+                        existingChapter.Name = ch.Name;
+                    }
+                    if (existingChapter.ChapterNumber < 0 && ch.ChapterNumber >= 0)
+                    {
+                        existingChapter.ChapterNumber = ch.ChapterNumber;
+                    }
+                    if (existingChapter.DateUpload == 0 && ch.DateUpload > 0)
+                    {
+                        existingChapter.DateUpload = ch.DateUpload;
+                    }
+                }
+                else
+                {
+                    ch.Id = 0;
+                    ch.MangaId = dbManga.Id;
+                    ch.DateFetch = (isInitialLoad || isEmptyLibrary) ? 0 : now; 
+
+                    if (!isInitialLoad && !isEmptyLibrary)
+                    {
+                        bool isHigherNumber = ch.ChapterNumber > maxExistingNum;
+                        bool isNewerDate = ch.DateUpload > 0 && maxExistingDate > 0 && ch.DateUpload > maxExistingDate;
+                        bool isNewPart = !dbChaptersDict.ContainsKey(ch.Url) && (maxExistingNum > 0 || maxExistingDate > 0);
+
+                        if (isHigherNumber || isNewerDate || isNewPart)
+                        {
+                            ch.IsNew = true;
+                            dbManga.HasNewChapters = true;
+                        }
+                        else 
+                        {
+                            ch.IsNew = false;
+                        }
+                    }
+                    else
+                    {
+                        ch.IsNew = false;
+                    }
+                    
+                    newChapters.Add(ch);
+                    dbManga.Chapters.Add(ch); // Make sure it's added to tracking collection
+                }
+            }
+
+            // PRUNE MISSING (Fix Ghost Chapters)
+            int prunedCount = 0;
+            if (!skipPrune && !isInitialLoad)
+            {
+                var missingChapters = dbManga.Chapters.Where(c => !sourceUrls.Contains(c.Url)).ToList();
+                
+                foreach (var missing in missingChapters)
+                {
+                    if (!missing.IsDownloaded)
+                    {
+                        context.Chapters.Remove(missing);
+                        dbManga.Chapters.Remove(missing);
+                        prunedCount++;
+                    }
+                }
+            }
+
+            if (newChapters.Count > 0)
+            {
+                context.Chapters.AddRange(newChapters);
+                LogService.Info("Library", $"SYNC: {newChapters.Count} new, {prunedCount} pruned (skipPrune={skipPrune}), {dbManga.Chapters.Count} in DB.");
+            }
+            else if (prunedCount > 0)
+            {
+                LogService.Info("Library", $"SYNC: {prunedCount} ghost chapters removed.");
+            }
+
+            return newChapters.Count;
+        }
+
+        private void UpdateMangaUpdateSchedule(Manga dbManga, long now)
+        {
+            dbManga.LastUpdate = now;
+            
+            if (dbManga.Chapters.Count >= 3)
+            {
+                var recentChapters = dbManga.Chapters
+                    .Where(c => c.DateUpload > 0)
+                    .OrderByDescending(c => c.DateUpload)
+                    .Take(10)
+                    .ToList();
+
+                if (recentChapters.Count >= 3)
+                {
+                    var diffs = new List<long>();
+                    for (int i = 0; i < recentChapters.Count - 1; i++)
+                    {
+                        long diff = recentChapters[i].DateUpload - recentChapters[i + 1].DateUpload;
+                        if (diff > 0 && diff < 31536000000)
+                        {
+                            diffs.Add(diff);
+                        }
+                    }
+                    
+                    if (diffs.Count > 0)
+                    {
+                        diffs.Sort();
+                        long medianDiff = diffs[diffs.Count / 2];
+                        if (diffs.Count % 2 == 0)
+                        {
+                            medianDiff = (diffs[(diffs.Count / 2) - 1] + diffs[diffs.Count / 2]) / 2;
+                        }
+                        dbManga.NextUpdate = recentChapters[0].DateUpload + medianDiff;
+                    }
+                }
+            }
+        }
+
 
         public async Task<List<Chapter>> GetRecentChaptersAsync(int limit = 50)
         {
@@ -692,6 +638,80 @@ namespace Yomic.Core.Services
             {
                 System.Diagnostics.Debug.WriteLine($"[LibraryService] Error setting read status: {ex}");
             }
+        }
+
+        public async Task SaveLastPageReadAsync(string chapterUrl, int pageIndex)
+        {
+            try
+            {
+                using var context = new MangaDbContext();
+                var chapter = await context.Chapters.FirstOrDefaultAsync(c => c.Url == chapterUrl);
+                if (chapter != null)
+                {
+                    chapter.LastPageRead = pageIndex;
+                    await context.SaveChangesAsync();
+                    System.Diagnostics.Debug.WriteLine($"[LibraryService] Saved scroll position ({pageIndex}) for chapter: {chapter.Name}");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[LibraryService] Error saving scroll position: {ex}");
+            }
+        }
+
+        public void SaveLastPageRead(string chapterUrl, long value)
+        {
+            try
+            {
+                using var context = new MangaDbContext();
+                var chapter = context.Chapters.FirstOrDefault(c => c.Url == chapterUrl);
+                if (chapter != null)
+                {
+                    chapter.LastPageRead = value;
+                    context.SaveChanges();
+                    System.Diagnostics.Debug.WriteLine($"[LibraryService] Saved scroll position ({value}) for chapter: {chapter.Name}");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[LibraryService] Error saving scroll position: {ex}");
+            }
+        }
+
+        public async Task<int> GetLastPageReadAsync(string chapterUrl)
+        {
+            try
+            {
+                using var context = new MangaDbContext();
+                var chapter = await context.Chapters.FirstOrDefaultAsync(c => c.Url == chapterUrl);
+                if (chapter != null)
+                {
+                    return (int)chapter.LastPageRead;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[LibraryService] Error reading scroll position: {ex}");
+            }
+            return 0;
+        }
+
+        public async Task<long> GetLastPageReadRawAsync(string chapterUrl)
+        {
+            try
+            {
+                using var context = new MangaDbContext();
+                var chapter = await context.Chapters.FirstOrDefaultAsync(c => c.Url == chapterUrl);
+                if (chapter != null)
+                {
+                    return chapter.LastPageRead;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[LibraryService] Error reading scroll position: {ex}");
+            }
+            return 0;
         }
 
         public async Task SetChapterBookmarkStatusAsync(string chapterUrl, bool isBookmarked, long sourceId = 0, string mangaUrl = "", string chapterTitle = "", float chapterNumber = -1)
@@ -786,7 +806,6 @@ namespace Yomic.Core.Services
 
         public async Task MarkChaptersBeforeAsReadAsync(Manga manga, float chapterNumber)
         {
-             await _dbLock.WaitAsync(); // Use lock to be safe
              try
              {
                  using var context = new MangaDbContext();
@@ -808,9 +827,9 @@ namespace Yomic.Core.Services
                      }
                  }
              }
-             finally
+             catch (Exception ex)
              {
-                 _dbLock.Release();
+                 System.Diagnostics.Debug.WriteLine($"[LibraryService] Error marking chapters before as read: {ex.Message}");
              }
         }
 
@@ -821,11 +840,23 @@ namespace Yomic.Core.Services
 
         public async Task<int> UpdateAllLibraryMangaAsync(SourceManager sourceManager, bool forceRefresh, IProgress<(int current, int total)>? progress = null)
         {
-            System.Diagnostics.Debug.WriteLine($"[LibraryService] Starting parallel library update (force={forceRefresh})...");
+            Yomic.Core.Sources.HttpSource.SilenceLogs = true;
+            LogService.Info("LibraryService", $"Starting parallel library update (force={forceRefresh})...");
             int updatedCount = 0;
             try
             {
                 var libraryManga = await GetLibraryMangaAsync();
+                
+                // Cleanup static semaphores for sources no longer in the library
+                var currentSources = new HashSet<long>(libraryManga.Select(m => m.Source));
+                var keysToRemove = _sourceSemaphores.Keys.Where(k => !currentSources.Contains(k)).ToList();
+                foreach (var key in keysToRemove)
+                {
+                    if (_sourceSemaphores.TryRemove(key, out var sem))
+                    {
+                        sem.Dispose();
+                    }
+                }
                 
                 // Filter out manga that belong to any category marked as UpdateExcluded
                 libraryManga = libraryManga.Where(m => !m.Categories.Any(c => c.UpdateExcluded)).ToList();
@@ -897,11 +928,18 @@ namespace Yomic.Core.Services
                 
                 int currentManga = 0;
                 
-                // Process in parallel (Limit 5 to avoid timeouts/bans) using SemaphoreSlim to avoid Parallel assembly issues
-                using var semaphore = new System.Threading.SemaphoreSlim(5);
+                // Process in parallel using a global semaphore and per-source semaphores
+                using var globalSemaphore = new System.Threading.SemaphoreSlim(20);
+                var completedBatch = new List<(Manga manga, Manga? freshManga, List<Chapter>? chapters)>();
+                var batchLock = new object();
+                int totalNewChapters = 0;
+
                 var tasks = libraryManga.Select(async manga =>
                 {
-                    await semaphore.WaitAsync();
+                    await globalSemaphore.WaitAsync();
+                    var sourceSemaphore = _sourceSemaphores.GetOrAdd(manga.Source, _ => new System.Threading.SemaphoreSlim(3));
+                    await sourceSemaphore.WaitAsync();
+                    
                     Manga? freshManga = null;
                     List<Chapter>? chapters = null;
                     try
@@ -909,8 +947,14 @@ namespace Yomic.Core.Services
                         var source = sourceManager.GetSource(manga.Source);
                         if (source != null)
                         {
-                            // Stagger requests with a random delay (0.5s - 2s) to prevent Cloudflare bans
-                            await Task.Delay(Random.Shared.Next(500, 2000));
+                            // Stagger requests per-source with a custom delay based on the source's limit
+                            int delayMs = source.RateLimitDelayMs;
+                            if (delayMs > 0)
+                            {
+                                int variance = delayMs / 4;
+                                int actualDelay = delayMs + Random.Shared.Next(-variance, variance);
+                                await Task.Delay(Math.Max(50, actualDelay));
+                            }
 
                             if (forceRefresh)
                             {
@@ -934,207 +978,45 @@ namespace Yomic.Core.Services
                     finally
                     {
                         int completed = System.Threading.Interlocked.Increment(ref currentManga);
+                        PrintConsoleProgress(completed, totalManga);
                         progress?.Report((completed, totalManga));
-                        semaphore.Release();
-                    }
-                    return (manga, freshManga, chapters);
-                });
-
-                var results = await Task.WhenAll(tasks);
-
-                // Write to database sequentially using a SINGLE DbContext and batch transaction
-                await _dbLock.WaitAsync();
-                try
-                {
-                    using var context = new MangaDbContext();
-                    
-                    // Pre-load all library mangas and their chapters in a single query
-                    var dbMangas = await context.Mangas
-                        .Include(m => m.Chapters)
-                        .Where(m => m.Favorite)
-                        .ToListAsync();
                         
-                    var dbMangaDict = dbMangas.ToDictionary(m => (m.Url, m.Source));
-                    long now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                        sourceSemaphore.Release();
+                        globalSemaphore.Release();
+                    }
 
-                    foreach (var (manga, freshManga, chapters) in results)
+                    var result = (manga, freshManga, chapters);
+                    List<(Manga manga, Manga? freshManga, List<Chapter>? chapters)>? batchToWrite = null;
+                    lock (batchLock)
                     {
-                        if (chapters == null) continue;
-
-                        if (dbMangaDict.TryGetValue((manga.Url, manga.Source), out var dbManga))
+                        completedBatch.Add(result);
+                        if (completedBatch.Count >= 20)
                         {
-                            // 1. Update metadata if forceRefresh
-                            if (forceRefresh && freshManga != null)
-                            {
-                                dbManga.Title = freshManga.Title;
-                                dbManga.Author = freshManga.Author;
-                                dbManga.Description = freshManga.Description;
-                                dbManga.Genre = freshManga.Genre;
-                                dbManga.Status = freshManga.Status;
-                                if (!string.IsNullOrEmpty(freshManga.ThumbnailUrl))
-                                {
-                                    dbManga.ThumbnailUrl = freshManga.ThumbnailUrl;
-                                }
-
-                                // Sync local copy properties
-                                manga.Title = freshManga.Title;
-                                manga.Author = freshManga.Author;
-                                manga.Description = freshManga.Description;
-                                manga.Genre = freshManga.Genre;
-                                manga.Status = freshManga.Status;
-                                if (!string.IsNullOrEmpty(freshManga.ThumbnailUrl))
-                                {
-                                    manga.ThumbnailUrl = freshManga.ThumbnailUrl;
-                                }
-                            }
-
-                            // 2. Sync Chapters (Inlined optimized version of UpdateChaptersAsync)
-                            var allDbChapters = dbManga.Chapters.ToList();
-                            var dbChaptersDict = new Dictionary<string, Chapter>();
-                            var duplicatesToRemove = new List<Chapter>();
-
-                            foreach (var group in allDbChapters.GroupBy(c => c.Url))
-                            {
-                                var list = group.OrderByDescending(c => c.IsDownloaded).ThenByDescending(c => c.Id).ToList();
-                                dbChaptersDict[group.Key] = list[0];
-                                
-                                if (list.Count > 1)
-                                {
-                                    duplicatesToRemove.AddRange(list.Skip(1));
-                                }
-                            }
-
-                            if (duplicatesToRemove.Any())
-                            {
-                                context.Chapters.RemoveRange(duplicatesToRemove);
-                                foreach (var dup in duplicatesToRemove)
-                                {
-                                    dbManga.Chapters.Remove(dup);
-                                }
-                            }
-
-                            var newChapters = new List<Chapter>();
-                            bool isEmptyLibrary = dbManga.Chapters.Count == 0;
-                            var sourceUrls = new HashSet<string>();
-                            var uniqueIncoming = chapters.GroupBy(c => c.Url).Select(g => g.First()).ToList();
-
-                            foreach (var ch in uniqueIncoming)
-                            {
-                                sourceUrls.Add(ch.Url);
-                                
-                                if (dbChaptersDict.TryGetValue(ch.Url, out var existingChapter))
-                                {
-                                    if (existingChapter.Name != ch.Name)
-                                    {
-                                        existingChapter.Name = ch.Name;
-                                    }
-                                    if (existingChapter.ChapterNumber < 0 && ch.ChapterNumber >= 0)
-                                    {
-                                        existingChapter.ChapterNumber = ch.ChapterNumber;
-                                    }
-                                    if (existingChapter.DateUpload == 0 && ch.DateUpload > 0)
-                                    {
-                                        existingChapter.DateUpload = ch.DateUpload;
-                                    }
-                                }
-                                else
-                                {
-                                    ch.Id = 0;
-                                    ch.MangaId = dbManga.Id;
-                                    ch.DateFetch = isEmptyLibrary ? 0 : now;
-
-                                    if (!isEmptyLibrary)
-                                    {
-                                        float maxExistingNum = dbManga.Chapters.Any() ? dbManga.Chapters.Max(c => c.ChapterNumber) : 0;
-                                        long maxExistingDate = dbManga.Chapters.Any() ? dbManga.Chapters.Max(c => c.DateUpload) : 0;
-
-                                        bool isHigherNumber = ch.ChapterNumber > maxExistingNum;
-                                        bool isNewerDate = ch.DateUpload > 0 && maxExistingDate > 0 && ch.DateUpload > maxExistingDate;
-                                        bool isNewPart = !dbChaptersDict.ContainsKey(ch.Url) && (maxExistingNum > 0 || maxExistingDate > 0);
-
-                                        if (isHigherNumber || isNewerDate || isNewPart)
-                                        {
-                                            ch.IsNew = true;
-                                            dbManga.HasNewChapters = true;
-                                        }
-                                        else
-                                        {
-                                            ch.IsNew = false;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        ch.IsNew = false;
-                                    }
-
-                                    newChapters.Add(ch);
-                                }
-                            }
-
-                            var missingChapters = dbManga.Chapters.Where(c => !sourceUrls.Contains(c.Url)).ToList();
-                            int prunedCount = 0;
-                            
-                            foreach (var missing in missingChapters)
-                            {
-                                if (!missing.IsDownloaded)
-                                {
-                                    context.Chapters.Remove(missing);
-                                    dbManga.Chapters.Remove(missing);
-                                    prunedCount++;
-                                }
-                            }
-
-                            if (newChapters.Count > 0)
-                            {
-                                await context.Chapters.AddRangeAsync(newChapters);
-                                foreach (var nc in newChapters)
-                                {
-                                    dbManga.Chapters.Add(nc);
-                                }
-                                updatedCount += newChapters.Count;
-                            }
-
-                            dbManga.LastUpdate = now;
-
-                            if (dbManga.Chapters.Count >= 3)
-                            {
-                                var recentChapters = dbManga.Chapters
-                                    .Where(c => c.DateUpload > 0)
-                                    .OrderByDescending(c => c.DateUpload)
-                                    .Take(10)
-                                    .ToList();
-
-                                if (recentChapters.Count >= 3)
-                                {
-                                    var diffs = new List<long>();
-                                    for (int i = 0; i < recentChapters.Count - 1; i++)
-                                    {
-                                        long diff = recentChapters[i].DateUpload - recentChapters[i + 1].DateUpload;
-                                        if (diff > 0 && diff < 31536000000)
-                                        {
-                                            diffs.Add(diff);
-                                        }
-                                    }
-                                    
-                                    if (diffs.Count > 0)
-                                    {
-                                        diffs.Sort();
-                                        long medianDiff = diffs[diffs.Count / 2];
-                                        dbManga.NextUpdate = recentChapters[0].DateUpload + medianDiff;
-                                    }
-                                }
-                            }
+                            batchToWrite = completedBatch.ToList();
+                            completedBatch.Clear();
                         }
                     }
+                    if (batchToWrite != null)
+                    {
+                        int newCount = await SaveLibraryUpdateBatchAsync(batchToWrite, forceRefresh);
+                        System.Threading.Interlocked.Add(ref totalNewChapters, newCount);
+                    }
+                    
+                    return result;
+                });
 
-                    await context.SaveChangesAsync();
-                }
-                finally
+                await Task.WhenAll(tasks);
+
+                // Write any remaining leftovers
+                if (completedBatch.Count > 0)
                 {
-                    _dbLock.Release();
+                    int newCount = await SaveLibraryUpdateBatchAsync(completedBatch, forceRefresh);
+                    totalNewChapters += newCount;
                 }
                 
-                System.Diagnostics.Debug.WriteLine($"[LibraryService] Update complete. Total new: {updatedCount}");
+                updatedCount = totalNewChapters;
+
+                LogService.Info("LibraryService", $"Update complete. Total new: {updatedCount}");
                 
                 // Notify subscribers (e.g. UpdatesViewModel)
                 UpdatesFound?.Invoke(this, updatedCount);
@@ -1143,9 +1025,89 @@ namespace Yomic.Core.Services
             }
             catch (Exception ex)
             {
-                 System.Diagnostics.Debug.WriteLine($"[LibraryService] Error in UpdateAllLibraryMangaAsync: {ex.Message}");
+                 LogService.Error("LibraryService", $"Error in UpdateAllLibraryMangaAsync: {ex.Message}", ex);
+            }
+            finally
+            {
+                 Yomic.Core.Sources.HttpSource.SilenceLogs = false;
             }
             return updatedCount;
+        }
+
+        private void PrintConsoleProgress(int current, int total)
+        {
+            int barWidth = 20;
+            int filled = total == 0 ? 0 : (int)((double)current / total * barWidth);
+            string bar = new string('█', filled) + new string('░', barWidth - filled);
+            int percent = total == 0 ? 0 : (int)((double)current / total * 100);
+            
+            Console.Write($"\r[LibraryService] Updating... [{bar}] {current}/{total} ({percent}%)");
+            if (current == total)
+            {
+                Console.WriteLine();
+            }
+        }
+
+        private async Task<int> SaveLibraryUpdateBatchAsync(List<(Manga manga, Manga? freshManga, List<Chapter>? chapters)> batch, bool forceRefresh)
+        {
+            int batchNewChaptersCount = 0;
+            await _dbLock.WaitAsync();
+            try
+            {
+                using var context = new MangaDbContext();
+                var urls = batch.Select(b => b.manga.Url).ToList();
+                var dbMangas = await context.Mangas
+                    .Include(m => m.Chapters)
+                    .Where(m => m.Favorite && urls.Contains(m.Url))
+                    .ToListAsync();
+                
+                var dbMangaDict = dbMangas.ToDictionary(m => (m.Url, m.Source));
+                long now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+                foreach (var (manga, freshManga, chapters) in batch)
+                {
+                    if (chapters == null) continue;
+
+                    if (dbMangaDict.TryGetValue((manga.Url, manga.Source), out var dbManga))
+                    {
+                        // 1. Update metadata if forceRefresh
+                        if (forceRefresh && freshManga != null)
+                        {
+                            dbManga.Title = freshManga.Title;
+                            dbManga.Author = freshManga.Author;
+                            dbManga.Description = freshManga.Description;
+                            dbManga.Genre = freshManga.Genre;
+                            dbManga.Status = freshManga.Status;
+                            if (!string.IsNullOrEmpty(freshManga.ThumbnailUrl))
+                            {
+                                dbManga.ThumbnailUrl = freshManga.ThumbnailUrl;
+                            }
+
+                            // Sync local copy properties
+                            manga.Title = freshManga.Title;
+                            manga.Author = freshManga.Author;
+                            manga.Description = freshManga.Description;
+                            manga.Genre = freshManga.Genre;
+                            manga.Status = freshManga.Status;
+                            if (!string.IsNullOrEmpty(freshManga.ThumbnailUrl))
+                            {
+                                manga.ThumbnailUrl = freshManga.ThumbnailUrl;
+                            }
+                        }
+
+                        int newCount = SyncChaptersInternal(context, dbManga, chapters, false, false, now);
+                        batchNewChaptersCount += newCount;
+                        UpdateMangaUpdateSchedule(dbManga, now);
+                    }
+                }
+                
+                await context.SaveChangesAsync();
+            }
+            finally
+            {
+                _dbLock.Release();
+            }
+            return batchNewChaptersCount;
         }
 
         public async Task ClearDatabaseAsync()
@@ -1328,18 +1290,26 @@ namespace Yomic.Core.Services
 
         public async Task UpdateCategoryOrderAsync(List<long> categoryIds)
         {
-            using var context = new MangaDbContext();
-            for (int i = 0; i < categoryIds.Count; i++)
+            try
             {
-                var id = categoryIds[i];
-                var cat = await context.Categories.FindAsync(id);
-                if (cat != null)
+                using var context = new MangaDbContext();
+                var categories = await context.Categories.Where(c => categoryIds.Contains(c.Id)).ToListAsync();
+                var categoryDict = categories.ToDictionary(c => c.Id);
+                for (int i = 0; i < categoryIds.Count; i++)
                 {
-                    cat.SortOrder = i + 1;
-                    context.Categories.Update(cat);
+                    var id = categoryIds[i];
+                    if (categoryDict.TryGetValue(id, out var cat))
+                    {
+                        cat.SortOrder = i + 1;
+                        context.Categories.Update(cat);
+                    }
                 }
+                await context.SaveChangesAsync();
             }
-            await context.SaveChangesAsync();
+            catch (Exception ex)
+            {
+                LogService.Error("LibraryService", $"Error updating category order: {ex.Message}", ex);
+            }
         }
 
         public async Task<Category?> GetDefaultCategoryAsync()

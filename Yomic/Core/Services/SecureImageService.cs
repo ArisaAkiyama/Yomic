@@ -10,6 +10,8 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using PuppeteerSharp;
 using System.Threading;
+using SkiaSharp;
+using System.IO.Hashing;
 
 namespace Yomic.Core.Services
 {
@@ -89,10 +91,11 @@ namespace Yomic.Core.Services
                 try
                 {
                     using var stream = File.OpenRead(cachePath);
-                    var bitmap = decodeWidth.HasValue 
-                        ? Bitmap.DecodeToWidth(stream, decodeWidth.Value)
-                        : new Bitmap(stream);
-                    _imageCacheService.AddImage(url, bitmap);
+                    var bitmap = DecodeAndResizeBitmap(stream, decodeWidth);
+                    if (bitmap != null)
+                    {
+                        _imageCacheService.AddImage(url, bitmap);
+                    }
                     return bitmap;
                 }
                 catch (Exception ex)
@@ -250,10 +253,11 @@ namespace Yomic.Core.Services
 
                 // Load to Memory
                 using var ms = new MemoryStream(data);
-                var bitmap = decodeWidth.HasValue
-                    ? Bitmap.DecodeToWidth(ms, decodeWidth.Value)
-                    : new Bitmap(ms);
-                _imageCacheService.AddImage(url, bitmap);
+                var bitmap = DecodeAndResizeBitmap(ms, decodeWidth);
+                if (bitmap != null)
+                {
+                    _imageCacheService.AddImage(url, bitmap);
+                }
                 
                 return bitmap;
             }
@@ -265,6 +269,26 @@ namespace Yomic.Core.Services
             finally
             {
                 _downloadSemaphore.Release();
+            }
+        }
+
+        private static Bitmap? DecodeAndResizeBitmap(Stream stream, int? decodeWidth)
+        {
+            try
+            {
+                if (stream.CanSeek) stream.Position = 0;
+
+                if (decodeWidth.HasValue && decodeWidth.Value > 0)
+                {
+                    return Bitmap.DecodeToWidth(stream, decodeWidth.Value);
+                }
+
+                return new Bitmap(stream);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[SecureImageService] Decode error: {ex.Message}");
+                return null;
             }
         }
 
@@ -313,10 +337,8 @@ namespace Yomic.Core.Services
         private string GenerateCacheKey(string url)
         {
             var inputBytes = Encoding.UTF8.GetBytes(url);
-            var hashBytes = MD5.HashData(inputBytes);
-            
-            var sb = new StringBuilder();
-            for (int i = 0; i < hashBytes.Length; i++) sb.Append(hashBytes[i].ToString("X2"));
+            ulong hashValue = XxHash64.HashToUInt64(inputBytes);
+            string hashHex = hashValue.ToString("X16");
 
             string ext = ".jpg";
             try 
@@ -327,7 +349,7 @@ namespace Yomic.Core.Services
             }
             catch { }
 
-            return $"{sb}{ext}";
+            return hashHex + ext;
         }
     }
 }

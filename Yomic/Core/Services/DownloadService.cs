@@ -37,8 +37,10 @@ namespace Yomic.Core.Services
         private readonly List<DownloadRequest> _history = new(); // Completed or Error
         private readonly object _historyLock = new(); // Thread lock
         private DownloadRequest? _currentDownload;
-        private bool _isProcessing;
-        private bool _isPaused;
+        private volatile bool _isProcessing;
+        private volatile bool _isPaused;
+        private System.Threading.Timer? _saveDebounceTimer;
+        private readonly object _debounceLock = new();
         private static readonly TimeSpan PageListTimeout = TimeSpan.FromSeconds(45);
         private static readonly TimeSpan PageDownloadTimeout = TimeSpan.FromSeconds(30);
 
@@ -54,18 +56,21 @@ namespace Yomic.Core.Services
         {
             get
             {
+                List<DownloadRequest> historySnapshot;
                 lock (_historyLock)
                 {
-                    lock (_queueLock)
-                    {
-                        // Return a snapshot to prevent iteration errors
-                        var historySnapshot = _history.ToList();
-                        var queueSnapshot = _queue.ToList();
-                        return historySnapshot
-                            .Concat(_currentDownload != null ? new[] { _currentDownload } : Array.Empty<DownloadRequest>())
-                            .Concat(queueSnapshot);
-                    }
+                    historySnapshot = _history.ToList();
                 }
+
+                List<DownloadRequest> queueSnapshot;
+                lock (_queueLock)
+                {
+                    queueSnapshot = _queue.ToList();
+                }
+
+                return historySnapshot
+                    .Concat(_currentDownload != null ? new[] { _currentDownload } : Array.Empty<DownloadRequest>())
+                    .Concat(queueSnapshot);
             }
         }
 
@@ -84,6 +89,21 @@ namespace Yomic.Core.Services
         }
 
         private void SaveQueue()
+        {
+            lock (_debounceLock)
+            {
+                _saveDebounceTimer?.Dispose();
+                _saveDebounceTimer = new System.Threading.Timer(_ => 
+                {
+                    lock (_debounceLock)
+                    {
+                        SaveQueueInternal();
+                    }
+                }, null, 500, System.Threading.Timeout.Infinite);
+            }
+        }
+
+        private void SaveQueueInternal()
         {
             try
             {
@@ -406,17 +426,15 @@ namespace Yomic.Core.Services
                     {
                         refererUrl = source.BaseUrl.TrimEnd('/') + request.Chapter.Url;
                     }
-                    client.DefaultRequestHeaders.Referrer = new Uri(refererUrl);
+                    // Will set referrer per-request
                 }
                 catch (Exception ex)
                 {
-                    // Fallback - use source base URL
-                    LogService.Warning("Download", $"Referer error: {ex.Message}, using base URL");
-                    client.DefaultRequestHeaders.Referrer = new Uri(source.BaseUrl);
+                    LogService.Warning("Download", $"Referer initialization warning: {ex.Message}");
                 }
                 
                 // Use semaphore to limit concurrent downloads (4 at a time for speed)
-                var semaphore = new System.Threading.SemaphoreSlim(4);
+                using var semaphore = new System.Threading.SemaphoreSlim(4);
                 var downloadTasks = new List<Task>();
                 
                 LogService.Info("Download", $"Downloading {total} pages...");
@@ -475,7 +493,18 @@ namespace Yomic.Core.Services
                                         try
                                         {
                                             var req = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-                                            if (customHeaders.ContainsKey("Referer")) req.Headers.Referrer = new Uri(customHeaders["Referer"]);
+                                            if (customHeaders.ContainsKey("Referer"))
+                                            {
+                                                var customRef = customHeaders["Referer"];
+                                                if (customRef != "none" && customRef != "null")
+                                                {
+                                                    req.Headers.Referrer = new Uri(customRef);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                req.Headers.Referrer = new Uri(refererUrl);
+                                            }
 
                                             if (customHeaders.ContainsKey("User-Agent")) req.Headers.UserAgent.TryParseAdd(customHeaders["User-Agent"]);
                                             else if (customHeaders.ContainsKey("UserAgent")) req.Headers.UserAgent.TryParseAdd(customHeaders["UserAgent"]);
@@ -548,9 +577,6 @@ namespace Yomic.Core.Services
 
                 await Task.WhenAll(downloadTasks);
                 
-                // Dispose semaphore after all tasks complete
-                semaphore.Dispose();
-                
                 if (request.CancellationTokenSource.IsCancellationRequested)
                 {
                     if (request.Status != "Paused") request.Status = "Cancelled";
@@ -618,6 +644,9 @@ namespace Yomic.Core.Services
 
         private static async Task<T> WithTimeout<T>(Task<T> task, TimeSpan timeout, CancellationToken cancellationToken, string timeoutMessage)
         {
+            // Prevent unobserved task exceptions on the original task if it faults after timeout
+            _ = task.ContinueWith(t => { _ = t.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
+
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var timeoutTask = Task.Delay(timeout, timeoutCts.Token);
             var completedTask = await Task.WhenAny(task, timeoutTask);
@@ -625,6 +654,14 @@ namespace Yomic.Core.Services
             if (completedTask == task)
             {
                 timeoutCts.Cancel();
+                try
+                {
+                    await timeoutTask;
+                }
+                catch
+                {
+                    // Suppress TaskCanceledException of timeoutTask
+                }
                 return await task;
             }
 

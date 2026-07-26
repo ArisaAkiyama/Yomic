@@ -40,20 +40,29 @@
                 <Panel Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Center">
                     <!-- Success Icon (Checkmark: E73E) -->
                     <Border Background="#20A6E3A1" Width="32" Height="32" CornerRadius="16" IsVisible="{Binding IsSuccess}">
-                         <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" Foreground="#A6E3A1" FontSize="16" 
-                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                         <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                             <Canvas Width="24" Height="24">
+                                 <Path Data="M5 12l5 5l10 -10" Stroke="#A6E3A1" StrokeThickness="2.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                             </Canvas>
+                         </Viewbox>
                     </Border>
                     
                     <!-- Error Icon (Network Offline: F384) -->
                     <Border Background="#20F38BA8" Width="32" Height="32" CornerRadius="16" IsVisible="{Binding IsError}">
-                         <TextBlock Text="&#xF384;" FontFamily="Segoe Fluent Icons" Foreground="#F38BA8" FontSize="16" 
-                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                         <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                             <Canvas Width="24" Height="24">
+                                 <Path Data="M18 6l-12 12 M6 6l12 12" Stroke="#F38BA8" StrokeThickness="2.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                             </Canvas>
+                         </Viewbox>
                     </Border>
                     
                     <!-- Info Icon -->
                     <Border Background="#200078D7" Width="32" Height="32" CornerRadius="16" IsVisible="{Binding IsInfo}">
-                         <TextBlock Text="&#xE946;" FontFamily="Segoe Fluent Icons" Foreground="#0078D7" FontSize="16" 
-                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                         <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                             <Canvas Width="24" Height="24">
+                                 <Path Data="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0 M12 9h.01 M11 12h1v4h1" Stroke="#0078D7" StrokeThickness="2.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                             </Canvas>
+                         </Viewbox>
                     </Border>
                 </Panel>
 

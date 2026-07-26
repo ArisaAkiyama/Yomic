@@ -93,9 +93,10 @@ namespace Yomic.ViewModels
         }
     }
 
-    public class LibraryViewModel : ViewModelBase
+    public class LibraryViewModel : ViewModelBase, IDisposable
     {
         private static readonly string _cacheFolder;
+        private readonly EventHandler<bool> _statusChangedHandler;
         
         private List<MangaItem> _allItems = new(); // Store all items offline
         public ObservableCollection<MangaItem> LibraryItems { get; set; } = new();
@@ -260,8 +261,8 @@ namespace Yomic.ViewModels
              }
         }
 
-        public bool ShowGridView => !IsListView && !IsRefreshing;
-        public bool ShowListView => IsListView && !IsRefreshing;
+        public bool ShowGridView => !IsListView && !IsLoading && !IsRefreshing;
+        public bool ShowListView => IsListView && !IsLoading && !IsRefreshing;
 
         // Commands
         public ReactiveCommand<MangaItem, Unit> OpenMangaCommand { get; }
@@ -352,7 +353,7 @@ namespace Yomic.ViewModels
 
             // Bind to NetworkService
             IsOnline = _networkService.IsOnline;
-            _networkService.StatusChanged += (s, online) => 
+            _statusChangedHandler = (s, online) => 
             {
                 Avalonia.Threading.Dispatcher.UIThread.Post(() => 
                 {
@@ -367,6 +368,7 @@ namespace Yomic.ViewModels
                     }
                 });
             };
+            _networkService.StatusChanged += _statusChangedHandler;
 
             OpenMangaCommand = ReactiveCommand.CreateFromTask<MangaItem>(async item => 
             {
@@ -546,7 +548,12 @@ namespace Yomic.ViewModels
         public bool IsLoading
         {
             get => _isLoading;
-            set => this.RaiseAndSetIfChanged(ref _isLoading, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _isLoading, value);
+                this.RaisePropertyChanged(nameof(ShowGridView));
+                this.RaisePropertyChanged(nameof(ShowListView));
+            }
         }
 
         public async Task RefreshLibrary()
@@ -555,17 +562,17 @@ namespace Yomic.ViewModels
             try
             {
                 await LoadCategoriesAsync();
-                System.Diagnostics.Debug.WriteLine("[LibraryVM] Soft refresh (cached images)...");
+                Yomic.Core.Services.LogService.Info("LibraryVM", "Soft refresh (cached images)...");
                 var mangas = await _libraryService.GetLibraryMangaAsync();
-                System.Diagnostics.Debug.WriteLine($"[LibraryVM] Found {mangas.Count} items in DB.");
+                Yomic.Core.Services.LogService.Info("LibraryVM", $"Found {mangas.Count} items in DB.");
                 
                 await MergeLibraryItems(mangas, forceDownload: false);
 
-                System.Diagnostics.Debug.WriteLine($"[LibraryVM] UI Updated. Items: {LibraryItems.Count}");
+                Yomic.Core.Services.LogService.Info("LibraryVM", $"UI Updated. Items: {LibraryItems.Count}");
             }
             catch (System.Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading library: {ex}");
+                Yomic.Core.Services.LogService.Error("LibraryVM", "Error loading library", ex);
             }
             finally
             {
@@ -580,11 +587,11 @@ namespace Yomic.ViewModels
             {
                 if (IsOnline)
                 {
-                    System.Diagnostics.Debug.WriteLine("[LibraryVM] Checking for latest updates from sources...");
+                    Yomic.Core.Services.LogService.Info("LibraryVM", "Checking for latest updates from sources...");
                     await _libraryService.UpdateAllLibraryMangaAsync(_mainVM.SourceManager, forceRefresh: true);
                 }
 
-                System.Diagnostics.Debug.WriteLine("[LibraryVM] Hard refresh (redownload covers)...");
+                Yomic.Core.Services.LogService.Info("LibraryVM", "Hard refresh (redownload covers)...");
                 var mangas = await _libraryService.GetLibraryMangaAsync();
                 
                 await MergeLibraryItems(mangas, forceDownload: true);
@@ -624,10 +631,11 @@ namespace Yomic.ViewModels
              foreach (var item in toRemove) _allItems.Remove(item);
              
              // 2. Add or Update items
+             var allItemsDict = _allItems.ToDictionary(x => x.MangaUrl + "|" + x.SourceId);
              foreach (var m in mangas)
              {
                  var key = m.Url + "|" + m.Source;
-                 var existingItem = _allItems.FirstOrDefault(x => x.MangaUrl == m.Url && x.SourceId == m.Source);
+                 allItemsDict.TryGetValue(key, out var existingItem);
                  
                  // Calculate Unread Count
                  int unread = m.Chapters?.Count(c => !c.Read) ?? 0;
@@ -688,50 +696,62 @@ namespace Yomic.ViewModels
              }
              
              // 3. Update AvailableSources
+             var sourceIds = _allItems
+                 .Select(x => x.SourceId)
+                 .Distinct()
+                 .ToList();
+
+             var desiredSources = new List<LibrarySourceFilterItem> 
+             { 
+                 new LibrarySourceFilterItem { Name = "All", Id = "All", IconText = "ALL" } 
+             };
+             
+             foreach (var id in sourceIds)
+             {
+                 var s = _mainVM.SourceManager.GetSource(id);
+                 if (s != null)
+                 {
+                     var item = new LibrarySourceFilterItem 
+                     { 
+                         Name = s.Name, 
+                         Id = s.Id.ToString(),
+                         IconText = !string.IsNullOrEmpty(s.Name) ? s.Name.Substring(0, 1) : "?",
+                         IconColor = !string.IsNullOrEmpty(s.IconBackground) ? s.IconBackground : "White",
+                         IconForeground = !string.IsNullOrEmpty(s.IconForeground) ? s.IconForeground : "Black"
+                     };
+                     
+                     var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                     var iconsDir = System.IO.Path.Combine(appData, "Yomic", "Icons");
+                     var iconFile = System.IO.Path.Combine(iconsDir, $"{s.Id}.png");
+                     if (System.IO.File.Exists(iconFile))
+                     {
+                         try {
+                             var bytes = System.IO.File.ReadAllBytes(iconFile);
+                             using var ms = new System.IO.MemoryStream(bytes);
+                             item.IconBitmap = new Avalonia.Media.Imaging.Bitmap(ms);
+                             item.IconText = "";
+                         } catch { }
+                     }
+                     
+                     desiredSources.Add(item);
+                 }
+             }
+             desiredSources = desiredSources.OrderBy(x => x.Name == "All" ? 0 : 1).ThenBy(x => x.Name).ToList();
+
+             // Extract all unique genres from _allItems on background thread
+             var allExtractedGenres = _allItems
+                 .Where(x => x.Genres != null)
+                 .SelectMany(x => x.Genres)
+                 .Where(g => !string.IsNullOrWhiteSpace(g))
+                 .Select(g => g.Trim())
+                 .Where(g => !string.Equals(g, "Manga", StringComparison.OrdinalIgnoreCase))
+                 .Distinct(StringComparer.OrdinalIgnoreCase)
+                 .OrderBy(g => g)
+                 .ToList();
+
+             // Post collection updates to UI Thread
              Avalonia.Threading.Dispatcher.UIThread.Post(() => 
              {
-                 var sourceIds = _allItems
-                     .Select(x => x.SourceId)
-                     .Distinct()
-                     .ToList();
-
-                 var desiredSources = new List<LibrarySourceFilterItem> 
-                 { 
-                     new LibrarySourceFilterItem { Name = "All", Id = "All", IconText = "ALL" } 
-                 };
-                 
-                 foreach (var id in sourceIds)
-                 {
-                     var s = _mainVM.SourceManager.GetSource(id);
-                     if (s != null)
-                     {
-                         var item = new LibrarySourceFilterItem 
-                         { 
-                             Name = s.Name, 
-                             Id = s.Id.ToString(),
-                             IconText = !string.IsNullOrEmpty(s.Name) ? s.Name.Substring(0, 1) : "?",
-                             IconColor = !string.IsNullOrEmpty(s.IconBackground) ? s.IconBackground : "White",
-                             IconForeground = !string.IsNullOrEmpty(s.IconForeground) ? s.IconForeground : "Black"
-                         };
-                         
-                         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                         var iconsDir = System.IO.Path.Combine(appData, "Yomic", "Icons");
-                         var iconFile = System.IO.Path.Combine(iconsDir, $"{s.Id}.png");
-                         if (System.IO.File.Exists(iconFile))
-                         {
-                             try {
-                                 var bytes = System.IO.File.ReadAllBytes(iconFile);
-                                 using var ms = new System.IO.MemoryStream(bytes);
-                                 item.IconBitmap = new Avalonia.Media.Imaging.Bitmap(ms);
-                                 item.IconText = "";
-                             } catch { }
-                         }
-                         
-                         desiredSources.Add(item);
-                     }
-                 }
-                 desiredSources = desiredSources.OrderBy(x => x.Name == "All" ? 0 : 1).ThenBy(x => x.Name).ToList();
-
                  // Sync
                  var toRemoveSource = AvailableSources.Where(s => !desiredSources.Any(d => d.Name == s.Name)).ToList();
                  foreach (var s in toRemoveSource) AvailableSources.Remove(s);
@@ -763,17 +783,6 @@ namespace Yomic.ViewModels
                   {
                        // FilterLibrary() is called below or skipped if source filter changed
                   }
-
-                  // Extract all unique genres from _allItems
-                  var allExtractedGenres = _allItems
-                      .Where(x => x.Genres != null)
-                      .SelectMany(x => x.Genres)
-                      .Where(g => !string.IsNullOrWhiteSpace(g))
-                      .Select(g => g.Trim())
-                      .Where(g => !string.Equals(g, "Manga", StringComparison.OrdinalIgnoreCase))
-                      .Distinct(StringComparer.OrdinalIgnoreCase)
-                      .OrderBy(g => g)
-                      .ToList();
 
                   // Sync AvailableGenres
                   var toRemoveGenre = AvailableGenres.Where(g => !allExtractedGenres.Contains(g.Name, StringComparer.OrdinalIgnoreCase)).ToList();
@@ -825,10 +834,18 @@ namespace Yomic.ViewModels
                  }
 
                  // 2. Apply Source Filter
-                 if (!string.IsNullOrEmpty(SelectedSourceFilter) && SelectedSourceFilter != "All")
-                 {
-                     query = query.Where(x => string.Equals(x.SourceName, SelectedSourceFilter, StringComparison.OrdinalIgnoreCase));
-                 }
+                  if (!string.IsNullOrEmpty(SelectedSourceFilter) && SelectedSourceFilter != "All")
+                  {
+                      var sourceItem = AvailableSources.FirstOrDefault(s => s.Name == SelectedSourceFilter);
+                      if (sourceItem != null && long.TryParse(sourceItem.Id, out long selectedSourceId))
+                      {
+                          query = query.Where(x => x.SourceId == selectedSourceId);
+                      }
+                      else
+                      {
+                          query = query.Where(x => string.Equals(x.SourceName, SelectedSourceFilter, StringComparison.OrdinalIgnoreCase));
+                      }
+                  }
 
                  // 2b. Apply Category Filter
                  if (HasCategories && SelectedCategoryTab != null)
@@ -881,22 +898,28 @@ namespace Yomic.ViewModels
                  var initialPage = source.Take(PageSize).ToList();
                  _loadedCount = initialPage.Count;
 
-                 // Smart Sync for ObservableCollection
-                 var toRemove = LibraryItems.Where(i => !initialPage.Contains(i)).ToList();
+                 // Smart Sync for ObservableCollection using HashSet lookup for O(1) contains check
+                 var initialPageSet = new HashSet<MangaItem>(initialPage);
+                 var toRemove = LibraryItems.Where(i => !initialPageSet.Contains(i)).ToList();
                  foreach(var item in toRemove) LibraryItems.Remove(item);
                  
+                 // Use an in-memory shadow list to avoid slow index scans on the Avalonia UI ObservableCollection
+                 var shadowList = LibraryItems.ToList();
                  for (int i = 0; i < initialPage.Count; i++)
                  {
                      var item = initialPage[i];
-                     int existingIndex = LibraryItems.IndexOf(item);
+                     int existingIndex = shadowList.IndexOf(item);
                      
                      if (existingIndex == -1)
                      {
                          LibraryItems.Insert(i, item);
+                         shadowList.Insert(i, item);
                      }
                      else if (existingIndex != i)
                      {
                          LibraryItems.Move(existingIndex, i);
+                         shadowList.RemoveAt(existingIndex);
+                         shadowList.Insert(i, item);
                      }
                  }
                  
@@ -1013,5 +1036,12 @@ namespace Yomic.ViewModels
         }
 
         #endregion
+        public void Dispose()
+        {
+            if (_networkService != null && _statusChangedHandler != null)
+            {
+                _networkService.StatusChanged -= _statusChangedHandler;
+            }
+        }
     }
 }

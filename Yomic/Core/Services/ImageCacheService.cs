@@ -1,43 +1,82 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
+using BitFaster.Caching;
+using BitFaster.Caching.Lru;
 
 namespace Yomic.Core.Services
 {
+    public class CachedBitmap
+    {
+        public Bitmap Bitmap { get; }
+        public CachedBitmap(Bitmap bitmap)
+        {
+            Bitmap = bitmap;
+        }
+    }
+
     public class ImageCacheService
     {
-        // Thread-safe dictionary for bitmap cache: URL -> WeakReference<Bitmap>
-        // Use WeakReference to allow GC to reclaim memory if needed.
-        private readonly ConcurrentDictionary<string, WeakReference<Bitmap>> _cache = new();
+        // High-performance lock-free Concurrent LRU Cache powered by BitFaster.Caching (Max 1000 items in RAM)
+        // Wrapped in CachedBitmap to prevent BitFaster from disposing bitmaps while UI elements are rendering them
+        private readonly ICache<string, CachedBitmap> _lruCache;
         
+        // L2 WeakReference cache for soft memory references
+        private readonly ConcurrentDictionary<string, WeakReference<Bitmap>> _weakCache = new();
+
+        public ImageCacheService()
+        {
+            _lruCache = new ConcurrentLruBuilder<string, CachedBitmap>()
+                .WithCapacity(1000)
+                .Build();
+        }
+
         public Bitmap? GetImage(string url)
         {
-            if (_cache.TryGetValue(url, out var weakRef))
+            if (string.IsNullOrEmpty(url)) return null;
+
+            // 1. Try L1 Lock-free Concurrent LRU Cache
+            if (_lruCache.TryGet(url, out var cached))
             {
-                if (weakRef.TryGetTarget(out var bitmap))
+                if (cached?.Bitmap != null)
                 {
-                    return bitmap;
+                    return cached.Bitmap;
+                }
+            }
+
+            // 2. Try L2 Weak Cache Fallback
+            if (_weakCache.TryGetValue(url, out var weakRef))
+            {
+                if (weakRef.TryGetTarget(out var weakBitmap))
+                {
+                    _lruCache.AddOrUpdate(url, new CachedBitmap(weakBitmap));
+                    return weakBitmap;
                 }
                 else
                 {
-                    // Clean up dead reference
-                    _cache.TryRemove(url, out _);
+                    _weakCache.TryRemove(url, out _);
                 }
             }
+
             return null;
         }
 
         public void AddImage(string url, Bitmap bitmap)
         {
-            if (bitmap == null) return;
-            _cache.AddOrUpdate(url, new WeakReference<Bitmap>(bitmap), (k, v) => new WeakReference<Bitmap>(bitmap));
+            if (string.IsNullOrEmpty(url) || bitmap == null) return;
+
+            // Add/Update to L1 Concurrent LRU Cache
+            _lruCache.AddOrUpdate(url, new CachedBitmap(bitmap));
+
+            // Add/Update to L2 Weak Cache
+            _weakCache.AddOrUpdate(url, new WeakReference<Bitmap>(bitmap), (k, v) => new WeakReference<Bitmap>(bitmap));
         }
 
         public void Clear()
         {
-            _cache.Clear();
+            _lruCache.Clear();
+            _weakCache.Clear();
         }
 
         /// <summary>
@@ -48,16 +87,24 @@ namespace Yomic.Core.Services
         {
             if (string.IsNullOrEmpty(sourceBaseUrl)) return;
             
-            // Extract domain from baseUrl for matching
-            string domain = sourceBaseUrl.Replace("https://", "").Replace("http://", "").TrimEnd('/');
-            
-            var keysToRemove = _cache.Keys.Where(url => url.Contains(domain, StringComparison.OrdinalIgnoreCase)).ToList();
-            foreach (var key in keysToRemove)
+            string domain = sourceBaseUrl;
+            if (Uri.TryCreate(sourceBaseUrl, UriKind.Absolute, out var uri))
             {
-                _cache.TryRemove(key, out _);
+                domain = uri.Host;
+            }
+            else
+            {
+                domain = sourceBaseUrl.Replace("https://", "").Replace("http://", "").TrimEnd('/');
             }
             
-            System.Console.WriteLine($"[ImageCacheService] Cleared {keysToRemove.Count} cached images for source: {domain}");
+            var keysToRemove = _weakCache.Keys.Where(url => url.Contains(domain, StringComparison.OrdinalIgnoreCase)).ToList();
+            foreach (var key in keysToRemove)
+            {
+                _weakCache.TryRemove(key, out _);
+                _lruCache.TryRemove(key);
+            }
+            
+            LogService.Info("ImageCacheService", $"Cleared {keysToRemove.Count} cached images for source: {domain}");
         }
     }
 }

@@ -2,6 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using Yomic.Core.Models;
 using System.Linq;
 using System.Collections.Generic;
+using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Yomic.Core.Data
 {
@@ -11,6 +15,8 @@ namespace Yomic.Core.Data
         public DbSet<Chapter> Chapters { get; set; } = null!;
         public DbSet<History> History { get; set; } = null!;
         public DbSet<Category> Categories { get; set; } = null!;
+
+        private static bool _hasLoggedPath = false;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -22,10 +28,15 @@ namespace Yomic.Core.Data
             }
             var dbPath = System.IO.Path.Combine(path, "manga.db");
             
-            // Log path for debugging
-            System.Diagnostics.Debug.WriteLine($"[DbContext] Database Path: {dbPath}");
+            // Log path for debugging once
+            if (!_hasLoggedPath)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DbContext] Database Path: {dbPath}");
+                _hasLoggedPath = true;
+            }
             
-            optionsBuilder.UseSqlite($"Data Source={dbPath}");
+            optionsBuilder.UseSqlite($"Data Source={dbPath};Cache=Shared;Default Timeout=10");
+            optionsBuilder.AddInterceptors(new SqlitePragmaInterceptor());
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -71,6 +82,23 @@ namespace Yomic.Core.Data
                     });
                 
             base.OnModelCreating(modelBuilder);
+        }
+    }
+
+    public class SqlitePragmaInterceptor : DbConnectionInterceptor
+    {
+        public override void ConnectionOpened(DbConnection connection, ConnectionEndEventData eventData)
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA cache_size=-10000; PRAGMA temp_store=MEMORY; PRAGMA busy_timeout=10000;";
+            command.ExecuteNonQuery();
+        }
+
+        public override async Task ConnectionOpenedAsync(DbConnection connection, ConnectionEndEventData eventData, CancellationToken cancellationToken = default)
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA cache_size=-10000; PRAGMA temp_store=MEMORY; PRAGMA busy_timeout=10000;";
+            await command.ExecuteNonQueryAsync(cancellationToken);
         }
     }
 }

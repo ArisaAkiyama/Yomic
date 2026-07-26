@@ -45,6 +45,8 @@ namespace Yomic.Views
                 this.RaiseAndSetIfChanged(ref _isDefault, value);
                 this.RaisePropertyChanged(nameof(StarIcon));
                 this.RaisePropertyChanged(nameof(StarColor));
+                this.RaisePropertyChanged(nameof(StarFill));
+                this.RaisePropertyChanged(nameof(StarStroke));
             }
         }
 
@@ -62,10 +64,12 @@ namespace Yomic.Views
         }
 
         public IBrush ColorBrush => Brush.Parse(Color);
-        public string StarIcon => IsDefault ? "\uE735" : "\uE734"; // Filled vs hollow star
+        public string StarIcon => IsDefault ? "M8.243 7.34l-6.38 .925l-.113 .023a1 1 0 0 0 -.44 1.684l4.622 4.499l-1.09 6.355l-.013 .11a1 1 0 0 0 1.464 .944l5.706 -3l5.693 3l.1 .046a1 1 0 0 0 1.352 -1.1l-1.091 -6.355l4.624 -4.5l.078 -.085a1 1 0 0 0 -.633 -1.62l-6.38 -.926l-2.852 -5.78a1 1 0 0 0 -1.794 0l-2.853 5.78z" : "M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245"; // Filled vs hollow star
         public string StarColor => IsDefault ? "#FFB900" : "#7A7A7A"; // Gold vs grey
+        public string StarFill => IsDefault ? StarColor : "Transparent";
+        public string StarStroke => IsDefault ? "Transparent" : StarColor;
         
-        public string ExcludeIcon => IsUpdateExcluded ? "\uE711" : "\uE73E"; // Cancel (X) vs CheckMark
+        public string ExcludeIcon => IsUpdateExcluded ? "M18 6l-12 12 M6 6l12 12" : "M5 12l5 5l10 -10"; // Cancel (X) vs CheckMark
         public string ExcludeColor => IsUpdateExcluded ? "#F87171" : "#107C41"; // Red if excluded, Green if included
         public string ExcludeToolTip => IsUpdateExcluded ? "Updates Paused (Click to Resume)" : "Updates Active (Click to Pause)";
     }
@@ -251,10 +255,10 @@ namespace Yomic.Views
             _editingItem = null;
             
             var title = this.FindControl<TextBlock>("PaneTitle");
-            if (title != null) title.Text = "Create Category";
+            if (title != null) title.Text = GetResourceString("String.Category.CreateCategory", "Create Category");
 
             var button = this.FindControl<Button>("ActionButton");
-            if (button != null) button.Content = "Add";
+            if (button != null) button.Content = GetResourceString("String.Add", "Add");
 
             var cancelBtn = this.FindControl<Button>("CancelEditButton");
             if (cancelBtn != null) cancelBtn.IsVisible = false;
@@ -299,10 +303,10 @@ namespace Yomic.Views
                 _editingItem = item;
                 
                 var title = this.FindControl<TextBlock>("PaneTitle");
-                if (title != null) title.Text = "Edit Category";
+                if (title != null) title.Text = GetResourceString("String.Category.EditCategory", "Edit Category");
 
                 var button = this.FindControl<Button>("ActionButton");
-                if (button != null) button.Content = "Save";
+                if (button != null) button.Content = GetResourceString("String.Save", "Save");
 
                 var cancelBtn = this.FindControl<Button>("CancelEditButton");
                 if (cancelBtn != null) cancelBtn.IsVisible = true;
@@ -329,13 +333,24 @@ namespace Yomic.Views
             }
         }
 
+        private string GetResourceString(string key, string defaultValue)
+        {
+            if (this.TryFindResource(key, out var res) && res is string str)
+            {
+                return str;
+            }
+            return defaultValue;
+        }
+
         private async void OnDeleteRowClick(object? sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.DataContext is CategoryItemViewModel item)
             {
-                var dialog = new ConfirmDialog(
-                    "Delete Category",
-                    $"Are you sure you want to delete the category \"{item.Name}\"? Mangas in this category will not be deleted.");
+                var title = GetResourceString("String.Dialog.DeleteCategoryTitle", "Delete Category");
+                var format = GetResourceString("String.Dialog.DeleteCategoryMsg", "Are you sure you want to delete the category \"{0}\"? Mangas in this category will not be deleted.");
+                var message = string.Format(format, item.Name);
+                
+                var dialog = new ConfirmDialog(title, message);
 
                 bool confirmed = await dialog.ShowDialog<bool>(this);
                 if (confirmed)

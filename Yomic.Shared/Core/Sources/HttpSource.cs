@@ -2,14 +2,17 @@ using System;
 using System.Net.Http;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Linq;
 using System.Net;
 using Yomic.Core.Services;
+using Polly;
+using Polly.Retry;
 
 namespace Yomic.Core.Sources
 {
     public abstract class HttpSource : IMangaSource
     {
+        public static bool SilenceLogs { get; set; } = false;
+
         /// <summary>
         /// Unique stable ID generated from the class name.
         /// This ensures no collision between extensions from different developers.
@@ -19,15 +22,15 @@ namespace Yomic.Core.Sources
         private long GenerateStableId()
         {
             var name = GetType().FullName ?? GetType().Name;
-            var hash = System.Security.Cryptography.MD5.HashData(
-                System.Text.Encoding.UTF8.GetBytes(name));
-            return BitConverter.ToInt64(hash, 0);
+            var bytes = System.Text.Encoding.UTF8.GetBytes(name);
+            return (long)System.IO.Hashing.XxHash64.HashToUInt64(bytes);
         }
         
         public abstract string Name { get; }
         public abstract string BaseUrl { get; }
         public virtual string Language => "EN"; // Default to EN
         public virtual bool IsHasMorePages => true;
+        public virtual int RateLimitDelayMs => 1000;
         
         public virtual string Version => "1.0.0";
         public virtual string IconUrl => "";
@@ -66,7 +69,7 @@ namespace Yomic.Core.Sources
                     // Re-apply extension-specific configuration (headers, etc.)
                     ConfigureClient(_client);
                     
-                    Console.WriteLine("[HttpSource] HttpClient created");
+                    if (!SilenceLogs) Console.WriteLine("[HttpSource] HttpClient created");
                 }
                 
                 return _client;
@@ -150,10 +153,10 @@ namespace Yomic.Core.Sources
                         ipAddress = entry.AddressList.FirstOrDefault();
                     }
                     
-                    System.Diagnostics.Debug.WriteLine(logBuilder.ToString());
+                    if (!SilenceLogs) System.Diagnostics.Debug.WriteLine(logBuilder.ToString());
                     if (ipAddress == null) 
                     {
-                        Console.WriteLine($"[DoH] FAILED resolving {host}!");
+                        if (!SilenceLogs) Console.WriteLine($"[DoH] FAILED resolving {host}!");
                         throw new Exception($"Could not resolve host: {host}\nLogs:\n{logBuilder}");
                     }
 
@@ -172,7 +175,25 @@ namespace Yomic.Core.Sources
                 },
                 SslOptions = new System.Net.Security.SslClientAuthenticationOptions
                 {
-                    RemoteCertificateValidationCallback = delegate { return true; },
+                    RemoteCertificateValidationCallback = (sender, cert, chain, errors) =>
+                    {
+                        if (errors == System.Net.Security.SslPolicyErrors.None) return true;
+                        if (cert != null)
+                        {
+                            var subject = cert.Subject;
+                            if (subject.Contains("ryzukomik", StringComparison.OrdinalIgnoreCase) ||
+                                subject.Contains("komikcast", StringComparison.OrdinalIgnoreCase) ||
+                                subject.Contains("komiku", StringComparison.OrdinalIgnoreCase) ||
+                                subject.Contains("shinigami", StringComparison.OrdinalIgnoreCase) ||
+                                subject.Contains("kiryuu", StringComparison.OrdinalIgnoreCase) ||
+                                subject.Contains("komikindo", StringComparison.OrdinalIgnoreCase) ||
+                                subject.Contains("mangaku", StringComparison.OrdinalIgnoreCase))
+                            {
+                                return true;
+                            }
+                        }
+                        return false;
+                    },
                     EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
                 },
                 PooledConnectionLifetime = TimeSpan.FromMinutes(2),
@@ -205,25 +226,25 @@ namespace Yomic.Core.Sources
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [HttpSource] Request Error ({ex.GetType().Name}): {ex.Message}");
+                WriteToLog($"Request Error ({ex.GetType().Name}): {ex.Message}");
                 if (ex is HttpRequestException httpEx && httpEx.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [HttpSource] 404 Not Found. Skipping Cloudflare Fallback.");
+                    WriteToLog("404 Not Found. Skipping Cloudflare Fallback.");
                     throw; // Don't try to bypass cloudflare for 404s, it will just time out
                 }
-                Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [HttpSource] Attempting Cloudflare/Puppeteer Fallback...");
+                WriteToLog("Attempting Cloudflare/Puppeteer Fallback...");
                 
                 // FAST PATH: If user already solved CAPTCHA via WebView, skip Steps 1-2 and go directly to headless fetch
                 if (CloudflareBypassService.Instance.HasPreSolvedCookies)
                 {
-                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [HttpSource] Pre-solved cookies detected! Skipping to HEADLESS BROWSER FETCH...");
+                    WriteToLog("Pre-solved cookies detected! Skipping to HEADLESS BROWSER FETCH...");
                     return await CloudflareBypassService.Instance.GetContentAsync(url);
                 }
 
                 try
                 {
                     // Strategy 1: Update Tokens and Retry HTTP
-                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [HttpSource] Step 1: Fetching Tokens via Headless Browser from {BaseUrl}...");
+                    WriteToLog($"Step 1: Fetching Tokens via Headless Browser from {BaseUrl}...");
                     var (ua, cookies) = await CloudflareBypassService.Instance.GetTokensAsync(BaseUrl);
                     
                     if (!string.IsNullOrEmpty(ua)) Client.DefaultRequestHeaders.UserAgent.ParseAdd(ua);
@@ -238,13 +259,13 @@ namespace Yomic.Core.Sources
                     }
 
                     // Retry Internal
-                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [HttpSource] Step 2: Retrying HTTP Request with new tokens...");
+                    WriteToLog("Step 2: Retrying HTTP Request with new tokens...");
                     return await GetStringAsyncInternal(url);
                 }
                 catch (Exception retryEx)
                 {
-                     Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [HttpSource] HTTP Retry Failed: {retryEx.Message}");
-                     Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [HttpSource] Step 3: Switching to HEADLESS BROWSER FETCH (Slow but Reliable)");
+                     WriteToLog($"HTTP Retry Failed: {retryEx.Message}");
+                     WriteToLog("Step 3: Switching to HEADLESS BROWSER FETCH (Slow but Reliable)");
                      
                      // Strategy 2: Fetch Content directly via Puppeteer
                      return await CloudflareBypassService.Instance.GetContentAsync(url);
@@ -252,31 +273,53 @@ namespace Yomic.Core.Sources
             }
         }
 
+        private static readonly ResiliencePipeline _httpRetryPipeline = new ResiliencePipelineBuilder()
+            .AddRetry(new RetryStrategyOptions
+            {
+                ShouldHandle = new PredicateBuilder().Handle<HttpRequestException>()
+                                                     .Handle<TaskCanceledException>()
+                                                     .Handle<TimeoutException>(),
+                MaxRetryAttempts = 3,
+                Delay = TimeSpan.FromMilliseconds(500),
+                BackoffType = DelayBackoffType.Exponential,
+                UseJitter = true,
+                OnRetry = args =>
+                {
+                    if (!SilenceLogs) Console.WriteLine($"[Polly Retry #{args.AttemptNumber}] Network glitch: {args.Outcome.Exception?.Message}. Retrying in {args.RetryDelay.TotalMilliseconds:F0}ms...");
+                    return default;
+                }
+            })
+            .Build();
+
         private async Task<string> GetStringAsyncInternal(string url)
         {
-            // Ensure Referer is set to BaseUrl (Important for hotlink protection/anti-bot)
-            if (Client.DefaultRequestHeaders.Referrer == null)
+            return await _httpRetryPipeline.ExecuteAsync(async (context) =>
             {
-                try { Client.DefaultRequestHeaders.Referrer = new Uri(BaseUrl); } catch { }
-            }
+                // Ensure Referer is set to BaseUrl (Important for hotlink protection/anti-bot)
+                if (Client.DefaultRequestHeaders.Referrer == null)
+                {
+                    try { Client.DefaultRequestHeaders.Referrer = new Uri(BaseUrl); } catch { }
+                }
 
-            WriteToLog($"Downloading: {url}");
-            var response = await Client.GetAsync(url);
-            
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                var preview = new string(errorContent.Take(200).ToArray());
-                WriteToLog($"Failed: {response.StatusCode}. Content: {preview}..."); 
-                throw new HttpRequestException($"Request failed with {response.StatusCode}", null, response.StatusCode); 
-            }
-            
-            WriteToLog($"Success! ({response.Content.Headers.ContentLength} bytes)");
-            return await response.Content.ReadAsStringAsync();
+                WriteToLog($"Downloading: {url}");
+                var response = await Client.GetAsync(url);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    var preview = new string(errorContent.Take(200).ToArray());
+                    WriteToLog($"Failed: {response.StatusCode}. Content: {preview}..."); 
+                    throw new HttpRequestException($"Request failed with {response.StatusCode}", null, response.StatusCode); 
+                }
+                
+                WriteToLog($"Success! ({response.Content.Headers.ContentLength} bytes)");
+                return await response.Content.ReadAsStringAsync();
+            });
         }
 
         private void WriteToLog(string message)
         {
+            if (SilenceLogs) return;
             string log = $"[{DateTime.Now:HH:mm:ss}] [HttpSource] {message}";
             Console.WriteLine(log);
         }
@@ -288,7 +331,7 @@ namespace Yomic.Core.Sources
 
         protected async Task<string> ForceBrowserFetchAsync(string url, string? waitForSelector = null)
         {
-              Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [HttpSource] FORCING HEADLESS BROWSER FETCH for: {url} (Wait: {waitForSelector ?? "None"})");
+              WriteToLog($"FORCING HEADLESS BROWSER FETCH for: {url} (Wait: {waitForSelector ?? "None"})");
               return await CloudflareBypassService.Instance.GetContentAsync(url, waitForSelector);
          }
     }
@@ -296,7 +339,7 @@ namespace Yomic.Core.Sources
     public class DpiBypassStream : Stream
     {
         private readonly Stream _innerStream;
-        private bool _isFirstWrite = true;
+        private volatile bool _isFirstWrite = true;
 
         public DpiBypassStream(Stream innerStream)
         {

@@ -12,7 +12,7 @@
     <Border Background="{DynamicResource PrimaryBackground}" CornerRadius="16" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" Padding="26">
         <Grid RowDefinitions="Auto,*,Auto">
             <StackPanel Grid.Row="0" Spacing="6" Margin="0,0,0,22">
-                <TextBlock Text="Download Chapters" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}"/>
+                <TextBlock Text="{DynamicResource String.Dialog.DownloadChapters}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}"/>
                 <TextBlock x:Name="MangaTitleText" FontSize="13" Foreground="{DynamicResource SecondaryText}" TextTrimming="CharacterEllipsis" MaxLines="1"/>
             </StackPanel>
 
@@ -20,21 +20,21 @@
                 <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
                     <Border Grid.Column="0" Background="{DynamicResource SidebarBackground}" CornerRadius="10" Padding="12" MinHeight="76">
                         <StackPanel Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock Text="Total" Foreground="{DynamicResource SecondaryText}" FontSize="12" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{DynamicResource String.Dialog.Total}" Foreground="{DynamicResource SecondaryText}" FontSize="12" HorizontalAlignment="Center"/>
                             <TextBlock x:Name="TotalCountText" Foreground="{DynamicResource PrimaryText}" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Border>
 
                     <Border Grid.Column="1" Background="{DynamicResource SidebarBackground}" CornerRadius="10" Padding="12" MinHeight="76">
                         <StackPanel Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock Text="To Download" Foreground="{DynamicResource SecondaryText}" FontSize="12" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{DynamicResource String.Dialog.ToDownload}" Foreground="{DynamicResource SecondaryText}" FontSize="12" HorizontalAlignment="Center"/>
                             <TextBlock x:Name="MissingCountText" Foreground="{DynamicResource PrimaryAccent}" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Border>
 
                     <Border Grid.Column="2" Background="{DynamicResource SidebarBackground}" CornerRadius="10" Padding="12" MinHeight="76">
                         <StackPanel Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock Text="Unread" Foreground="{DynamicResource SecondaryText}" FontSize="12" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{DynamicResource String.Dialog.Unread}" Foreground="{DynamicResource SecondaryText}" FontSize="12" HorizontalAlignment="Center"/>
                             <TextBlock x:Name="UnreadCountText" Foreground="{DynamicResource SuccessColor}" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Border>
@@ -47,17 +47,17 @@
                                      IsChecked="True"
                                      Foreground="{DynamicResource PrimaryText}"
                                      FontSize="13"
-                                     Content="Download all chapters"/>
+                                     Content="{DynamicResource String.Dialog.DownloadAllOpt}"/>
                         <RadioButton x:Name="UnreadOption"
                                      GroupName="DownloadMode"
                                      Foreground="{DynamicResource PrimaryText}"
                                      FontSize="13"
-                                     Content="Download unread chapters only"/>
+                                     Content="{DynamicResource String.Dialog.DownloadUnreadOpt}"/>
                     </StackPanel>
                 </Border>
 
                 <Border Background="#08000000" CornerRadius="8" Padding="14,12">
-                    <TextBlock Text="Downloaded chapters will be skipped. Selected chapters will be added to the Downloads queue."
+                    <TextBlock Text="{DynamicResource String.Dialog.SkipWarning}"
                                Foreground="{DynamicResource SecondaryText}"
                                FontSize="12"
                                TextWrapping="Wrap"
@@ -67,8 +67,12 @@
                 <!-- Bulk Warning -->
                 <Border x:Name="BulkWarningBorder" Background="#1AFFB900" BorderBrush="#FFB900" BorderThickness="1" CornerRadius="8" Padding="14,12" IsVisible="False" Margin="0,12,0,0">
                     <Grid ColumnDefinitions="Auto, *">
-                        <TextBlock Grid.Column="0" Text="&#xE7BA;" FontFamily="Segoe Fluent Icons" Foreground="#FFB900" FontSize="16" VerticalAlignment="Top" Margin="0,2,10,0"/>
-                        <TextBlock Grid.Column="1" Text="Mass Download Warning:&#x0a;Downloading more than 20 chapters at once may trigger Anti-Bot protection (like Cloudflare) on the source server. If your IP is blocked, you will be unable to read from this source temporarily."
+                        <Viewbox Grid.Column="0" Width="16" Height="16" VerticalAlignment="Top" Margin="0,2,10,0">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M12 9v4 M12 17h.01 M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75" Stroke="#FFB900" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                            </Canvas>
+                        </Viewbox>
+                        <TextBlock Grid.Column="1" Text="{DynamicResource String.Dialog.MassDownloadWarning}"
                                    Foreground="{DynamicResource PrimaryText}"
                                    FontSize="12"
                                    TextWrapping="Wrap"
@@ -79,7 +83,7 @@
 
             <Border Grid.Row="2" Padding="0,18,0,0" Margin="0,22,0,0">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12">
-                    <Button Content="Cancel"
+                    <Button Content="{DynamicResource String.Cancel}"
                             Click="OnCancelClick"
                             Background="{DynamicResource HoverBackground}"
                             Foreground="{DynamicResource PrimaryText}"
@@ -87,7 +91,7 @@
                             Padding="24,10"
                             FontWeight="SemiBold"
                             BorderThickness="0"/>
-                    <Button Content="Start Download"
+                    <Button Content="{DynamicResource String.Dialog.StartDownload}"
                             Click="OnStartClick"
                             Background="{DynamicResource AccentColor}"
                             Foreground="White"

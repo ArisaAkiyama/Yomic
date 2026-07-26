@@ -11,18 +11,24 @@
         <StackPanel Spacing="30" Margin="30,20">
              <!-- Header -->
              <StackPanel Orientation="Horizontal" Spacing="15" VerticalAlignment="Center" Margin="0,0,0,10">
-                <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="28" 
-                           Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"
-                           RenderOptions.TextRenderingMode="Antialias"/>
-                <TextBlock Text="Settings" FontSize="32" FontWeight="Bold" 
+                <Viewbox Width="28" Height="28" VerticalAlignment="Center">
+                    <Canvas Width="24" Height="24">
+                        <Path Data="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c.996 .608 2.296 .07 2.572 -1.065z M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                    </Canvas>
+                </Viewbox>
+                <TextBlock Text="{DynamicResource String.Settings}" FontSize="32" FontWeight="Bold" 
                            Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
             </StackPanel>
             
             <!-- General Section -->
             <StackPanel Spacing="15">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                     <TextBlock Text="&#xE770;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource SecondaryText}"/>
-                     <TextBlock Text="General" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
+                     <Viewbox Width="20" Height="20" VerticalAlignment="Center">
+                          <Canvas Width="24" Height="24">
+                              <Path Data="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1z M7 20h10 M9 16v4 M15 16v4" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                          </Canvas>
+                      </Viewbox>
+                      <TextBlock Text="{DynamicResource String.General}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
                 </StackPanel>
                 
                 <StackPanel Spacing="6">
@@ -30,8 +36,8 @@
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3">
-                                <TextBlock Text="Dark Mode" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Use system dark theme preferences" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                                <TextBlock Text="{DynamicResource String.DarkMode}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.DarkModeDesc}" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
                             <ToggleSwitch Grid.Column="1" IsEnabled="{Binding !IsThemeChanging}" IsChecked="{Binding IsDarkMode}" OnContent="" OffContent=""/>
                         </Grid>
@@ -42,7 +48,7 @@
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <TextBlock Text="Offline Mode" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                    <TextBlock Text="{DynamicResource String.OfflineMode}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
                                     <!-- Status Badges -->
                                     <Panel VerticalAlignment="Center">
                                         <Border Background="#2000C853" CornerRadius="8" Padding="8,2" IsVisible="{Binding !IsOfflineMode}">
@@ -53,7 +59,7 @@
                                         </Border>
                                     </Panel>
                                 </StackPanel>
-                                <TextBlock Text="Force application to use downloaded content only" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                                <TextBlock Text="{DynamicResource String.OfflineModeDesc}" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
                             <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsOfflineMode}" OnContent="" OffContent=""/>
                         </Grid>
@@ -63,8 +69,8 @@
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3">
-                                <TextBlock Text="Show NSFW Sources" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Display extensions with 18+ content in Browse" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                                <TextBlock Text="{DynamicResource String.ShowNsfwSources}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.ShowNsfwSourcesDesc}" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
                             <ToggleSwitch Grid.Column="1" IsChecked="{Binding ShowNsfwSources}" OnContent="" OffContent="" VerticalAlignment="Center"/>
                         </Grid>
@@ -74,22 +80,38 @@
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3">
-                                <TextBlock Text="Auto-Update" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Check for updates automatically on startup" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                                <TextBlock Text="{DynamicResource String.AutoUpdate}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.AutoUpdateDesc}" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
                             <ToggleSwitch Grid.Column="1" IsChecked="{Binding CheckAppUpdateOnStart}" OnContent="" OffContent=""/>
                         </Grid>
                     </Border>
 
-
+                    <!-- Language Selection -->
+                    <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Spacing="3" VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource String.AppLanguage}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.AppLanguageDesc}" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                            </StackPanel>
+                            <ComboBox Grid.Column="1" SelectedIndex="{Binding AppLanguageIndex}" Width="160" VerticalAlignment="Center">
+                                <ComboBoxItem Content="English"/>
+                                <ComboBoxItem Content="Bahasa Indonesia"/>
+                            </ComboBox>
+                        </Grid>
+                    </Border>
                 </StackPanel>
             </StackPanel>
 
             <!-- Network Section -->
             <StackPanel Spacing="15">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                     <TextBlock Text="&#xE839;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource SecondaryText}"/>
-                     <TextBlock Text="Network" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
+                     <Viewbox Width="20" Height="20" VerticalAlignment="Center">
+                          <Canvas Width="24" Height="24">
+                              <Path Data="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0 M3.6 9h16.8 M3.6 15h16.8 M11.5 3a17 17 0 0 0 0 18 M12.5 3a17 17 0 0 1 0 18" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                          </Canvas>
+                      </Viewbox>
+                      <TextBlock Text="{DynamicResource String.Network}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
                 </StackPanel>
                 <StackPanel Spacing="6">
 
@@ -97,11 +119,11 @@
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3">
-                                <TextBlock Text="DNS over HTTPS" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Bypass DNS blocking by resolving over HTTPS" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                                <TextBlock Text="{DynamicResource String.DnsOverHttps}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.DnsOverHttpsDesc}" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
                             <ComboBox Grid.Column="1" SelectedIndex="{Binding DnsOverHttpsProvider}" Width="150" VerticalAlignment="Center" CornerRadius="8">
-                                <ComboBoxItem>Disabled</ComboBoxItem>
+                                <ComboBoxItem Content="{DynamicResource String.Disabled}"/>
                                 <ComboBoxItem>Cloudflare</ComboBoxItem>
                                 <ComboBoxItem>Google</ComboBoxItem>
                                 <ComboBoxItem>AdGuard</ComboBoxItem>
@@ -112,8 +134,12 @@
             </StackPanel>
             <StackPanel Spacing="15">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                     <TextBlock Text="&#xE8F1;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource SecondaryText}"/>
-                     <TextBlock Text="Library" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
+                      <Viewbox Width="20" Height="20" VerticalAlignment="Center">
+                          <Canvas Width="24" Height="24">
+                              <Path Data="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0 M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0 M3 6v13 M12 6v13 M21 6v13" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                          </Canvas>
+                      </Viewbox>
+                      <TextBlock Text="{DynamicResource String.LibraryHeader}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
                 </StackPanel>
                 
                 <StackPanel Spacing="6">
@@ -121,8 +147,8 @@
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3">
-                                <TextBlock Text="Auto-Sync Library" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Automatically check for new chapters on startup" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                                <TextBlock Text="{DynamicResource String.AutoSyncLibrary}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.AutoSyncLibraryDesc}" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
                             
                             <ToggleSwitch Grid.Column="1" IsChecked="{Binding UpdateOnStart}" OnContent="" OffContent=""/>
@@ -134,12 +160,12 @@
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="Smart Update" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                    <TextBlock Text="{DynamicResource String.SmartUpdate}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
                                     <Border Background="#20E8A0" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
-                                        <TextBlock Text="Recommended" FontSize="10" FontWeight="Bold" Foreground="#121212"/>
+                                        <TextBlock Text="{DynamicResource String.Recommended}" FontSize="10" FontWeight="Bold" Foreground="#121212"/>
                                     </Border>
                                 </StackPanel>
-                                <TextBlock Text="Prioritize updating active manga and skip completed/hiatus titles to save bandwidth" FontSize="13" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryText}"/>
+                                <TextBlock Text="{DynamicResource String.SmartUpdateDesc}" FontSize="13" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
                             
                             <ToggleSwitch Grid.Column="1" IsChecked="{Binding UseSmartUpdate}" OnContent="" OffContent=""/>
@@ -150,15 +176,15 @@
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3">
-                                <TextBlock Text="Background Auto-Update" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Update library in the background without opening the app (Uses Windows Task Scheduler)" FontSize="13" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryText}"/>
+                                <TextBlock Text="{DynamicResource String.BackgroundAutoUpdate}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.BackgroundAutoUpdateDesc}" FontSize="13" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
                             
                             <ComboBox Grid.Column="1" SelectedIndex="{Binding AutoUpdateIntervalIndex}" Width="150" VerticalAlignment="Center">
-                                <ComboBoxItem>Off (Manual Only)</ComboBoxItem>
-                                <ComboBoxItem>Every 6 Hours</ComboBoxItem>
-                                <ComboBoxItem>Every 12 Hours</ComboBoxItem>
-                                <ComboBoxItem>Every 24 Hours</ComboBoxItem>
+                                <ComboBoxItem Content="{DynamicResource String.UpdateIntervalOff}"/>
+                                <ComboBoxItem Content="{DynamicResource String.UpdateInterval6h}"/>
+                                <ComboBoxItem Content="{DynamicResource String.UpdateInterval12h}"/>
+                                <ComboBoxItem Content="{DynamicResource String.UpdateInterval24h}"/>
                             </ComboBox>
                         </Grid>
                     </Border>
@@ -167,8 +193,8 @@
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3">
-                                <TextBlock Text="Refresh Library Covers" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Re-download cover thumbnails for all manga in your library" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                                <TextBlock Text="{DynamicResource String.RefreshLibraryCovers}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.RefreshLibraryCoversDesc}" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
                             <Button Grid.Column="1" Command="{Binding RefreshLibraryCoversCommand}" 
                                     IsEnabled="{Binding !IsRefreshingCovers}"
@@ -199,7 +225,7 @@
                                             </Style>
                                         </Path.Styles>
                                     </Path>
-                                    <TextBlock Text="Refresh" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{DynamicResource String.Refresh}" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Grid>
@@ -210,15 +236,19 @@
             <!-- Security Section -->
             <StackPanel Spacing="15">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                     <TextBlock Text="&#xE72E;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource SecondaryText}"/>
-                     <TextBlock Text="Security" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
+                     <Viewbox Width="20" Height="20" VerticalAlignment="Center">
+                          <Canvas Width="24" Height="24">
+                              <Path Data="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                          </Canvas>
+                      </Viewbox>
+                      <TextBlock Text="{DynamicResource String.Security}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
                 </StackPanel>
                  <StackPanel Spacing="6">
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3">
-                                <TextBlock Text="Blur Explicit Covers" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Blur cover images containing explicit content in Library" 
+                                <TextBlock Text="{DynamicResource String.BlurExplicitCovers}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.BlurExplicitCoversDesc}" 
                                            FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
                             <ToggleSwitch Grid.Column="1" IsChecked="{Binding SecureScreen}" OnContent="" OffContent=""/>
@@ -231,16 +261,20 @@
             <!-- Reader Section -->
             <StackPanel Spacing="15">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                     <TextBlock Text="&#xE736;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource SecondaryText}"/>
-                     <TextBlock Text="Reader" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
+                     <Viewbox Width="20" Height="20" VerticalAlignment="Center">
+                          <Canvas Width="24" Height="24">
+                              <Path Data="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0 M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0 M3 6v13 M12 6v13 M21 6v13" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                          </Canvas>
+                      </Viewbox>
+                      <TextBlock Text="{DynamicResource String.Reader}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
                 </StackPanel>
                  <StackPanel Spacing="6">
                     <!-- Preload Next Chapter -->
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <TextBlock Text="Preload Next Chapter" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16" HorizontalAlignment="Left"/>
-                                <TextBlock Text="Download pages of the next chapter in the background when nearing the end of current chapter" 
+                                <TextBlock Text="{DynamicResource String.PreloadNextChapter}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16" HorizontalAlignment="Left"/>
+                                <TextBlock Text="{DynamicResource String.PreloadNextChapterDesc}" 
                                            FontSize="13" Foreground="{DynamicResource SecondaryText}" TextWrapping="Wrap" MaxWidth="500" HorizontalAlignment="Left"/>
                             </StackPanel>
                             <ToggleSwitch Grid.Column="1" IsChecked="{Binding PreloadNextChapter}" OnContent="" OffContent="" VerticalAlignment="Center"/>
@@ -251,8 +285,8 @@
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <TextBlock Text="Auto Download Next Chapter" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16" HorizontalAlignment="Left"/>
-                                <TextBlock Text="Automatically add the next chapter to the Downloads queue while reading" 
+                                <TextBlock Text="{DynamicResource String.AutoDownloadNextChapter}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16" HorizontalAlignment="Left"/>
+                                <TextBlock Text="{DynamicResource String.AutoDownloadNextChapterDesc}" 
                                            FontSize="13" Foreground="{DynamicResource SecondaryText}" TextWrapping="Wrap" MaxWidth="500" HorizontalAlignment="Left"/>
                             </StackPanel>
                             <ToggleSwitch Grid.Column="1" IsChecked="{Binding AutoDownloadNextChapter}" OnContent="" OffContent="" VerticalAlignment="Center"/>
@@ -263,8 +297,8 @@
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <TextBlock Text="Skip Filtered Chapters" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16" HorizontalAlignment="Left"/>
-                                <TextBlock Text="Automatically skip chapters that are filtered out in the manga details page while reading" 
+                                <TextBlock Text="{DynamicResource String.SkipFilteredChapters}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16" HorizontalAlignment="Left"/>
+                                <TextBlock Text="{DynamicResource String.SkipFilteredChaptersDesc}" 
                                            FontSize="13" Foreground="{DynamicResource SecondaryText}" TextWrapping="Wrap" MaxWidth="500" HorizontalAlignment="Left"/>
                             </StackPanel>
                             <ToggleSwitch Grid.Column="1" IsChecked="{Binding SkipFilteredChapters}" OnContent="" OffContent="" VerticalAlignment="Center"/>
@@ -275,8 +309,8 @@
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <TextBlock Text="Reader Performance Mode" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16" HorizontalAlignment="Left"/>
-                                <TextBlock Text="Optimize reader performance by limiting concurrent downloads (2) and image decodes (1) for smoother scrolling" 
+                                <TextBlock Text="{DynamicResource String.ReaderPerformanceMode}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16" HorizontalAlignment="Left"/>
+                                <TextBlock Text="{DynamicResource String.ReaderPerformanceModeDesc}" 
                                            FontSize="13" Foreground="{DynamicResource SecondaryText}" TextWrapping="Wrap" MaxWidth="500" HorizontalAlignment="Left"/>
                             </StackPanel>
                             <ToggleSwitch Grid.Column="1" IsChecked="{Binding ReaderPerformanceMode}" OnContent="" OffContent="" VerticalAlignment="Center"/>
@@ -287,12 +321,12 @@
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <TextBlock Text="Max Reader Cache Size" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16" HorizontalAlignment="Left"/>
-                                <TextBlock Text="Automatically clear oldest reader cache files when the size limit is exceeded" 
+                                <TextBlock Text="{DynamicResource String.MaxReaderCacheSize}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16" HorizontalAlignment="Left"/>
+                                <TextBlock Text="{DynamicResource String.MaxReaderCacheSizeDesc}" 
                                            FontSize="13" Foreground="{DynamicResource SecondaryText}" TextWrapping="Wrap" MaxWidth="500" HorizontalAlignment="Left"/>
                             </StackPanel>
                             <ComboBox Grid.Column="1" SelectedIndex="{Binding MaxCacheSizeIndex}" Width="150" VerticalAlignment="Center" CornerRadius="8">
-                                <ComboBoxItem>Disabled</ComboBoxItem>
+                                <ComboBoxItem Content="{DynamicResource String.Disabled}"/>
                                 <ComboBoxItem>250 MB</ComboBoxItem>
                                 <ComboBoxItem>500 MB</ComboBoxItem>
                                 <ComboBoxItem>1 GB</ComboBoxItem>
@@ -306,15 +340,19 @@
             <!-- Data & Storage Section -->
             <StackPanel Spacing="15">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                     <TextBlock Text="&#xE78C;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource SecondaryText}"/>
-                     <TextBlock Text="Data &amp; Storage" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
+                      <Viewbox Width="20" Height="20" VerticalAlignment="Center">
+                          <Canvas Width="24" Height="24">
+                              <Path Data="M12 6m-8 0a8 3 0 1 0 16 0a8 3 0 1 0 -16 0 M4 6v6a8 3 0 0 0 16 0v-6 M4 12v6a8 3 0 0 0 16 0v-6" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                          </Canvas>
+                      </Viewbox>
+                      <TextBlock Text="{DynamicResource String.DataStorage}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
                 </StackPanel>
                  <StackPanel Spacing="6">
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3">
-                                <TextBlock Text="Create Backup" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Create a backup of your local database and settings" 
+                                <TextBlock Text="{DynamicResource String.CreateBackup}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.CreateBackupDesc}" 
                                            FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                                 <TextBlock Text="{Binding LastBackupInfo}" 
                                            FontSize="11" Foreground="{DynamicResource SecondaryText}" Opacity="0.7" Margin="0,3,0,0"/>
@@ -348,7 +386,7 @@
                                             </Style>
                                         </Path.Styles>
                                     </Path>
-                                    <TextBlock Text="Backup" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{DynamicResource String.Backup}" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Grid>
@@ -356,8 +394,8 @@
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3">
-                                <TextBlock Text="Restore Backup" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Restore data from a previously created backup file" 
+                                <TextBlock Text="{DynamicResource String.RestoreBackup}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.RestoreBackupDesc}" 
                                            FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
                             <Button Grid.Column="1" Command="{Binding RestoreDataCommand}"
@@ -389,7 +427,7 @@
                                             </Style>
                                         </Path.Styles>
                                     </Path>
-                                    <TextBlock Text="Restore" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{DynamicResource String.Restore}" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Grid>
@@ -399,10 +437,10 @@
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000" IsVisible="False">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3">
-                                <TextBlock Text="Clear Cache &amp; Cookies" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Free up memory and reset network connections" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                                <TextBlock Text="{DynamicResource String.ClearCacheCookies}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.ClearCacheCookiesDesc}" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
-                            <Button Grid.Column="1" Content="Clear Cache" Command="{Binding ClearCacheCookiesCommand}"
+                            <Button Grid.Column="1" Content="{DynamicResource String.ClearCache}" Command="{Binding ClearCacheCookiesCommand}"
                                     Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" 
                                     Foreground="{DynamicResource PrimaryText}" CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
                                      VerticalAlignment="Center" Cursor="Hand">
@@ -421,8 +459,12 @@
             <!-- Advanced Section -->
             <StackPanel Spacing="15">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                    <TextBlock Text="&#xE9F3;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource SecondaryText}"/>
-                    <TextBlock Text="Advanced" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
+                    <Viewbox Width="20" Height="20" VerticalAlignment="Center">
+                        <Canvas Width="24" Height="24">
+                            <Path Data="M7 8l-4 4l4 4 M17 8l4 4l-4 4 M14 4l-4 16" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                        </Canvas>
+                    </Viewbox>
+                    <TextBlock Text="{DynamicResource String.Advanced}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
                 </StackPanel>
 
                 <StackPanel Spacing="6">
@@ -432,8 +474,8 @@
                         <StackPanel Spacing="14">
                             <Grid ColumnDefinitions="*, Auto">
                                 <StackPanel Spacing="3">
-                                    <TextBlock Text="Database Statistics" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                    <TextBlock Text="Overview of your local manga database" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                                    <TextBlock Text="{DynamicResource String.DatabaseStatistics}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                    <TextBlock Text="{DynamicResource String.DatabaseStatisticsDesc}" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                                 </StackPanel>
                                 <!-- Optimize Button -->
                                 <Button Grid.Column="1" Command="{Binding OptimizeDatabaseCommand}"
@@ -465,9 +507,12 @@
                                                 </Style>
                                             </Path.Styles>
                                         </Path>
-                                        <TextBlock Text="&#xE9F5;" FontFamily="Segoe Fluent Icons" FontSize="14" VerticalAlignment="Center"
-                                                   IsVisible="{Binding !IsOptimizingDb}"/>
-                                        <TextBlock Text="Optimize DB" VerticalAlignment="Center"/>
+                                        <Viewbox Width="14" Height="14" VerticalAlignment="Center" IsVisible="{Binding !IsOptimizingDb}">
+                                             <Canvas Width="24" Height="24">
+                                                 <Path Data="M13 3l0 7l6 0l-8 11l0 -7l-6 0z" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                             </Canvas>
+                                         </Viewbox>
+                                        <TextBlock Text="{DynamicResource String.OptimizeDb}" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
                             </Grid>
@@ -479,28 +524,28 @@
                                     <StackPanel Grid.Column="0" HorizontalAlignment="Center" Spacing="4">
                                         <TextBlock Text="{Binding DbStatsManga}" FontSize="22" FontWeight="Bold"
                                                    Foreground="{DynamicResource PrimaryAccent}" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="Manga" FontSize="11" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="{DynamicResource String.Manga}" FontSize="11" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                     <Border Grid.Column="1" Width="1" Background="{DynamicResource SeparatorBrush}" Margin="0,4"/>
                                     <!-- Chapters -->
                                     <StackPanel Grid.Column="2" HorizontalAlignment="Center" Spacing="4">
                                         <TextBlock Text="{Binding DbStatsChapters}" FontSize="22" FontWeight="Bold"
                                                    Foreground="{DynamicResource PrimaryAccent}" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="Chapters" FontSize="11" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="{DynamicResource String.Chapters}" FontSize="11" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                     <Border Grid.Column="3" Width="1" Background="{DynamicResource SeparatorBrush}" Margin="0,4"/>
                                     <!-- History -->
                                     <StackPanel Grid.Column="4" HorizontalAlignment="Center" Spacing="4">
                                         <TextBlock Text="{Binding DbStatsHistory}" FontSize="22" FontWeight="Bold"
                                                    Foreground="{DynamicResource PrimaryAccent}" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="History" FontSize="11" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="{DynamicResource String.HistoryLabel}" FontSize="11" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                     <Border Grid.Column="5" Width="1" Background="{DynamicResource SeparatorBrush}" Margin="0,4"/>
                                     <!-- DB Size -->
                                     <StackPanel Grid.Column="6" HorizontalAlignment="Center" Spacing="4">
                                         <TextBlock Text="{Binding DbStatsSize}" FontSize="22" FontWeight="Bold"
                                                    Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="DB Size" FontSize="11" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="{DynamicResource String.DbSize}" FontSize="11" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -511,8 +556,8 @@
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3">
-                                <TextBlock Text="Export App Logs" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Save the application log file for bug reporting or troubleshooting" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                                <TextBlock Text="{DynamicResource String.ExportAppLogs}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.ExportAppLogsDesc}" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
                             <Button Grid.Column="1" Command="{Binding ExportLogsCommand}"
                                     Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1"
@@ -524,8 +569,12 @@
                                     </Style>
                                 </Button.Styles>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="&#xE74E;" FontFamily="Segoe Fluent Icons" FontSize="14" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Export Logs" VerticalAlignment="Center"/>
+                                     <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                                         <Canvas Width="24" Height="24">
+                                             <Path Data="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2 M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M14 4l0 4l-4 0l0 -4" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                         </Canvas>
+                                     </Viewbox>
+                                    <TextBlock Text="{DynamicResource String.ExportLogs}" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Grid>
@@ -537,18 +586,22 @@
             <!-- Danger Zone Section -->
             <StackPanel Spacing="15">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                     <TextBlock Text="&#xE7BA;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="#FF5555"/>
-                     <TextBlock Text="Danger Zone" FontSize="18" FontWeight="SemiBold" Foreground="#FF5555"/>
+                      <Viewbox Width="20" Height="20" VerticalAlignment="Center">
+                          <Canvas Width="24" Height="24">
+                              <Path Data="M12 9v4 M12 17h.01 M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75" Stroke="#FF5555" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                          </Canvas>
+                      </Viewbox>
+                     <TextBlock Text="{DynamicResource String.DangerZone}" FontSize="18" FontWeight="SemiBold" Foreground="#FF5555"/>
                 </StackPanel>
                 <Border BorderBrush="#40FF5555" BorderThickness="1" CornerRadius="8" Background="#05FF5555">
                     <StackPanel Spacing="0">
                         <!-- Clear Read History -->
                         <Grid ColumnDefinitions="*, Auto" Margin="20,15">
                             <StackPanel Spacing="3">
-                                <TextBlock Text="Clear Read History &amp; Cache" FontWeight="SemiBold" Foreground="#F59E0B" FontSize="16"/>
-                                <TextBlock Text="Reset all chapters to unread status and free up memory" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                                <TextBlock Text="{DynamicResource String.ClearHistoryCache}" FontWeight="SemiBold" Foreground="#F59E0B" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.ClearHistoryCacheDesc}" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
-                            <Button Grid.Column="1" Content="Clear All" Command="{Binding ClearReadHistoryCommand}" 
+                            <Button Grid.Column="1" Content="{DynamicResource String.ClearAll}" Command="{Binding ClearReadHistoryCommand}" 
                                     Background="#15F59E0B" BorderBrush="Transparent" BorderThickness="0" 
                                     Foreground="#F59E0B" CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
                                     VerticalAlignment="Center" Cursor="Hand">
@@ -566,10 +619,10 @@
                         <!-- Clear All Data -->
                         <Grid ColumnDefinitions="*, Auto" Margin="20,15">
                             <StackPanel Spacing="3">
-                                <TextBlock Text="Clear All Data" FontWeight="SemiBold" Foreground="#FF5555" FontSize="16"/>
-                                <TextBlock Text="Irreversible action to clear local database" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                                <TextBlock Text="{DynamicResource String.ClearAllData}" FontWeight="SemiBold" Foreground="#FF5555" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.ClearAllDataDesc}" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
-                            <Button Grid.Column="1" Content="Reset Data" Command="{Binding ClearAllDataCommand}" 
+                            <Button Grid.Column="1" Content="{DynamicResource String.ResetData}" Command="{Binding ClearAllDataCommand}" 
                                     Background="#15FF5555" BorderBrush="Transparent" BorderThickness="0" 
                                     Foreground="#FF5555" CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
                                     VerticalAlignment="Center" Cursor="Hand">
@@ -588,8 +641,12 @@
             <!-- About Section -->
             <StackPanel Spacing="15">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                     <TextBlock Text="&#xE946;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="{DynamicResource SecondaryText}"/>
-                     <TextBlock Text="About" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
+                     <Viewbox Width="20" Height="20" VerticalAlignment="Center">
+                         <Canvas Width="24" Height="24">
+                             <Path Data="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0 M12 9h.01 M11 12h1v4h1" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                         </Canvas>
+                     </Viewbox>
+                     <TextBlock Text="{DynamicResource String.About}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
                 </StackPanel>
                 <Border Background="{DynamicResource SidebarBackground}" CornerRadius="16" Padding="40" BoxShadow="0 4 15 0 #20000000">
                     <Grid ColumnDefinitions="Auto, *" Margin="10">
@@ -613,14 +670,14 @@
 
                             <!-- Description -->
                             <TextBlock Foreground="{DynamicResource PrimaryText}" FontSize="14" LineHeight="24" TextWrapping="Wrap" MaxWidth="600" HorizontalAlignment="Left" TextAlignment="Left">
-                                <Run Text="Yomic is a free and open source web comic reader, designed for a premium desktop reading experience."/>
+                                <Run Text="{DynamicResource String.AboutDesc1}"/>
                                 <LineBreak/>
-                                <Run Text="It aggregates content from popular sources, allowing you to read your favorite stories distraction-free."/>
+                                <Run Text="{DynamicResource String.AboutDesc2}"/>
                             </TextBlock>
 
                             <!-- Actions Row -->
                             <StackPanel Orientation="Horizontal" Spacing="15" Margin="0,5,0,0">
-                                <Button Command="{Binding VisitWebsiteCommand}" Content="Visit Website" 
+                                <Button Command="{Binding VisitWebsiteCommand}" Content="{DynamicResource String.VisitWebsite}" 
                                         FontWeight="SemiBold" FontSize="13"
                                         CornerRadius="16" Padding="18,8" Cursor="Hand">
                                     <Button.Styles>

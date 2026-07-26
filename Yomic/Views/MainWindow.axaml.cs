@@ -161,7 +161,7 @@ namespace Yomic.Views
             {
                 var dialog = new FeedbackDialog
                 {
-                    DataContext = new Yomic.ViewModels.FeedbackDialogViewModel(mainVM.ShowNotification)
+                    DataContext = new Yomic.ViewModels.FeedbackDialogViewModel(mainVM.SettingsService, mainVM.ShowNotification)
                 };
 
                 mainVM.IsDialogOverlayVisible = true;

@@ -51,7 +51,11 @@
                                 <Setter Property="Background" Value="#60000000"/>
                             </Style>
                         </Button.Styles>
-                        <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M5 12l14 0 M5 12l6 6 M5 12l6 -6" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                            </Canvas>
+                        </Viewbox>
                     </Button>
 
                     <!-- HEADER CONTENT -->
@@ -82,15 +86,21 @@
                             <StackPanel Orientation="Vertical" Spacing="8" Margin="0,0,0,20">
                                 <!-- Author -->
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="&#xE77B;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center"/>
+                                    <Viewbox Width="15" Height="15" VerticalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0 M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                        </Canvas>
+                                    </Viewbox>
                                     <TextBlock Text="{Binding Author}" Foreground="{DynamicResource SecondaryText}" FontSize="15" FontWeight="SemiBold"/>
                                 </StackPanel>
 
                                 <!-- Status with Timer Icon -->
                                 <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left">
-                                    <TextBlock Text="&#xE916;" FontFamily="Segoe Fluent Icons"
-                                               Foreground="{Binding Status, Converter={x:Static vm:StatusToColorConverter.Instance}}"
-                                               FontSize="15" VerticalAlignment="Center"/>
+                                    <Viewbox Width="15" Height="15" VerticalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0 M12 7v5l3 3" Stroke="{Binding Status, Converter={x:Static vm:StatusToColorConverter.Instance}}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                        </Canvas>
+                                    </Viewbox>
                                     <TextBlock Text="{Binding Status}"
                                                Foreground="{Binding Status, Converter={x:Static vm:StatusToColorConverter.Instance}}"
                                                FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -112,24 +122,49 @@
                                 <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,2,0,0"
                                             IsVisible="{Binding HasRating}">
                                     <Panel>
-                                        <TextBlock Text="&#xE734;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource PrimaryAccent}" FontSize="15" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding Star1Char}" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource PrimaryAccent}" FontSize="15" VerticalAlignment="Center"/>
+                                        <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Data="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245" 
+                                                      Stroke="{DynamicResource PrimaryAccent}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <PathIcon Data="{Binding Star1Char}" Width="16" Height="16" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Center"/>
                                     </Panel>
                                     <Panel>
-                                        <TextBlock Text="&#xE734;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource PrimaryAccent}" FontSize="15" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding Star2Char}" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource PrimaryAccent}" FontSize="15" VerticalAlignment="Center"/>
+                                        <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Data="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245" 
+                                                      Stroke="{DynamicResource PrimaryAccent}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <PathIcon Data="{Binding Star2Char}" Width="16" Height="16" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Center"/>
                                     </Panel>
                                     <Panel>
-                                        <TextBlock Text="&#xE734;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource PrimaryAccent}" FontSize="15" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding Star3Char}" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource PrimaryAccent}" FontSize="15" VerticalAlignment="Center"/>
+                                        <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Data="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245" 
+                                                      Stroke="{DynamicResource PrimaryAccent}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <PathIcon Data="{Binding Star3Char}" Width="16" Height="16" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Center"/>
                                     </Panel>
                                     <Panel>
-                                        <TextBlock Text="&#xE734;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource PrimaryAccent}" FontSize="15" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding Star4Char}" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource PrimaryAccent}" FontSize="15" VerticalAlignment="Center"/>
+                                        <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Data="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245" 
+                                                      Stroke="{DynamicResource PrimaryAccent}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <PathIcon Data="{Binding Star4Char}" Width="16" Height="16" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Center"/>
                                     </Panel>
                                     <Panel>
-                                        <TextBlock Text="&#xE734;" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource PrimaryAccent}" FontSize="15" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding Star5Char}" FontFamily="Segoe Fluent Icons" Foreground="{DynamicResource PrimaryAccent}" FontSize="15" VerticalAlignment="Center"/>
+                                        <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Data="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245" 
+                                                      Stroke="{DynamicResource PrimaryAccent}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <PathIcon Data="{Binding Star5Char}" Width="16" Height="16" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Center"/>
                                     </Panel>
                                     <TextBlock Text="{Binding RatingText}" Foreground="{DynamicResource SecondaryText}" FontSize="14" FontWeight="SemiBold" Margin="6,0,0,0" VerticalAlignment="Center"/>
                                 </StackPanel>
@@ -184,7 +219,11 @@
                                             CommandParameter="{Binding NextChapterToRead}"
                                             IsEnabled="{Binding Chapters.Count}">
                                         <StackPanel Spacing="6" HorizontalAlignment="Center">
-                                            <TextBlock Text="&#xE768;" FontFamily="Segoe Fluent Icons" FontSize="22" HorizontalAlignment="Center"/>
+                                            <Viewbox Width="26" Height="26" HorizontalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="M7 4v16l13 -8l-13 -8" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
                                             <TextBlock Text="{Binding ResumeButtonText}" FontSize="11" HorizontalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
@@ -192,9 +231,22 @@
                                     <!-- Library Toggle -->
                                     <Button Command="{Binding ToggleLibraryCommand}">
                                         <StackPanel Spacing="6" HorizontalAlignment="Center">
-                                            <TextBlock Text="{Binding InLibrary, Converter={x:Static vm:StatusToColorConverter.BoolToHeartIcon}}"
-                                                       FontFamily="Segoe Fluent Icons" HorizontalAlignment="Center" FontSize="22"
-                                                       Foreground="{Binding InLibrary, Converter={x:Static vm:StatusToColorConverter.BoolToHeartColor}}"/>
+                                            <Panel>
+                                                <!-- Not in Library (Outline) -->
+                                                <Viewbox Width="26" Height="26" HorizontalAlignment="Center" IsVisible="{Binding !InLibrary}">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Data="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" 
+                                                              Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                    </Canvas>
+                                                </Viewbox>
+                                                <!-- In Library (Filled Red) -->
+                                                <Viewbox Width="26" Height="26" HorizontalAlignment="Center" IsVisible="{Binding InLibrary}">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Data="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" 
+                                                              Stroke="Red" StrokeThickness="2" Fill="Red" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                    </Canvas>
+                                                </Viewbox>
+                                            </Panel>
                                             <TextBlock Text="{Binding InLibrary, Converter={x:Static vm:StatusToColorConverter.BoolToLibraryText}}"
                                                        FontSize="11" HorizontalAlignment="Center"
                                                        TextWrapping="Wrap" TextAlignment="Center"/>
@@ -204,7 +256,11 @@
                                     <!-- Open in Browser -->
                                     <Button Command="{Binding OpenWebViewCommand}">
                                         <StackPanel Spacing="6" HorizontalAlignment="Center">
-                                            <TextBlock Text="&#xE12B;" FontFamily="Segoe Fluent Icons" FontSize="22" HorizontalAlignment="Center"/>
+                                            <Viewbox Width="26" Height="26" HorizontalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0 M3.6 9h16.8 M3.6 15h16.8 M11.5 3a17 17 0 0 0 0 18 M12.5 3a17 17 0 0 1 0 18" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
                                             <TextBlock Text="Browser" FontSize="11" HorizontalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
@@ -212,7 +268,11 @@
                                     <!-- Refresh -->
                                     <Button Command="{Binding RefreshCommand}">
                                         <StackPanel Spacing="6" HorizontalAlignment="Center">
-                                            <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="22" HorizontalAlignment="Center"/>
+                                            <Viewbox Width="26" Height="26" HorizontalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
                                             <TextBlock Text="Refresh" FontSize="11" HorizontalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
@@ -220,7 +280,11 @@
                                     <!-- Download -->
                                     <Button Command="{Binding DownloadAllCommand}">
                                         <StackPanel Spacing="6" HorizontalAlignment="Center">
-                                            <TextBlock Text="&#xE896;" FontFamily="Segoe Fluent Icons" FontSize="22" HorizontalAlignment="Center"/>
+                                            <Viewbox Width="26" Height="26" HorizontalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2 M7 11l5 5l5 -5 M12 4l0 12" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
                                             <TextBlock Text="Download" FontSize="11" HorizontalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
@@ -268,15 +332,17 @@
                                         <Setter Property="Background" Value="Transparent"/>
                                     </Style>
                                 </Button.Styles>
-                                <TextBlock FontSize="18"
-                                           FontFamily="Segoe Fluent Icons"
-                                           Foreground="{Binding $parent[Button].Foreground}">
-                                    <TextBlock.Text>
-                                        <MultiBinding Converter="{x:Static vm:StatusToColorConverter.BoolToExpandText}">
-                                            <Binding Path="IsSynopsisExpanded"/>
-                                        </MultiBinding>
-                                    </TextBlock.Text>
-                                </TextBlock>
+                                <Viewbox Width="20" Height="20">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round">
+                                            <Path.Data>
+                                                <MultiBinding Converter="{x:Static vm:StatusToColorConverter.BoolToExpandText}">
+                                                    <Binding Path="IsSynopsisExpanded"/>
+                                                </MultiBinding>
+                                            </Path.Data>
+                                        </Path>
+                                    </Canvas>
+                                </Viewbox>
                             </Button>
                         </StackPanel>
 
@@ -296,17 +362,17 @@
                                         <MenuFlyout Placement="BottomEdgeAlignedRight">
                                             <MenuItem Header="All Chapters" Command="{Binding SetChapterFilterCommand}" CommandParameter="All">
                                                 <MenuItem.Icon>
-                                                    <TextBlock Text="&#xE8B9;" FontFamily="Segoe Fluent Icons" IsVisible="{Binding IsFilterAll}"/>
+                                                    <PathIcon Data="M5 12l5 5l10 -10" Width="14" Height="14" IsVisible="{Binding IsFilterAll}"/>
                                                 </MenuItem.Icon>
                                             </MenuItem>
                                             <MenuItem Header="Unread Only" Command="{Binding SetChapterFilterCommand}" CommandParameter="Unread">
                                                 <MenuItem.Icon>
-                                                    <TextBlock Text="&#xE8B9;" FontFamily="Segoe Fluent Icons" IsVisible="{Binding IsFilterUnread}"/>
+                                                    <PathIcon Data="M5 12l5 5l10 -10" Width="14" Height="14" IsVisible="{Binding IsFilterUnread}"/>
                                                 </MenuItem.Icon>
                                             </MenuItem>
                                             <MenuItem Header="Bookmarked Only" Command="{Binding SetChapterFilterCommand}" CommandParameter="Bookmarked">
                                                 <MenuItem.Icon>
-                                                    <TextBlock Text="&#xE8B9;" FontFamily="Segoe Fluent Icons" IsVisible="{Binding IsFilterBookmarked}"/>
+                                                    <PathIcon Data="M5 12l5 5l10 -10" Width="14" Height="14" IsVisible="{Binding IsFilterBookmarked}"/>
                                                 </MenuItem.Icon>
                                             </MenuItem>
                                         </MenuFlyout>
@@ -326,9 +392,13 @@
                                             <Setter Property="Background" Value="Transparent"/>
                                         </Style>
                                     </Button.Styles>
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="&#xE71C;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
-                                    </StackPanel>
+                                     <StackPanel Orientation="Horizontal" Spacing="6">
+                                         <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                             <Canvas Width="24" Height="24">
+                                                 <Path Data="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                             </Canvas>
+                                         </Viewbox>
+                                     </StackPanel>
                                 </Button>
 
                                 <!-- Sort Button -->
@@ -350,9 +420,12 @@
                                             <Setter Property="Background" Value="Transparent"/>
                                         </Style>
                                     </Button.Styles>
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="&#xE8CB;" FontFamily="Segoe Fluent Icons"
-                                                   Foreground="{Binding $parent[Button].Foreground}"/>
+                                     <StackPanel Orientation="Horizontal" Spacing="6">
+                                         <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                             <Canvas Width="24" Height="24">
+                                                 <Path Data="M3 9l4 -4l4 4m-4 -4v14 M21 15l-4 4l-4 -4m4 4v-14" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                             </Canvas>
+                                         </Viewbox>
                                         <TextBlock Text="{Binding SortAscending, Converter={x:Static vm:StatusToColorConverter.SortToString}}"
                                                    FontSize="12"
                                                    Foreground="{Binding $parent[Button].Foreground}"/>
@@ -438,14 +511,14 @@
                                         <!-- NEW Badge -->
                                         <Border Background="#D20F39" CornerRadius="4" Padding="5,1.5" VerticalAlignment="Center"
                                                 IsVisible="{Binding IsNewRelease}">
-                                            <TextBlock Text="NEW" Foreground="White" FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{DynamicResource String.Badge.New}" Foreground="White" FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
                                         </Border>
                                     </StackPanel>
 
                                     <!-- Bookmark Toggle -->
                                     <Panel Grid.Column="1" Margin="0,0,5,0" IsHitTestVisible="True" VerticalAlignment="Center">
                                         <Button Command="{Binding ToggleBookmarkCommand}" Background="Transparent"
-                                                Padding="8" BorderThickness="0" CornerRadius="8" ToolTip.Tip="Toggle Bookmark">
+                                                Padding="8" BorderThickness="0" CornerRadius="8" ToolTip.Tip="{DynamicResource String.MangaDetail.ToggleBookmark}">
                                             <Button.Styles>
                                                 <Style Selector="Button:pointerover /template/ ContentPresenter">
                                                     <Setter Property="Background" Value="Transparent"/>
@@ -455,12 +528,20 @@
                                                 </Style>
                                             </Button.Styles>
                                             <Panel>
-                                                <TextBlock Text="&#xE734;" FontFamily="Segoe Fluent Icons" FontSize="16"
-                                                           Foreground="{DynamicResource SecondaryText}"
-                                                           IsVisible="{Binding !Bookmark}"/>
-                                                <TextBlock Text="&#xE735;" FontFamily="Segoe Fluent Icons" FontSize="16"
-                                                           Foreground="{DynamicResource PrimaryAccent}"
-                                                           IsVisible="{Binding Bookmark}"/>
+                                                <!-- Unbookmarked Star -->
+                                                <Viewbox Width="20" Height="20" IsVisible="{Binding !Bookmark}">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Data="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245" 
+                                                              Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                    </Canvas>
+                                                </Viewbox>
+                                                <!-- Bookmarked Star (Filled) -->
+                                                <Viewbox Width="20" Height="20" IsVisible="{Binding Bookmark}">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Data="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245" 
+                                                              Stroke="{DynamicResource PrimaryAccent}" StrokeThickness="2" Fill="{DynamicResource PrimaryAccent}" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                    </Canvas>
+                                                </Viewbox>
                                             </Panel>
                                         </Button>
                                     </Panel>
@@ -471,7 +552,7 @@
                                         <Button Command="{Binding DownloadCommand}" Background="Transparent"
                                                 IsVisible="{Binding !IsDownloaded}"
                                                 Padding="8" BorderThickness="0" CornerRadius="8"
-                                                ToolTip.Tip="Download Chapter"
+                                                ToolTip.Tip="{DynamicResource String.MangaDetail.DownloadChapter}"
                                                 Foreground="{DynamicResource SecondaryText}">
                                             <Button.Styles>
                                                 <Style Selector="Button:pointerover /template/ ContentPresenter">
@@ -482,8 +563,12 @@
                                                 </Style>
                                             </Button.Styles>
                                             <Panel>
-                                                <TextBlock Text="&#xE896;" FontFamily="Segoe Fluent Icons" FontSize="16"
-                                                           IsVisible="{Binding !IsDownloading}"/>
+                                                <Viewbox Width="20" Height="20" IsVisible="{Binding !IsDownloading}">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Data="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2 M7 11l5 5l5 -5 M12 4l0 12" 
+                                                              Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                    </Canvas>
+                                                </Viewbox>
                                                 <ProgressBar IsIndeterminate="True" Width="16" Height="16"
                                                              IsVisible="{Binding IsDownloading}"
                                                              Foreground="{DynamicResource PrimaryAccent}"/>
@@ -494,15 +579,19 @@
                                         <Button Command="{Binding DeleteCommand}" Background="Transparent"
                                                 IsVisible="{Binding IsDownloaded}"
                                                 Padding="8" BorderThickness="0" CornerRadius="8"
-                                                ToolTip.Tip="Delete Download">
+                                                ToolTip.Tip="{DynamicResource String.MangaDetail.DeleteDownload}">
                                             <Button.Styles>
                                                 <Style Selector="Button:pointerover /template/ ContentPresenter">
                                                     <Setter Property="Background" Value="Transparent"/>
                                                 </Style>
                                             </Button.Styles>
                                             <Panel>
-                                                <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons" Foreground="#EF4444" FontSize="16"
-                                                           IsVisible="{Binding !IsDeleting}"/>
+                                                <Viewbox Width="20" Height="20" IsVisible="{Binding !IsDeleting}">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Data="M4 7l16 0 M10 11l0 6 M14 11l0 6 M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12 M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" 
+                                                              Stroke="#EF4444" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                    </Canvas>
+                                                </Viewbox>
                                                 <ProgressBar IsIndeterminate="True" Width="16" Height="16"
                                                              IsVisible="{Binding IsDeleting}"
                                                              Foreground="#EF4444"/>
@@ -555,8 +644,11 @@
                             </Style>
                         </Button.Styles>
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="&#xE8CB;" FontFamily="Segoe Fluent Icons"
-                                       Foreground="{Binding $parent[Button].Foreground}"/>
+                            <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M3 9l4 -4l4 4m-4 -4v14 M21 15l-4 4l-4 -4m4 4v-14" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                </Canvas>
+                            </Viewbox>
                             <TextBlock Text="{Binding SortAscending, Converter={x:Static vm:StatusToColorConverter.SortToString}}"
                                        FontSize="12"
                                        Foreground="{Binding $parent[Button].Foreground}"/>
@@ -633,7 +725,11 @@
                         <Setter Property="Background" Value="#60000000"/>
                     </Style>
                 </Button.Styles>
-                <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Canvas Width="24" Height="24">
+                        <Path Data="M5 12l14 0 M5 12l6 6 M5 12l6 -6" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                    </Canvas>
+                </Viewbox>
             </Button>
         </Grid>
 

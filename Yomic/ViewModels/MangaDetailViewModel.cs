@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using Yomic.Core.Services;
 using Yomic.Core.Helpers;
 using Avalonia.Collections;
+using Avalonia.Controls;
 
 namespace Yomic.ViewModels
 {
@@ -70,10 +71,32 @@ namespace Yomic.ViewModels
             {
                 this.RaiseAndSetIfChanged(ref _additionalChaptersCount, value);
                 this.RaisePropertyChanged(nameof(HasAdditionalChapters));
+                this.RaisePropertyChanged(nameof(AdditionalChaptersText));
             }
         }
         
         public bool HasAdditionalChapters => AdditionalChaptersCount > 0;
+
+        private string GetResourceString(string key, string defaultValue)
+        {
+            if (Avalonia.Application.Current != null && Avalonia.Application.Current.TryFindResource(key, out var res))
+            {
+                if (res is string str)
+                {
+                    return str;
+                }
+            }
+            return defaultValue;
+        }
+
+        public string AdditionalChaptersText
+        {
+            get
+            {
+                var format = GetResourceString("String.AdditionalChaptersFormat", "+{0} more");
+                return string.Format(format, AdditionalChaptersCount);
+            }
+        }
 
         private bool _isDownloaded;
         public bool IsDownloaded
@@ -211,8 +234,8 @@ namespace Yomic.ViewModels
             double score = Rating.Value / 2.0; // scale 10 to 5
             double diff = score - index;
 
-            if (diff >= 0.75) return "\uE735"; // Filled star overlay
-            if (diff >= 0.25) return "\uE7C6"; // Half star overlay
+            if (diff >= 0.75) return "M8.243 7.34l-6.38 .925l-.113 .023a1 1 0 0 0 -.44 1.684l4.622 4.499l-1.09 6.355l-.013 .11a1 1 0 0 0 1.464 .944l5.706 -3l5.693 3l.1 .046a1 1 0 0 0 1.352 -1.1l-1.091 -6.355l4.624 -4.5l.078 -.085a1 1 0 0 0 -.633 -1.62l-6.38 -.926l-2.852 -5.78a1 1 0 0 0 -1.794 0l-2.853 5.78z"; // Filled star overlay
+            if (diff >= 0.25) return "M12 1a.993 .993 0 0 1 .823 .443l.067 .116l2.852 5.781l6.38 .925c.741 .108 1.08 .94 .703 1.526l-.07 .095l-.078 .086l-4.624 4.499l1.09 6.355a1.001 1.001 0 0 1 -1.249 1.135l-.101 -.035l-.101 -.046l-5.693 -3l-5.706 3c-.105 .055 -.212 .09 -.32 .106l-.106 .01a1.003 1.003 0 0 1 -1.038 -1.06l.013 -.11l1.09 -6.355l-4.623 -4.5a1.001 1.001 0 0 1 .328 -1.647l.113 -.036l.114 -.023l6.379 -.925l2.853 -5.78a.968 .968 0 0 1 .904 -.56zm0 3.274v12.476a1 1 0 0 1 .239 .029l.115 .036l.112 .05l4.363 2.299l-.836 -4.873a1 1 0 0 1 .136 -.696l.07 -.099l.082 -.09l3.546 -3.453l-4.891 -.708a1 1 0 0 1 -.62 -.344l-.073 -.097l-.06 -.106l-2.183 -4.424z"; // Half star overlay
             return ""; // Empty overlay
         }
 
@@ -527,7 +550,6 @@ namespace Yomic.ViewModels
                 });
             };
 
-            Title = item.Title;
             Title = item.Title;
             _ = LoadSourceIcon();
             
@@ -851,8 +873,6 @@ namespace Yomic.ViewModels
                 _model.Status = manga.Status;
                 _model.Description = manga.Description;
                 _model.Genre = manga.Genre;
-                _model.Description = manga.Description;
-                _model.Genre = manga.Genre;
                 
                 // FORCE Update Thumbnail from Source if available, even if we have one
                 if (!string.IsNullOrEmpty(manga.ThumbnailUrl)) 
@@ -931,7 +951,8 @@ namespace Yomic.ViewModels
                          ChapterNumber = c.ChapterNumber 
                     }).ToList();
                     
-                    await _libraryService.UpdateChaptersAsync(_model, dbChapters);
+                    await _libraryService.UpdateChaptersAsync(_model, dbChapters, skipPrune: true);
+
                     System.Diagnostics.Debug.WriteLine($"[MangaDetailVM] Synced {dbChapters.Count} chapters to DB (Cache)");
                 }
                 
@@ -1035,15 +1056,27 @@ namespace Yomic.ViewModels
             }
         }
         
+        private string GetResourceString(string key, string defaultValue)
+        {
+            if (Avalonia.Application.Current != null && Avalonia.Application.Current.TryFindResource(key, out var res))
+            {
+                if (res is string str)
+                {
+                    return str;
+                }
+            }
+            return defaultValue;
+        }
+
         private string StatusToString(int status) => status switch
         {
-            1 => "Ongoing",
-            2 => "Completed",
-            3 => "Licensed",
-            4 => "Publishing Finished",
-            5 => "Cancelled",
-            6 => "Hiatus",
-            _ => "Unknown"
+            1 => GetResourceString("String.Status.Ongoing", "Ongoing"),
+            2 => GetResourceString("String.Status.Completed", "Completed"),
+            3 => GetResourceString("String.Status.Licensed", "Licensed"),
+            4 => GetResourceString("String.Status.PublishingFinished", "Publishing Finished"),
+            5 => GetResourceString("String.Status.Cancelled", "Cancelled"),
+            6 => GetResourceString("String.Status.Hiatus", "Hiatus"),
+            _ => GetResourceString("String.Status.Unknown", "Unknown")
         };
 
         private async System.Threading.Tasks.Task MarkChapterAsRead(ChapterItem item)

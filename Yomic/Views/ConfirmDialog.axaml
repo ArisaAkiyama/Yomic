@@ -19,7 +19,7 @@
             
             <!-- Actions -->
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,20,0,0">
-                <Button Content="Cancel" Click="OnCancelClick" 
+                <Button Content="{DynamicResource String.Cancel}" Click="OnCancelClick" 
                         Background="Transparent" Foreground="{DynamicResource PrimaryText}" FontWeight="SemiBold"
                         CornerRadius="8" Padding="20,10" Cursor="Hand" BorderThickness="0">
                     <Button.Styles>
@@ -28,7 +28,7 @@
                         </Style>
                     </Button.Styles>
                 </Button>
-                <Button Content="Confirm" Click="OnConfirmClick"
+                <Button Content="{DynamicResource String.Confirm}" Click="OnConfirmClick"
                         Background="#FF5555" Foreground="White" FontWeight="SemiBold"
                         CornerRadius="8" Padding="20,10" Cursor="Hand" BorderThickness="0">
                     <Button.Styles>

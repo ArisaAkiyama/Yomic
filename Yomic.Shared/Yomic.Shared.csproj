@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -8,10 +8,22 @@
 
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="1.5.1" />
+    <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.2" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
     <PackageReference Include="Jint" Version="4.9.3" />
+    <PackageReference Include="MemoryPack" Version="1.21.4" />
+    <PackageReference Include="Microsoft.ClearScript.V8" Version="7.5.1" />
+    <PackageReference Include="Microsoft.ClearScript.V8.Native.win-x64" Version="7.5.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Polly" Version="8.7.0" />
     <PackageReference Include="PuppeteerSharp" Version="20.2.5" />
+    <PackageReference Include="Serilog" Version="4.4.0" />
+    <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="SharpZipLib" Version="1.4.2" />
+    <PackageReference Include="System.IO.Hashing" Version="10.0.10" />
+    <PackageReference Include="System.Net.Http.WinHttpHandler" Version="10.0.10" />
   </ItemGroup>
 
 </Project>

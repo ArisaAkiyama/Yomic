@@ -21,7 +21,7 @@ namespace Yomic.Core.Services
         private readonly object _sourcesLock = new();
         private readonly string _localPluginsDir; // Bundled JS plugins (app directory)
         private readonly string _userPluginsDir;  // User JS plugins (AppData)
-        
+
         // Track source ID to file path mapping
         private readonly Dictionary<long, string> _sourceIdToPath = new();
 
@@ -30,11 +30,11 @@ namespace Yomic.Core.Services
         private readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(30);
 
         public event Action? OnSourcesChanged;
-        
+
         public SourceManager()
         {
             _sources = new List<IMangaSource>();
-            
+
             // 1. Define Bundled Plugins Path (App Directory)
             _localPluginsDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
             if (!System.IO.Directory.Exists(_localPluginsDir)) System.IO.Directory.CreateDirectory(_localPluginsDir);
@@ -43,7 +43,7 @@ namespace Yomic.Core.Services
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             _userPluginsDir = System.IO.Path.Combine(appData, "Yomic", "Plugins");
             if (!System.IO.Directory.Exists(_userPluginsDir)) System.IO.Directory.CreateDirectory(_userPluginsDir);
-            
+
             LoadExtensions();
         }
 
@@ -69,9 +69,17 @@ namespace Yomic.Core.Services
         {
             lock (_sourcesLock)
             {
-                if (!_sources.Any(s => s.Id == source.Id))
+                var existing = _sources.FirstOrDefault(s => s.Id == source.Id);
+                if (existing == null)
                 {
                     _sources.Add(source);
+                    OnSourcesChanged?.Invoke();
+                }
+                else
+                {
+                    // Bug Fix: Replace old instance on update/reinstall so new code is active in memory
+                    var idx = _sources.IndexOf(existing);
+                    _sources[idx] = source;
                     OnSourcesChanged?.Invoke();
                 }
             }
@@ -111,8 +119,15 @@ namespace Yomic.Core.Services
                 if (source != null)
                 {
                     _sources.Remove(source);
+
+                    // Bug Fix: Dispose source to release any background resources (e.g., headless browsers)
+                    if (source is IDisposable disposable)
+                    {
+                        try { disposable.Dispose(); } catch { }
+                    }
+
                     string? trackedPath = null;
-                    
+
                     // 1. Delete the path currently tracked
                     if (_sourceIdToPath.TryGetValue(id, out var path))
                     {
@@ -121,11 +136,11 @@ namespace Yomic.Core.Services
                         _sourceIdToPath.Remove(id);
                     }
 
-                    // 2. Also aggressively delete from both plugin directories using the filename
+                    // 2. Bug Fix: Only delete from userPluginsDir, NOT from localPluginsDir.
+                    //    Bundled (system) plugins should never be permanently deleted by the user.
                     string? jsName = string.IsNullOrWhiteSpace(trackedPath) ? null : System.IO.Path.GetFileName(trackedPath);
                     if (!string.IsNullOrEmpty(jsName))
                     {
-                        SafeDeleteFile(System.IO.Path.Combine(_localPluginsDir, jsName));
                         SafeDeleteFile(System.IO.Path.Combine(_userPluginsDir, jsName));
                     }
 
@@ -133,34 +148,34 @@ namespace Yomic.Core.Services
                 }
             }
         }
-        
+
         // Helper to check if a source is System (Bundled)
         public bool IsSystemSource(long id)
         {
-             if (_sourceIdToPath.TryGetValue(id, out var path))
-             {
-                 var fullPath = System.IO.Path.GetFullPath(path);
-                 var fullLocalDir = System.IO.Path.GetFullPath(_localPluginsDir);
-                 return fullPath.StartsWith(fullLocalDir, StringComparison.OrdinalIgnoreCase);
-             }
-             return false;
+            if (_sourceIdToPath.TryGetValue(id, out var path))
+            {
+                var fullPath = System.IO.Path.GetFullPath(path);
+                var fullLocalDir = System.IO.Path.GetFullPath(_localPluginsDir);
+                return fullPath.StartsWith(fullLocalDir, StringComparison.OrdinalIgnoreCase);
+            }
+            return false;
         }
 
         // Helper to check if a source is actually installed (System or User) vs just loaded from random path
         public bool IsInstalledSource(long id)
         {
-             if (_sourceIdToPath.TryGetValue(id, out var path))
-             {
-                 var fullPath = System.IO.Path.GetFullPath(path);
-                 var fullUserDir = System.IO.Path.GetFullPath(_userPluginsDir);
-                 var fullLocalDir = System.IO.Path.GetFullPath(_localPluginsDir);
-                 
-                 return fullPath.StartsWith(fullUserDir, StringComparison.OrdinalIgnoreCase) ||
-                        fullPath.StartsWith(fullLocalDir, StringComparison.OrdinalIgnoreCase);
-             }
-             return false;
+            if (_sourceIdToPath.TryGetValue(id, out var path))
+            {
+                var fullPath = System.IO.Path.GetFullPath(path);
+                var fullUserDir = System.IO.Path.GetFullPath(_userPluginsDir);
+                var fullLocalDir = System.IO.Path.GetFullPath(_localPluginsDir);
+
+                return fullPath.StartsWith(fullUserDir, StringComparison.OrdinalIgnoreCase) ||
+                       fullPath.StartsWith(fullLocalDir, StringComparison.OrdinalIgnoreCase);
+            }
+            return false;
         }
-        
+
         public string? GetSourcePath(long id)
         {
             if (_sourceIdToPath.TryGetValue(id, out var path)) return path;
@@ -231,16 +246,16 @@ namespace Yomic.Core.Services
                 // Copy to User Plugins Directory
                 var destPath = System.IO.Path.Combine(_userPluginsDir, fileName);
 
-                // If verifying existence or overwrite needed
+                // Overwrite if already exists (update scenario)
                 System.IO.File.Copy(sourcePath, destPath, overwrite: true);
 
                 // Load from the NEW location
                 return LoadJsExtension(destPath);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
-                 LogService.Error("SourceManager", $"Failed to install plugin: {ex.Message}");
-                 return null;
+                LogService.Error("SourceManager", $"Failed to install plugin: {ex.Message}");
+                return null;
             }
         }
 

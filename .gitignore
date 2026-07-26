@@ -1,6 +1,6 @@
 # Excluded Folders (User Request)
-MyMangaApp/Extensions/
-mihon-main/
+docs/reference/mihon-main/
+tests/scratch/
 
 # Build Results
 [Bb]in/

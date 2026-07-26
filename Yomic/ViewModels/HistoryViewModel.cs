@@ -12,6 +12,7 @@ using System.Net.Http;
 using System.IO;
 using Avalonia.Media.Imaging;
 using Microsoft.EntityFrameworkCore;
+using Avalonia.Controls;
 
 namespace Yomic.ViewModels
 {
@@ -333,16 +334,40 @@ namespace Yomic.ViewModels
             }
         }
         
+        private string GetResourceString(string key, string defaultValue)
+        {
+            if (Avalonia.Application.Current != null && Avalonia.Application.Current.TryFindResource(key, out var res))
+            {
+                if (res is string str)
+                {
+                    return str;
+                }
+            }
+            return defaultValue;
+        }
+
         private string GetTimeAgo(long dateFetch)
         {
-            if (dateFetch <= 0) return "Unknown";
+            if (dateFetch <= 0) return GetResourceString("String.TimeAgo.Unknown", "Unknown");
             var date = DateTimeOffset.FromUnixTimeMilliseconds(dateFetch);
             var diff = DateTimeOffset.Now - date;
             
-            if (diff.TotalMinutes < 1) return "Just now";
-            if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
-            if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
-            if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d ago";
+            if (diff.TotalMinutes < 1) return GetResourceString("String.TimeAgo.JustNow", "Just now");
+            if (diff.TotalMinutes < 60)
+            {
+                var val = (int)diff.TotalMinutes;
+                return string.Format(GetResourceString("String.TimeAgo.Minutes", "{0}m ago"), val);
+            }
+            if (diff.TotalHours < 24)
+            {
+                var val = (int)diff.TotalHours;
+                return string.Format(GetResourceString("String.TimeAgo.Hours", "{0}h ago"), val);
+            }
+            if (diff.TotalDays < 7)
+            {
+                var val = (int)diff.TotalDays;
+                return string.Format(GetResourceString("String.TimeAgo.Days", "{0}d ago"), val);
+            }
             return date.ToString("MMM dd");
         }
 

@@ -64,7 +64,9 @@
                         
                         <!-- Update Button (For Installed Extensions with Updates available) -->
                         <Button x:CompileBindings="False" Classes="ExtBtn ExtBtnUpdate" 
-                                ToolTip.Tip="{DynamicResource String.UpdateExtension}" Padding="12,6"
+                                ToolTip.Tip="{DynamicResource String.UpdateExtension}" 
+                                Width="36" Height="36" Padding="0"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                 Command="{Binding DataContext.UpdateExtensionCommand, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}"
                                 CommandParameter="{Binding}">
                             <Button.IsVisible>
@@ -74,19 +76,18 @@
                                     <Binding Path="!IsInstalling"/>
                                 </MultiBinding>
                             </Button.IsVisible>
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <Viewbox Width="14" Height="14" VerticalAlignment="Center">
-                                    <Canvas Width="24" Height="24">
-                                        <Path Data="M 20 11 A 8.1 8.1 0 0 0 4.5 9 M 4 5 v 4 h 4 M 4 13 A 8.1 8.1 0 0 0 19.5 15 M 20 19 v -4 h -4" Stroke="White" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
-                                    </Canvas>
-                                </Viewbox>
-                                <TextBlock Text="{DynamicResource String.Update}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" Foreground="White"/>
-                            </StackPanel>
+                            <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M 20 11 A 8.1 8.1 0 0 0 4.5 9 M 4 5 v 4 h 4 M 4 13 A 8.1 8.1 0 0 0 19.5 15 M 20 19 v -4 h -4" Stroke="White" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Button>
                         
                         <!-- Download Button (For Uninstalled) -->
                         <Button x:CompileBindings="False" Classes="ExtBtn" Background="{DynamicResource HoverBackground}" 
-                                Foreground="{DynamicResource PrimaryAccent}" ToolTip.Tip="Download &amp; Install" Padding="12,8"
+                                Foreground="{DynamicResource PrimaryAccent}" ToolTip.Tip="Download &amp; Install" 
+                                Width="36" Height="36" Padding="0"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                 Command="{Binding DataContext.DownloadExtensionCommand, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}"
                                 CommandParameter="{Binding}">
                             <Button.IsVisible>
@@ -95,14 +96,11 @@
                                     <Binding Path="!IsDownloading"/>
                                 </MultiBinding>
                             </Button.IsVisible>
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <Viewbox Width="16" Height="16" VerticalAlignment="Center">
-                                    <Canvas Width="24" Height="24">
-                                        <Path Data="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2 M7 11l5 5l5 -5 M12 4l0 12" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
-                                    </Canvas>
-                                </Viewbox>
-                                <TextBlock Text="{DynamicResource String.Download}" FontWeight="Medium" FontSize="14" VerticalAlignment="Center"/>
-                            </StackPanel>
+                            <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2 M7 11l5 5l5 -5 M12 4l0 12" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                </Canvas>
+                            </Viewbox>
                         </Button>
 
                         <!-- Downloading State -->
@@ -139,7 +137,9 @@
 
                         <!-- Verify Button -->
                         <Button x:CompileBindings="False" Classes="ExtBtn" Background="{DynamicResource HoverBackground}" 
-                                Foreground="#FAB387" ToolTip.Tip="{DynamicResource String.VerifyCloudflare}" Padding="8"
+                                Foreground="#FAB387" ToolTip.Tip="{DynamicResource String.VerifyCloudflare}" 
+                                Width="36" Height="36" Padding="0"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                 Command="{Binding DataContext.VerifyExtensionCommand, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}"
                                 CommandParameter="{Binding}">
                             <Button.IsVisible>
@@ -148,7 +148,7 @@
                                     <Binding Path="!IsInstalling"/>
                                 </MultiBinding>
                             </Button.IsVisible>
-                            <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                            <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
                                     <Path Data="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3 M9 11l2 2l4 -4" Stroke="#FAB387" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
                                 </Canvas>
@@ -157,7 +157,9 @@
 
                         <!-- Uninstall Button -->
                         <Button x:CompileBindings="False" Classes="ExtBtn" Background="Transparent" Foreground="{DynamicResource ErrorColor}"
-                                ToolTip.Tip="{DynamicResource String.Uninstall}" Padding="8"
+                                ToolTip.Tip="{DynamicResource String.Uninstall}" 
+                                Width="36" Height="36" Padding="0"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                 Command="{Binding DataContext.ToggleInstallCommand, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}"
                                 CommandParameter="{Binding}">
                             <Button.IsVisible>
@@ -166,7 +168,7 @@
                                     <Binding Path="!IsInstalling"/>
                                 </MultiBinding>
                             </Button.IsVisible>
-                            <Viewbox Width="20" Height="20" VerticalAlignment="Center">
+                            <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
                                     <Path Data="M4 7l16 0 M10 11l0 6 M14 11l0 6 M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12 M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" Stroke="{DynamicResource ErrorColor}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
                                 </Canvas>

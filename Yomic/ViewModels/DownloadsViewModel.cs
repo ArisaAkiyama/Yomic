@@ -6,6 +6,7 @@ using System.IO;
 using Avalonia.Media.Imaging;
 using System.Net.Http;
 using System;
+using Avalonia.Controls;
 
 namespace Yomic.ViewModels
 {
@@ -14,9 +15,37 @@ namespace Yomic.ViewModels
         private readonly Core.Services.DownloadRequest _request;
         public Core.Services.DownloadRequest Request => _request;
         
+        private string GetResourceString(string key, string defaultValue)
+        {
+            if (Avalonia.Application.Current != null && Avalonia.Application.Current.TryFindResource(key, out var res))
+            {
+                if (res is string str)
+                {
+                    return str;
+                }
+            }
+            return defaultValue;
+        }
+        
         public string Title => _request.Manga.Title ?? "Unknown Manga";
         public string ChapterName => _request.Chapter.Name;
-        public string Status => _request.Status;
+        
+        public string Status
+        {
+            get
+            {
+                var raw = _request.Status;
+                if (string.IsNullOrEmpty(raw)) return string.Empty;
+                if (raw.StartsWith("Retrying"))
+                {
+                    var localizedRetrying = GetResourceString("String.Status.Retrying", "Retrying");
+                    var suffix = raw.Substring(8);
+                    return $"{localizedRetrying}{suffix}";
+                }
+                return GetResourceString("String.Status." + raw, raw);
+            }
+        }
+        
         public int Progress => _request.Progress;
         
         public string StatusColor => _request.Status switch 
