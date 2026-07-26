@@ -46,7 +46,6 @@ SetupIconFile=d:\Project\DesktopKomik\Yomic\Assets\app.ico
 WizardSmallImageFile=d:\Project\DesktopKomik\Yomic\Assets\wizard-small.bmp
 WizardImageFile=d:\Project\DesktopKomik\Yomic\Assets\wizard-image.png
 WizardStyle=modern
-WizardResizable=no
 WizardSizePercent=110
 
 ; --- Compression ---
