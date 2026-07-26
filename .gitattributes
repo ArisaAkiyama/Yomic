@@ -1,14 +1,3 @@
-# Exclude non-C# files from language statistics
-*.axaml linguist-vendored
-*.html linguist-vendored
-*.css linguist-vendored
-*.js linguist-vendored
-*.xml linguist-vendored
-*.json linguist-vendored
-*.iss linguist-vendored
-*.py linguist-vendored
-*.bat linguist-vendored
-*.manifest linguist-vendored
-*.toml linguist-vendored
-*.conf linguist-vendored
-*.md linguist-vendored
+# Ignore PowerShell scripts from GitHub language statistics
+*.ps1 linguist-detectable=false
+*.ps1 linguist-vendored=true

@@ -38,6 +38,7 @@ extension-yomic/
 Yomic/Extensions/
 
 # Dev Scripts and Build Configs
+*.ps1
 rename_content.py
 run_app.bat
 setup.iss
