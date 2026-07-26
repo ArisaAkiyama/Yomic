@@ -33,6 +33,7 @@ PackedExtensions/
 Extensions.zip
 
 # Submodules & Extensions
+sources/
 extension-yomic/
 Yomic/Extensions/
 
