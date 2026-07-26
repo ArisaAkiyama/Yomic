@@ -134,7 +134,7 @@ Name: "{app}\Logs";     Permissions: users-modify
 ; ============================================================
 [Files]
 ; Main Application Files
-Source: "d:\Project\DesktopKomik\bin\Publish\*"; \
+Source: "d:\Project\DesktopKomik\Yomic\bin\Release\net10.0-windows\publish\*"; \
   DestDir: "{app}"; \
   Flags: ignoreversion recursesubdirs createallsubdirs
 
