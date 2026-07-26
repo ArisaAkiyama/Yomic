@@ -100,6 +100,19 @@ indonesian.WelcomeSubtitle=Pembaca Manga Desktop Terbaik untuk Windows
 indonesian.DotNetMissing=.NET {#DotNetVersion} Runtime dibutuhkan tetapi tidak ditemukan di sistem Anda.%n%nInstaler akan membuka halaman unduhan .NET di browser Anda.%n%nSetelah menginstal .NET {#DotNetVersion}, jalankan kembali Yomic Setup.
 indonesian.DotNetMissingTitle=.NET Runtime Diperlukan
 indonesian.LaunchAfterInstall=Jalankan Yomic setelah instalasi selesai
+indonesian.CreateDesktopIcon=Buat ikon di &Desktop
+indonesian.AdditionalIcons=Ikon Tambahan:
+indonesian.NameAndVersion=%1 versi %2
+indonesian.CreateQuickLaunchIcon=Buat ikon di &Quick Launch
+indonesian.ProgramOnTheWeb=%1 di Web
+indonesian.UninstallProgram=Hapus instalasi %1
+indonesian.LaunchProgram=Jalankan %1
+indonesian.AssocFileExtension=Kaitkan %1 dengan ekstensi berkas %2
+indonesian.AssocingFileExtension=Mengaitkan %1 dengan ekstensi berkas %2...
+indonesian.AutoStartProgramGroupDescription=Mulai Otomatis:
+indonesian.AutoStartProgram=Mulai otomatis %1
+indonesian.AddonHostProgramNotFound=%1 tidak dapat ditemukan di folder yang dipilih. Tetap lanjutkan?
+
 
 ; ============================================================
 ; [Tasks]

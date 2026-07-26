@@ -266,13 +266,8 @@ ErrorRegisterTypeLib=Tidak dapat mendaftarkan pustaka tipe: %1
 
 UninstallDisplayName=%1
 UninstallWelcomeLabel=Ini akan menghapus instalasi [name] dari komputer Anda.
-UninstallConfirmLabel=Apakah Anda yakin ingin menghapus instalasi [name] dan semua komponennya?
-UninstallOnlyOnReinstall=Hanya dihapus jika ini adalah instalasi ulang
-UninstallSelectTasksLabel=Pilih tugas tambahan yang ingin dilakukan:
-UninstallClickNext=Klik Lanjut untuk melanjutkan.
 
 ConfirmUninstall=Apakah Anda yakin ingin menghapus instalasi %1 dan semua komponennya?
-UninstallOnlyOnReinstall=Hanya jika pemasangan ulang
 OnlyAdminCanUninstall=Hanya administrator yang dapat menghapus instalasi program ini.
 UninstallStatusLabel=Harap tunggu sementara [name] dihapus dari komputer Anda.
 UninstalledAll=[name] telah berhasil dihapus dari komputer Anda.
@@ -284,63 +279,20 @@ ConfirmDeleteSharedFileTitle=Hapus Berkas Bersama?
 ConfirmDeleteSharedFile2=Sistem menunjukkan bahwa berkas bersama berikut tidak lagi digunakan oleh program lain. Apakah Anda ingin menghapus berkas bersama ini?%n%nJika ada program yang masih menggunakan berkas ini dan berkas ini dihapus, program tersebut mungkin tidak berfungsi dengan benar. Jika Anda tidak yakin, pilih Tidak. Membiarkan berkas ini di sistem Anda tidak akan menyebabkan masalah.
 SharedFileNameLabel=Nama Berkas:
 SharedFileLocationLabel=Lokasi:
-NoButtonReply=Tidak
-YesButtonReply=Ya
 
-NameLabel=Nama
-TasksList_Description=Deskripsi
 
-; --- Pesan yang hilang di Inno Setup 6.7.x ---
-ErrorFileSize=Ukuran berkas tidak valid.
-ErrorOpeningReadme=Terjadi kesalahan saat mencoba membuka berkas README.
-ErrorProgress=Terjadi kesalahan pada proses kemajuan.
-ErrorRestartingComputer=Pemandu tidak dapat me-restart komputer. Silakan restart secara manual.
-ExtractingLabel=Mengekstrak...
-RetryCancelCancel=Batal
-RetryCancelRetry=&Coba Lagi
-RetryCancelSelectAction=Pilih tindakan
-ShutdownBlockReasonInstallingApp=Memasang %1.
-ShutdownBlockReasonUninstallingApp=Menghapus instalasi %1.
-SourceVerificationFailed=Verifikasi berkas sumber gagal.
-StatusDownloadFiles=Mengunduh berkas...
-StatusRollback=Membatalkan perubahan...
-StatusUninstalling=Menghapus instalasi %1...
-StopDownload=Apakah Anda ingin menghentikan pengunduhan?
-StopExtraction=Apakah Anda ingin menghentikan ekstraksi?
-UninstallDisplayNameMark=%1 (%2)
-UninstallDisplayNameMarks=%1 (%2, %3)
-UninstallDisplayNameMark32Bit=32-bit
-UninstallDisplayNameMark64Bit=64-bit
-UninstallDisplayNameMarkAllUsers=Semua Pengguna
-UninstallDisplayNameMarkCurrentUser=Pengguna Saat Ini
-UninstallNotFound=Berkas "%1" tidak ada. Tidak dapat menghapus instalasi.
-UninstallOnlyOnWin64=Instalasi ini hanya dapat dihapus pada Windows 64-bit.
-UninstallOpenError=Berkas "%1" tidak dapat dibuka. Tidak dapat menghapus instalasi.
-UninstallUnknownEntry=Entri tidak dikenal ditemukan dalam skrip penghapusan instalasi (%1).
-UninstallUnsupportedVer=Berkas log penghapusan instalasi "%1" berada dalam format yang tidak dikenal oleh versi penghapus ini. Tidak dapat menghapus instalasi.
-VerificationFileHashIncorrect=Hash berkas "%1" tidak cocok.
-VerificationFileNameIncorrect=Nama berkas "%1" tidak cocok.
-VerificationFileSizeIncorrect=Ukuran berkas "%1" tidak cocok.
-VerificationFileTagIncorrect=Tag berkas "%1" tidak cocok.
-VerificationKeyNotFound=Kunci verifikasi tidak ditemukan.
-VerificationSignatureDoesntExist=Tanda tangan verifikasi tidak ada.
-VerificationSignatureInvalid=Tanda tangan verifikasi tidak valid.
-WizardUninstalling=Status Penghapusan Instalasi
-
-; --- Custom messages (terjemahan Inno Setup default) ---
-NameAndVersion=%1 versi %2
-AdditionalIcons=Ikon Tambahan:
-CreateDesktopIcon=Buat ikon di &Desktop
-CreateQuickLaunchIcon=Buat ikon di &Quick Launch
-ProgramOnTheWeb=%1 di Web
-UninstallProgram=Hapus instalasi %1
-LaunchProgram=Jalankan %1
-AssocFileExtension=Kaitkan %1 dengan ekstensi berkas %2
-AssocingFileExtension=Mengaitkan %1 dengan ekstensi berkas %2...
-AutoStartProgramGroupDescription=Mulai Otomatis:
-AutoStartProgram=Mulai otomatis %1
-AddonHostProgramNotFound=%1 tidak dapat ditemukan di folder yang dipilih. Tetap lanjutkan?
-
-; --- Pesan kustom Yomic ---
-YomicWelcomeTitle=Selamat Datang di Yomic
-YomicWelcomeMsg=Pembaca Manga Desktop Terbaik untuk Windows
+; --- Pesan baru Inno Setup 6.7.x ---
+ArchiveIncorrectPassword=Kata sandi arsip salah.
+ArchiveIsCorrupted=Arsip rusak atau tidak valid.
+ArchiveUnsupportedFormat=Format arsip tidak didukung.
+ButtonStopDownload=&Hentikan Unduhan
+ButtonStopExtraction=&Hentikan Ekstraksi
+ClickFinish=Klik &Selesai untuk keluar dari Pemandu.
+DownloadingLabel2=Mengunduh berkas, harap tunggu...
+ErrorDownloadAborted=Pengunduhan dibatalkan.
+ErrorDownloadFailed=Pengunduhan gagal: %1 %2
+ErrorDownloading=Terjadi kesalahan saat mengunduh berkas:
+ErrorDownloadSizeFailed=Gagal mendapatkan ukuran unduhan.
+ErrorExtracting=Terjadi kesalahan saat mengekstrak berkas.
+ErrorExtractionAborted=Ekstraksi dibatalkan.
+ErrorExtractionFailed=Ekstraksi gagal: %1
