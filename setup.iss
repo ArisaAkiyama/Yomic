@@ -58,8 +58,10 @@ LZMADictionarySize=65536
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 
-; --- Behavior ---
+; --- Behavior & Single-Instance Protection ---
 CloseApplications=yes
+AppMutex=YomicDesktopApp_SingleInstance_Mutex
+SetupLogging=yes
 LicenseFile=d:\Project\DesktopKomik\LICENSE
 
 ; --- Uninstall ---
@@ -189,10 +191,14 @@ Type: dirifempty; Name: "{localappdata}\Yomic"
 Type: dirifempty; Name: "{app}"
 
 ; ============================================================
-; [Registry] - Clean up registry on uninstall
+; [Registry] - App Paths CLI & Registry Cleanup
 ; ============================================================
 [Registry]
 Root: HKCU; Subkey: "Software\ArisaAkiyama\Yomic"; Flags: uninsdeletekey
+
+; App Paths for Terminal / Command Prompt CLI launching ('yomic' command)
+Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; ValueType: string; ValueData: "{app}\{#MyAppExeName}"; Flags: uninsdeletekey
+Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; ValueName: "Path"; ValueType: string; ValueData: "{app}"; Flags: uninsdeletekey
 
 ; ============================================================
 ; [Code] - Custom logic
@@ -323,6 +329,20 @@ begin
 end;
 
 // -------------------------------------------------------
+// Helper: Clean old temporary image cache on upgrade
+// -------------------------------------------------------
+procedure CleanTempCache();
+var
+  CachePath: String;
+begin
+  CachePath := ExpandConstant('{localappdata}\Yomic\Cache');
+  if DirExists(CachePath) then
+  begin
+    DelTree(CachePath + '\*.tmp', False, True, True);
+  end;
+end;
+
+// -------------------------------------------------------
 // OnInitializeWizard: Setup DownloadPage & Legacy Cleanup
 // -------------------------------------------------------
 procedure InitializeWizard();
@@ -332,6 +352,7 @@ begin
     SetupMessage(msgPreparingDesc),
     nil);
   CheckAndRemoveLegacyInstall();
+  CleanTempCache();
 end;
 
 // -------------------------------------------------------
