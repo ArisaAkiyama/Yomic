@@ -6,124 +6,134 @@
 ### The Ultimate Desktop Manga Reader
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Windows-blue.svg)](https://github.com/ArisaAkiyama/yomic)
+[![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)](https://github.com/ArisaAkiyama/yomic)
 [![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
 [![Avalonia](https://img.shields.io/badge/Avalonia-11.3.11-orange.svg)](https://avaloniaui.net/)
 [![Extensions](https://img.shields.io/badge/Extensions-Available-green.svg)](https://github.com/ArisaAkiyama/extension-yomic)
 
-**Yomic** adalah aplikasi pembaca komik, manga, manhwa, dan manhua desktop modern untuk Windows yang cepat, ringan, bebas iklan, dan kaya akan fitur.
+**Yomic** is a free, open-source desktop application designed for reading manga, manhwa, manhua, and webtoons on Windows. Add sources through extensions, organize your personal library, and read online or offline with zero ads and maximum performance.
 
-[**Unduh Rilis Terbaru (Download)**](https://github.com/ArisaAkiyama/yomic/releases)
+[**Download Latest Release**](https://github.com/ArisaAkiyama/yomic/releases)
 
 </div>
 
 ---
 
-## 📌 Apa Itu Yomic?
+## What is Yomic?
 
-Yomic adalah aplikasi pembaca dan pengelola perpustakaan komik pribadi dalam satu antarmuka desktop yang bersih dan nyaman. Daripada harus membuka berbagai situs komik satu per satu di browser, Yomic menghubungkan berbagai sumber komik melalui fitur **Ekstensi**, memungkinkan Anda mencari, membaca, mengunduh, dan mengelola koleksi komik favorit Anda dari satu tempat secara praktis.
-
----
-
-## ✨ Fitur Utama
-
-### 📱 Antarmuka Modern & Perpustakaan Cerdas
-- **Tampilan Grid & List Yang Rapi**: Jelajahi koleksi komik Anda dengan tampilan kartu sampul yang jernih, penanda bab belum dibaca (*Unread Dot*), dan efek visual modern.
-- **Pengorganisasian Otomatis**: Otomatis menandai komik yang belum selesai dibaca dan memberikan indikator **"BARU"** jika ada bab komik rilis terbaru.
-- **Kategori & Filter Cepat**: Kelompokkan komik ke dalam kategori kustom (misal: *Favorit*, *Komik Korea*, *Selesai Dibaca*) serta cari dan urutkan komik secara instan.
-- **Ekspor & Impor Backup (.zip)**: Cadangkan seluruh data perpustakaan, riwayat, dan pengaturan Anda menjadi berkas `.zip` standar dan pulihkan kapan saja dengan 1-klik.
-
-### 🔌 Sumber Komik Tanpa Batas (Engine Ekstensi)
-- **Engine JavaScript Google Chrome V8 (`ClearScript V8`)**: Menjalankan plugin ekstensi JavaScript secepat browser Google Chrome native.
-- **Dukungan Sumber Luas**:
-  - **Indonesia**: KomikCast, Kiryuu, Komiku, WestManga, KomikStation, ManhwaIndo, Softkomik, Shinigami, Luvyaa, Maid, AstralScans, dan banyak lagi.
-  - **Global / Inggris**: Mangabats, Weebcentral, NHentai, dll.
-- **Manajer Ekstensi Praktis**: Unduh dan perbarui ekstensi sumber komik favorit Anda langsung di dalam aplikasi tanpa perlu pengaturan yang rumit.
-
-### 📖 Pengalaman Membaca Terbaik
-- **Mode Webtoon**: Perguliran vertikal kontinu yang halus (*continuous vertical scroll*) khusus untuk Manhwa/Webtoon, dilengkapi fitur *Auto-Scroll* dan pergerakan inertia yang alami.
-- **Mode Halaman (Single & Dual Page)**: Mode membaca halaman demi halaman klasik (Kiri ke Kanan atau Kanan ke Kiri untuk Manga Jepang).
-- **Memuat Bab Otomatis (*Smart Preloading*)**: Yomic secara otomatis mengunduh halaman bab berikutnya di background saat Anda mendekati akhir bab, sehingga bab berikutnya terbuka secara instan tanpa membuat Anda menunggu.
-- **Fitur Pembesaran & Layar Penuh (*Zoom & Fit*)**: Menyesuaikan lebar/tinggi gambar secara otomatis, pembesaran fleksibel (*Custom Zoom*), rotasi layar, dan Mode Layar Penuh (*Fullscreen*).
-- **Navigasi Kibor & Tetikus**: Kontrol membaca penuh menggunakan tombol panah keyboard, Space, Page Up/Down, maupun roda scroll mouse.
-
-### 📅 Kalender Jadwal Perilisan (Upcoming Schedule)
-- **Prediksi Rilis Otomatis**: Memprediksi jadwal perilisan bab komik mendatang (Hari Ini, Besok, Minggu Ini) berdasarkan analisis riwayat pembaruan bab secara akurat.
-
-### ⚡ Performa Tinggi & Fitur Pintar (Engine .NET 10)
-- **Ditenagai 12 Engine Performa Tinggi**:
-  - **`SkiaSharp` & `Avalonia.Svg.Skia`**: Rendering gambar 2D dan ikon vektor SVG yang 100% tajam di layar resolusi tinggi (1080p, 2K, 4K).
-  - **`WinHttpHandler` & `Polly`**: Engine HTTP/2 Multiplexing bawaan Windows OS yang mempercepat pengunduhan gambar serta fitur otomatis mencoba ulang saat sinyal terputus.
-  - **`MemoryPack`**: Pemuatan data perpustakaan instan (0 milidetik).
-  - **`BitFaster.Caching` & `XxHash64`**: Manajemen memori RAM yang efisien dan hemat penggunaan RAM PC.
-- **Batas Cache Memori Otomatis**: Pilih batas ukuran cache gambar (Nonaktif, 250MB, 500MB, 1GB, 2GB) dan Yomic akan membersihkan data cache lama secara otomatis.
-- **Pembaruan Otomatis (*Auto-Update*)**: Memeriksa dan memperbarui versi aplikasi Yomic secara otomatis saat aplikasi dibuka.
-- **Pintas Jaringan & Anti-Blokir**: Dukungan DNS-Over-HTTPS (DoH), proxy, dan verifikasi Cloudflare bawaan.
+Yomic is a centralized manga manager and high-performance reader. Instead of opening multiple browser tabs or navigating different comic websites, Yomic connects to comic repositories using modular extensions. This allows you to search, track, download, and read your favorite series inside a clean, modern desktop interface.
 
 ---
 
-## 🛠️ Instalasi
+## Features
 
-### Persyaratan Sistem
-- **Windows 10** atau **Windows 11** (64-bit)
-- **.NET Desktop Runtime 10.0** (installer akan memasangnya secara otomatis jika belum ada)
+### High-Performance Core Architecture
+- **Google Chrome V8 Engine Integration**: Extension scripts execute using native Google Chrome V8 engine binaries (`Microsoft.ClearScript.V8`), providing ultra-fast JavaScript parsing and script execution.
+- **SkiaSharp & SVG Rendering**: User interface graphics and vector icons are rendered using `SkiaSharp` and `Avalonia.Svg.Skia`, ensuring crisp visuals on high-DPI displays (1080p, 2K, 4K, 8K).
+- **Instant Binary Serialization**: Library metadata loads instantly using `MemoryPack` binary serialization, removing loading delays when opening large collections.
+- **Lock-Free Cache & XxHash64**: Image caches use `BitFaster.Caching` concurrent LRU memory management combined with `XxHash64` 10 GB/s non-cryptographic hashing to minimize RAM usage.
+- **Windows HTTP/2 & Network Resilience**: Network operations utilize `WinHttpHandler` for native HTTP/2 multiplexing, paired with `Polly` exponential backoff policies for automatic connection retries.
+- **SQLite WAL Database**: Reading history, library status, and chapter tracking are saved using SQLite in Write-Ahead Logging (WAL) mode for maximum data integrity.
 
-### Langkah Instalasi
-1. Buka halaman [**Releases Page**](https://github.com/ArisaAkiyama/yomic/releases).
-2. Unduh berkas installer `Setup.exe` terbaru.
-3. Jalankan installer dan ikuti petunjuk di layar.
-4. Buka **Yomic** dari Desktop atau Start Menu Anda.
+### Library & Organization
+- **Virtualized Grid & List View**: Powered by `Avalonia.Controls.ItemsRepeater` for smooth 60 FPS scrolling through thousands of titles without memory stutter.
+- **Smart Status Badges**: Visual indicators display unread chapter counts, new chapter release ribbons, downloaded status badges, and in-library markers.
+- **Sorting & Tag Filtering**: Sort titles by recently read, unread count, or update date, and filter your collection by source or status.
+- **Backup & Restore**: Easily back up your library database, user settings, and cover cache into a standard `.zip` archive and restore it anytime using `SharpZipLib`.
 
----
+### Unlimited Sources (Extensions)
+- **Modular Extension Manager**: Browse available extensions from the online repository and install them with a single click.
+- **Multi-Language Support**: Access content from English and Indonesian comic repositories.
+- **Cloudflare & Network Tools**: Built-in verification tools and DNS-over-HTTPS (DoH) help bypass network restrictions seamlessly.
 
-## 🔌 Cara Memasang Ekstensi
-
-### Pemasangan Otomatis (Direkomendasikan)
-1. Buka aplikasi **Yomic** lalu pilih tab **Ekstensi**.
-2. Pada bagian **Tersedia**, pilih sumber komik yang ingin Anda gunakan.
-3. Klik tombol **Unduh** — ekstensi akan terpasang dan siap digunakan secara otomatis.
-4. Buka tab **Jelajahi** dan mulai membaca komik favorit Anda!
-
----
-
-## ⌨️ Pintasan Tombol Keyboard (Shortcuts)
-
-| Tombol Keyboard | Aksi / Fungsi |
-|---|---|
-| `Panah Kanan` / `Page Down` | Halaman Selanjutnya / Scroll Down |
-| `Panah Kiri` / `Page Up` | Halaman Sebelumnya / Scroll Up |
-| `Spasi (Space)` | Scroll Down 1 Layar / Lanjut Halaman |
-| `F` / `F11` | Masuk / Keluar Layar Penuh (*Fullscreen*) |
-| `Esc` | Keluar Fullscreen / Kembali ke Detail Komik |
-| `R` | Rotasi Gambar Halaman |
-| `+` / `-` | Zoom In / Zoom Out |
-| `Ctrl + B` | Bookmark Bab |
+### Reading Experience
+- **Webtoon Mode**: Continuous vertical scrolling built specifically for long-strip webtoons, featuring smooth mouse wheel inertia and auto-scrolling options.
+- **Paged & Dual-Page Mode**: Classic single-page or two-page side-by-side reading for traditional manga layouts.
+- **Background Preloading**: Automatically preloads upcoming pages in the background so chapter transitions happen without waiting.
+- **Zoom & Custom Controls**: Fit to width, fit to height, custom zoom multipliers, and rotation.
+- **Fullscreen & Shortcuts**: Full-screen mode support (`F11`) with complete keyboard navigation.
 
 ---
 
-## 🏗️ Mengompilasi dari Kode Sumber (Build Source)
+## Installation
 
-Persyaratan:
+### Requirements
+- **Windows 10** or higher (64-bit)
+- **.NET Desktop Runtime 10.0** (installed automatically by the setup package)
+
+### Steps
+1. Visit the [**Releases Page**](https://github.com/ArisaAkiyama/yomic/releases).
+2. Download the latest `Setup.exe` file.
+3. Run the installer and follow the instructions.
+4. Open **Yomic** from your Desktop or Start menu.
+
+---
+
+## Setting Up Extensions
+
+### Automatic Installation (Recommended)
+1. Open **Yomic** and click the **Extensions** tab.
+2. Under the **Available** list, choose the sources you want to add.
+3. Click **Download** on any extension to automatically download and install it.
+4. Go to the **Browse** tab to start exploring comic catalogs.
+
+### Manual Installation
+1. Obtain the extension package file (`.zip` or `.dll`).
+2. Open the **Extensions** tab in Yomic.
+3. Click **Add** in the upper-right corner.
+4. Select your extension file to install it immediately.
+
+---
+
+## Building from Source
+
+### Requirements
 - **.NET 10.0 SDK**
-- **Visual Studio 2022 (v17.12+)** atau **VS Code** dengan C# Dev Kit
+- **Visual Studio 2022 (v17.12+)** or **VS Code** with C# Dev Kit
 
 ```bash
-# Clone repositori
+# Clone the repository
 git clone https://github.com/ArisaAkiyama/yomic.git
 cd yomic
 
-# Kompilasi Solusi
+# Build the solution
 dotnet build Yomic.sln
 ```
 
 ---
 
-## 📄 Penafian (Disclaimer)
+## Keyboard Shortcuts
 
-Pengembang aplikasi ini tidak terafiliasi dengan penyedia konten manapun. Yomic adalah alat pembaca dan pengelola media independen. Seluruh konten komik diakses melalui plugin ekstensi yang terhubung ke situs pihak ketiga.
+| Key | Action |
+|-----|--------|
+| `Right Arrow` / `Page Down` | Next Page / Scroll Down |
+| `Left Arrow` / `Page Up` | Previous Page / Scroll Up |
+| `F11` / `F` | Toggle Fullscreen |
+| `Esc` | Exit Fullscreen / Close Reader |
+| `R` | Rotate Page |
+| `Ctrl+B` | Bookmark Chapter |
+| `Space` | Page Scroll |
 
 ---
 
-## 📜 Lisensi
+## Contributing
 
-Didistribusikan di bawah **MIT License**. Lihat berkas `LICENSE` untuk informasi lebih lanjut.
+Contributions are welcome. Feel free to open issues or submit pull requests to help improve Yomic.
+
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## Disclaimer
+
+The developer(s) of Yomic are not affiliated with any third-party content providers. Yomic is an open-source application designed to browse and view content hosted on public websites through user-installed extensions.
+
+---
+
+## License
+
+Distributed under the MIT License. See `LICENSE` for more information.
