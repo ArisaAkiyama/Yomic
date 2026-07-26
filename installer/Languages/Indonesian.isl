@@ -12,8 +12,8 @@ LanguageCodePage=0
 [Messages]
 SetupAppTitle=Instalasi
 SetupWindowTitle=Instalasi - %1
-UninstallAppTitle=Hapus Instalasi
-UninstallAppFullTitle=Hapus Instalasi %1
+UninstallAppTitle=Uninstall Yomic
+UninstallAppFullTitle=Uninstall %1
 
 InformationTitle=Informasi
 ConfirmTitle=Konfirmasi
@@ -85,8 +85,8 @@ BrowseDialogTitle=Jelajahi Folder
 BrowseDialogLabel=Pilih folder dari daftar berikut, lalu klik OK.
 NewFolderName=Folder Baru
 
-WelcomeLabel1=Selamat Datang di Pemandu Instalasi [name]
-WelcomeLabel2=Program ini akan memasang [name/ver] pada komputer Anda.%n%nDisarankan untuk menutup semua aplikasi lain yang sedang berjalan sebelum melanjutkan.
+WelcomeLabel1=Selamat Datang di Pemandu Instalasi %1
+WelcomeLabel2=Program ini akan memasang %1 pada komputer Anda.%n%nDisarankan untuk menutup semua aplikasi lain yang sedang berjalan sebelum melanjutkan.
 
 WizardPassword=Kata Sandi
 PasswordLabel1=Instalasi ini dilindungi kata sandi.
@@ -115,8 +115,8 @@ UserInfoSerial=&Nomor Seri:
 UserInfoNameRequired=Nama pengguna wajib diisi.
 
 WizardSelectDir=Pilih Lokasi Instalasi
-SelectDirDesc=Di manakah [name] akan dipasang?
-SelectDirLabel3=Program akan memasang [name] ke dalam folder berikut.
+SelectDirDesc=Di manakah %1 akan dipasang?
+SelectDirLabel3=Program akan memasang %1 ke dalam folder berikut.
 SelectDirBrowseLabel=Untuk melanjutkan, klik Lanjut. Jika Anda ingin memilih folder lain, klik Jelajahi.
 DiskSpaceGBLabel=Setidaknya diperlukan [gb] GB ruang disk kosong.
 DiskSpaceMBLabel=Setidaknya diperlukan [mb] MB ruang disk kosong.
@@ -149,7 +149,7 @@ ComponentsDiskSpaceMBLabel=Pilihan saat ini memerlukan setidaknya [mb] MB ruang 
 
 WizardSelectTasks=Pilih Tugas Tambahan
 SelectTasksDesc=Tugas tambahan apa yang ingin dilakukan?
-SelectTasksLabel2=Pilih tugas tambahan yang ingin dilakukan Pemandu saat memasang [name], lalu klik Lanjut.
+SelectTasksLabel2=Pilih tugas tambahan yang ingin dilakukan Pemandu saat memasang %1, lalu klik Lanjut.
 
 WizardSelectProgramGroup=Pilih Folder Menu Mulai
 SelectStartMenuFolderDesc=Di manakah pintasan program harus ditempatkan?
@@ -162,7 +162,7 @@ BadGroupName=Nama folder tidak boleh mengandung karakter berikut:%n%n%1
 NoProgramGroupCheck2=&Jangan buat folder Menu Mulai
 
 WizardReady=Siap untuk Memasang
-ReadyLabel1=Pemandu sekarang siap memasang [name] pada komputer Anda.
+ReadyLabel1=Pemandu sekarang siap memasang %1 pada komputer Anda.
 ReadyLabel2a=Klik Pasang untuk melanjutkan instalasi, atau klik Kembali jika Anda ingin meninjau atau mengubah pengaturan.
 ReadyLabel2b=Klik Pasang untuk melanjutkan instalasi.
 ReadyMemoUserInfo=Informasi Pengguna:
@@ -173,24 +173,24 @@ ReadyMemoGroup=Folder Menu Mulai:
 ReadyMemoTasks=Tugas Tambahan:
 
 WizardPreparing=Mempersiapkan Pemasangan
-PreparingDesc=Pemandu sedang mempersiapkan pemasangan [name] pada komputer Anda.
-PreviousInstallNotCompleted=Instalasi/penghapusan instalasi program sebelumnya belum selesai. Anda perlu me-restart komputer untuk menyelesaikannya.%n%nSetelah me-restart komputer, jalankan Pemandu kembali untuk menyelesaikan pemasangan [name].
+PreparingDesc=Pemandu sedang mempersiapkan pemasangan %1 pada komputer Anda.
+PreviousInstallNotCompleted=Instalasi/penghapusan instalasi program sebelumnya belum selesai. Anda perlu me-restart komputer untuk menyelesaikannya.%n%nSetelah me-restart komputer, jalankan Pemandu kembali untuk menyelesaikan pemasangan %1.
 CannotContinue=Pemandu tidak dapat meneruskan. Silakan klik Batal untuk keluar.
 ApplicationsFound=Aplikasi berikut menggunakan berkas yang perlu diperbarui oleh Pemandu. Disarankan agar Anda mengizinkan Pemandu menutup aplikasi-aplikasi ini secara otomatis.
 ApplicationsFound2=Aplikasi berikut menggunakan berkas yang perlu diperbarui oleh Pemandu. Disarankan agar Anda mengizinkan Pemandu menutup aplikasi-aplikasi ini secara otomatis. Setelah instalasi selesai, Pemandu akan mencoba memulai kembali aplikasi-aplikasi tersebut.
 CloseApplications=&Tutup aplikasi secara otomatis
 DontCloseApplications=&Jangan tutup aplikasi
 ErrorCloseApplications=Pemandu tidak dapat menutup semua aplikasi secara otomatis. Disarankan agar Anda menutup semua aplikasi yang menggunakan berkas yang perlu diperbarui sebelum melanjutkan.
-PrepareToInstallNeedsRestart=Pemandu harus me-restart komputer Anda. Setelah komputer di-restart, jalankan Pemandu kembali untuk menyelesaikan pemasangan [name].%n%nApakah Anda ingin me-restart sekarang?
+PrepareToInstallNeedsRestart=Pemandu harus me-restart komputer Anda. Setelah komputer di-restart, jalankan Pemandu kembali untuk menyelesaikan pemasangan %1.%n%nApakah Anda ingin me-restart sekarang?
 
 WizardInstalling=Memasang
-InstallingLabel=Harap tunggu sementara Pemandu memasang [name] pada komputer Anda.
+InstallingLabel=Harap tunggu sementara Pemandu memasang %1 pada komputer Anda.
 
-FinishedHeadingLabel=Menyelesaikan Pemasangan [name]
+FinishedHeadingLabel=Menyelesaikan Pemasangan %1
 FinishedLabelNoIcons=Program telah berhasil dipasang pada komputer Anda.
 FinishedLabel=Program telah berhasil dipasang pada komputer Anda. Aplikasi dapat dijalankan dengan memilih ikon yang terpasang.
-FinishedRestartLabel=Untuk menyelesaikan pemasangan [name], Pemandu perlu me-restart komputer Anda. Apakah Anda ingin me-restart sekarang?
-FinishedRestartMessage=Untuk menyelesaikan pemasangan [name], Pemandu perlu me-restart komputer Anda.%n%nApakah Anda ingin me-restart sekarang?
+FinishedRestartLabel=Untuk menyelesaikan pemasangan %1, Pemandu perlu me-restart komputer Anda. Apakah Anda ingin me-restart sekarang?
+FinishedRestartMessage=Untuk menyelesaikan pemasangan %1, Pemandu perlu me-restart komputer Anda.%n%nApakah Anda ingin me-restart sekarang?
 ShowReadmeCheck=Ya, saya ingin melihat berkas README
 YesRadio=&Ya, restart komputer sekarang
 NoRadio=&Tidak, saya akan restart komputer nanti
@@ -264,10 +264,10 @@ ErrorRegisterTypeLib=Tidak dapat mendaftarkan pustaka tipe: %1
 
 ConfirmUninstall=Apakah Anda yakin ingin menghapus instalasi %1 dan semua komponennya?
 OnlyAdminCanUninstall=Hanya administrator yang dapat menghapus instalasi program ini.
-UninstallStatusLabel=Harap tunggu sementara [name] dihapus dari komputer Anda.
-UninstalledAll=[name] telah berhasil dihapus dari komputer Anda.
-UninstalledMost=[name] telah selesai dihapus instalasinya.%n%nBeberapa elemen tidak dapat dihapus. Elemen-elemen tersebut dapat dihapus secara manual.
-UninstalledAndNeedsRestart=Untuk menyelesaikan penghapusan instalasi [name], komputer Anda perlu di-restart.%n%nApakah Anda ingin me-restart sekarang?
+UninstallStatusLabel=Harap tunggu sementara %1 dihapus dari komputer Anda.
+UninstalledAll=%1 telah berhasil dihapus dari komputer Anda.
+UninstalledMost=%1 telah selesai dihapus instalasinya.%n%nBeberapa elemen tidak dapat dihapus. Elemen-elemen tersebut dapat dihapus secara manual.
+UninstalledAndNeedsRestart=Untuk menyelesaikan penghapusan instalasi %1, komputer Anda perlu di-restart.%n%nApakah Anda ingin me-restart sekarang?
 UninstallDataCorrupted=Berkas "%1" rusak. Tidak dapat menghapus instalasi.
 
 ConfirmDeleteSharedFileTitle=Hapus Berkas Bersama?
