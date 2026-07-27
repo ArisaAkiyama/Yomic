@@ -170,6 +170,7 @@
     <sys:String x:Key="String.Monthly">Monthly</sys:String>
     <sys:String x:Key="String.Irregular">Irregular</sys:String>
     <sys:String x:Key="String.Unknown">Unknown</sys:String>
+    <sys:String x:Key="String.UnknownSchedule">Unknown Schedule</sys:String>
     <sys:String x:Key="String.Overdue">Overdue</sys:String>
     <sys:String x:Key="String.TodayAt">Today at</sys:String>
     <sys:String x:Key="String.TomorrowAt">Tomorrow at</sys:String>

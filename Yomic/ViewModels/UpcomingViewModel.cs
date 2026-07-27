@@ -248,7 +248,7 @@ namespace Yomic.ViewModels
                         _ = _libraryService.UpdateNextUpdateEpochAsync(m.Id, realNextUpdate);
                     }
 
-                    var isOverdue = realNextUpdate < now;
+                    var isOverdue = realNextUpdate > 0 && realNextUpdate < now;
                     var daysOverdue = isOverdue ? (int)TimeSpan.FromMilliseconds(now - realNextUpdate).TotalDays : 0;
 
                     var item = new UpcomingItem
@@ -263,9 +263,15 @@ namespace Yomic.ViewModels
                     };
 
                     string groupName;
-                    var date = DateTimeOffset.FromUnixTimeMilliseconds(realNextUpdate).ToLocalTime();
+                    var date = realNextUpdate > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(realNextUpdate).ToLocalTime() : DateTimeOffset.Now;
                     
-                    if (isOverdue)
+                    if (realNextUpdate <= 0)
+                    {
+                        groupName = "Upcoming";
+                        item.ReleaseFrequency = GetResourceString("String.Unknown", "Unknown");
+                        item.EstimatedRelease = GetResourceString("String.UnknownSchedule", "Unknown Schedule");
+                    }
+                    else if (isOverdue)
                     {
                         groupName = "Overdue";
                         item.EstimatedRelease = $"{daysOverdue} {GetResourceString("String.DaysOverdue", "days overdue")}";

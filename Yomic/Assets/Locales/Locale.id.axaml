@@ -170,6 +170,7 @@
     <sys:String x:Key="String.Monthly">Bulanan</sys:String>
     <sys:String x:Key="String.Irregular">Tidak Teratur</sys:String>
     <sys:String x:Key="String.Unknown">Tidak Diketahui</sys:String>
+    <sys:String x:Key="String.UnknownSchedule">Jadwal Tidak Diketahui</sys:String>
     <sys:String x:Key="String.Overdue">Terlambat</sys:String>
     <sys:String x:Key="String.TodayAt">Hari ini pukul</sys:String>
     <sys:String x:Key="String.TomorrowAt">Besok pukul</sys:String>
