@@ -584,12 +584,9 @@ namespace Yomic.Core.Services
             long latestRelease = batchTimestamps[0];
             long nextUpdate = latestRelease + quantizedCycleMs;
 
-            if (nextUpdate <= now && (now - latestRelease) < (quantizedCycleMs * 2))
+            while (nextUpdate <= now)
             {
-                while (nextUpdate <= now)
-                {
-                    nextUpdate += quantizedCycleMs;
-                }
+                nextUpdate += quantizedCycleMs;
             }
 
             dbManga.NextUpdate = nextUpdate;

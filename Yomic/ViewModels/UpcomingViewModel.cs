@@ -226,15 +226,26 @@ namespace Yomic.ViewModels
                             long latestRelease = batchTimestamps[0];
                             long calculatedNext = latestRelease + quantizedCycleMs;
 
-                            if (calculatedNext <= now && (now - latestRelease) < (quantizedCycleMs * 2))
+                            bool isIrregular = (now - latestRelease) > (quantizedCycleMs * 3);
+                            if (isIrregular)
                             {
-                                while (calculatedNext <= now)
-                                {
-                                    calculatedNext += quantizedCycleMs;
-                                }
+                                frequency = GetResourceString("String.Irregular", "Irregular");
                             }
 
-                            realNextUpdate = calculatedNext;
+                            while (calculatedNext <= now)
+                            {
+                                calculatedNext += quantizedCycleMs;
+                            }
+
+                            long previousSlot = calculatedNext - quantizedCycleMs;
+                            if (!isIrregular && previousSlot > latestRelease && previousSlot <= now)
+                            {
+                                realNextUpdate = previousSlot;
+                            }
+                            else
+                            {
+                                realNextUpdate = calculatedNext;
+                            }
                         }
                     }
 
