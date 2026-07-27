@@ -520,8 +520,9 @@ namespace Yomic.Core.Services
             if (dbManga.Chapters == null || dbManga.Chapters.Count == 0) return;
 
             var chaptersWithDates = dbManga.Chapters
-                .Where(c => c.DateUpload > 0)
-                .OrderByDescending(c => c.DateUpload)
+                .Select(c => new { Chapter = c, Date = c.DateUpload > 0 ? c.DateUpload : c.DateFetch })
+                .Where(x => x.Date > 0)
+                .OrderByDescending(x => x.Date)
                 .Take(20)
                 .ToList();
 
@@ -530,12 +531,12 @@ namespace Yomic.Core.Services
             // 1. Group chapters into Release Batches (chapters within 18 hours of each other belong to 1 batch)
             const long ClusterThresholdMs = 18L * 3600L * 1000L;
             var batchTimestamps = new List<long>();
-            long currentBatchTime = chaptersWithDates[0].DateUpload;
+            long currentBatchTime = chaptersWithDates[0].Date;
             batchTimestamps.Add(currentBatchTime);
 
             for (int i = 1; i < chaptersWithDates.Count; i++)
             {
-                long uploadTime = chaptersWithDates[i].DateUpload;
+                long uploadTime = chaptersWithDates[i].Date;
                 if (Math.Abs(currentBatchTime - uploadTime) >= ClusterThresholdMs)
                 {
                     currentBatchTime = uploadTime;

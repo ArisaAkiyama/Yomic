@@ -126,52 +126,55 @@ namespace Yomic.ViewModels
                     long realNextUpdate = m.NextUpdate;
                     if (m.Chapters.Count > 0)
                     {
-                        var recentChapters = m.Chapters.Where(c => c.DateUpload > 0).OrderByDescending(c => c.DateUpload).Take(10).ToList();
-                        if (recentChapters.Count > 0)
+                        float maxChap = 0;
+                        foreach (var ch in m.Chapters)
                         {
-                            float maxChap = m.Chapters.Max(c => c.ChapterNumber);
-                            if (maxChap <= 0)
+                            float num = ch.ChapterNumber;
+                            if (num <= 0)
                             {
-                                float maxParsed = 0;
-                                foreach (var ch in m.Chapters)
-                                {
-                                    var match = System.Text.RegularExpressions.Regex.Match(ch.Name, @"(?i)(?:ch\.|chapter|ep\.|episode)\s*(\d+(\.\d+)?)");
-                                    if (match.Success && float.TryParse(match.Groups[1].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float parsed))
-                                    {
-                                        if (parsed > maxParsed) maxParsed = parsed;
-                                    }
-                                    else
-                                    {
-                                        var fallbackMatch = System.Text.RegularExpressions.Regex.Match(ch.Name, @"\d+(\.\d+)?");
-                                        if (fallbackMatch.Success && float.TryParse(fallbackMatch.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float parsedFallback))
-                                        {
-                                            if (parsedFallback > maxParsed) maxParsed = parsedFallback;
-                                        }
-                                    }
-                                }
-                                
-                                if (maxParsed > 0)
-                                    maxChap = maxParsed;
-                                else
-                                    maxChap = m.Chapters.Count;
+                                num = ParseChapterNumberFromName(ch.Name);
                             }
-                            
-                            if (maxChap > 0)
-                                waitingFor = $"{GetResourceString("String.WaitingForChapter", "Waiting for Chapter")} {maxChap + 1}";
-                            else
-                                waitingFor = GetResourceString("String.WaitingForNewChapter", "Waiting for New Chapter");
+                            if (num > maxChap) maxChap = num;
                         }
-                        var chaptersWithDates = m.Chapters.Where(c => c.DateUpload > 0).OrderByDescending(c => c.DateUpload).Take(20).ToList();
+
+                        if (maxChap <= 0) maxChap = m.Chapters.Count;
+
+                        if (maxChap > 0)
+                        {
+                            float nextChapNum;
+                            if (Math.Abs(maxChap - Math.Floor(maxChap)) > 0.001f)
+                            {
+                                nextChapNum = (float)Math.Round(maxChap + 0.1f, 1);
+                            }
+                            else
+                            {
+                                nextChapNum = maxChap + 1;
+                            }
+                            string formattedNext = nextChapNum.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+                            waitingFor = $"{GetResourceString("String.WaitingForChapter", "Waiting for Chapter")} {formattedNext}";
+                        }
+                        else
+                        {
+                            waitingFor = GetResourceString("String.WaitingForNewChapter", "Waiting for New Chapter");
+                        }
+
+                        var chaptersWithDates = m.Chapters
+                            .Select(c => new { Chapter = c, Date = c.DateUpload > 0 ? c.DateUpload : c.DateFetch })
+                            .Where(x => x.Date > 0)
+                            .OrderByDescending(x => x.Date)
+                            .Take(20)
+                            .ToList();
+
                         if (chaptersWithDates.Count > 0)
                         {
                             const long ClusterThresholdMs = 18L * 3600L * 1000L;
                             var batchTimestamps = new List<long>();
-                            long currentBatchTime = chaptersWithDates[0].DateUpload;
+                            long currentBatchTime = chaptersWithDates[0].Date;
                             batchTimestamps.Add(currentBatchTime);
 
                             for (int i = 1; i < chaptersWithDates.Count; i++)
                             {
-                                long uploadTime = chaptersWithDates[i].DateUpload;
+                                long uploadTime = chaptersWithDates[i].Date;
                                 if (Math.Abs(currentBatchTime - uploadTime) >= ClusterThresholdMs)
                                 {
                                     currentBatchTime = uploadTime;
@@ -342,6 +345,25 @@ namespace Yomic.ViewModels
 
             _mainVM.GoToDetail(mangaItem);
             await Task.CompletedTask;
+        }
+
+        private static float ParseChapterNumberFromName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return 0f;
+            
+            var match = System.Text.RegularExpressions.Regex.Match(name, @"(?i)(?:ch\.|chapter|ep\.|episode|bab)\s*(\d+(\.\d+)?)");
+            if (match.Success && float.TryParse(match.Groups[1].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float parsed))
+            {
+                return parsed;
+            }
+
+            var fallbackMatch = System.Text.RegularExpressions.Regex.Match(name, @"\d+(\.\d+)?");
+            if (fallbackMatch.Success && float.TryParse(fallbackMatch.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float parsedFallback))
+            {
+                return parsedFallback;
+            }
+
+            return 0f;
         }
     }
 }
