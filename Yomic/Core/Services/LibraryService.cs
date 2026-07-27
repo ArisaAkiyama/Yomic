@@ -17,7 +17,7 @@ namespace Yomic.Core.Services
         {
             using var context = new MangaDbContext();
             return await context.Mangas
-                                .Include(m => m.Chapters.Where(c => !c.Read || c.IsNew))
+                                .Include(m => m.Chapters)
                                 .Include(m => m.Categories)
                                 .Where(m => m.Favorite)
                                 .OrderBy(m => m.Title)
@@ -29,7 +29,7 @@ namespace Yomic.Core.Services
             using var context = new MangaDbContext();
             // Fetch non-favorite items that have been read/viewed
             return await context.Mangas
-                                .Include(m => m.Chapters.Where(c => !c.Read || c.IsNew))
+                                .Include(m => m.Chapters)
                                 .Where(m => !m.Favorite && m.LastViewed > 0)
                                 .OrderByDescending(m => m.LastViewed)
                                 .ToListAsync();
