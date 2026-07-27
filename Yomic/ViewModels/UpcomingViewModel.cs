@@ -141,15 +141,7 @@ namespace Yomic.ViewModels
 
                         if (maxChap > 0)
                         {
-                            float nextChapNum;
-                            if (Math.Abs(maxChap - Math.Floor(maxChap)) > 0.001f)
-                            {
-                                nextChapNum = (float)Math.Round(maxChap + 0.1f, 1);
-                            }
-                            else
-                            {
-                                nextChapNum = maxChap + 1;
-                            }
+                            float nextChapNum = (float)Math.Floor(maxChap) + 1;
                             string formattedNext = nextChapNum.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
                             waitingFor = $"{GetResourceString("String.WaitingForChapter", "Waiting for Chapter")} {formattedNext}";
                         }
