@@ -105,10 +105,10 @@ namespace Yomic.ViewModels
                 var libraryManga = await _libraryService.GetLibraryMangaAsync();
                 var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-                // Filter out manga that have NextUpdate and are not completed/cancelled
+                // Filter active library manga (excluding completed/cancelled series)
                 var upcomingManga = libraryManga
-                    .Where(m => m.NextUpdate > 0 && m.Status != Manga.COMPLETED && m.Status != Manga.CANCELLED)
-                    .OrderBy(m => m.NextUpdate)
+                    .Where(m => m.Status != Manga.COMPLETED && m.Status != Manga.CANCELLED && m.Chapters != null && m.Chapters.Count > 0)
+                    .OrderBy(m => m.NextUpdate > 0 ? m.NextUpdate : long.MaxValue)
                     .ToList();
 
                 var grouped = new Dictionary<string, List<UpcomingItem>>();
@@ -247,6 +247,13 @@ namespace Yomic.ViewModels
                                 realNextUpdate = calculatedNext;
                             }
                         }
+                    }
+
+                    // Sync realNextUpdate back to Database if it changed or was uninitialized
+                    if (m.NextUpdate != realNextUpdate && realNextUpdate > 0)
+                    {
+                        m.NextUpdate = realNextUpdate;
+                        _ = _libraryService.UpdateNextUpdateEpochAsync(m.Id, realNextUpdate);
                     }
 
                     var isOverdue = realNextUpdate < now;

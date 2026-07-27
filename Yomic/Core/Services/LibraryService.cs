@@ -592,6 +592,24 @@ namespace Yomic.Core.Services
             dbManga.NextUpdate = nextUpdate;
         }
 
+        public async Task UpdateNextUpdateEpochAsync(long mangaId, long nextUpdateEpoch)
+        {
+            try
+            {
+                using var context = new MangaDbContext();
+                var manga = await context.Mangas.FindAsync(mangaId);
+                if (manga != null && manga.NextUpdate != nextUpdateEpoch)
+                {
+                    manga.NextUpdate = nextUpdateEpoch;
+                    await context.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.Error("LibraryService", $"Error updating NextUpdate for manga {mangaId}: {ex.Message}");
+            }
+        }
+
 
         public async Task<List<Chapter>> GetRecentChaptersAsync(int limit = 50)
         {
