@@ -186,6 +186,7 @@ namespace Yomic.Views
                 {
                     _isPressed = false;
                     
+#pragma warning disable CS0618
                     if (sender is Border border && border.DataContext is MangaItem item)
                     {
                         var dragData = new DataObject();
@@ -193,6 +194,7 @@ namespace Yomic.Views
                         
                         await DragDrop.DoDragDrop(e, dragData, DragDropEffects.Move);
                     }
+#pragma warning restore CS0618
                 }
             }
         }
@@ -202,6 +204,7 @@ namespace Yomic.Views
             _isPressed = false;
         }
 
+#pragma warning disable CS0618
         private void OnTabDragOver(object? sender, DragEventArgs e)
         {
             if (e.Data.Contains("MangaItem"))
@@ -230,6 +233,7 @@ namespace Yomic.Views
             }
             e.Handled = true;
         }
+#pragma warning restore CS0618
         
         private void OnMangaCardPressed(object? sender, PointerPressedEventArgs e)
         {

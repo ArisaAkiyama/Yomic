@@ -11,7 +11,7 @@ namespace Yomic.Views
             InitializeComponent();
         }
 
-        private DownloadAllDialogInfo _info;
+        private DownloadAllDialogInfo _info = null!;
 
         public DownloadAllDialog(DownloadAllDialogInfo info) : this()
         {

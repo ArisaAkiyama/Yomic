@@ -43,7 +43,7 @@ class Program
             System.Diagnostics.Trace.AutoFlush = true;
 
             BuildAvaloniaApp()
-                .StartWithClassicDesktopLifetime(args);
+                .StartWithClassicDesktopLifetime(args ?? Array.Empty<string>());
         }
         catch (Exception ex)
         {

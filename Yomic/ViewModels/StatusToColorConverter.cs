@@ -64,7 +64,7 @@ namespace Yomic.ViewModels
                     "FeatureRequest" => GetResourceString("String.Feedback.Category.FeatureRequest", "Feature Request"),
                     "General" => GetResourceString("String.General", "General"),
                     "Question" => GetResourceString("String.Feedback.Category.Question", "Question"),
-                    _ => str
+                    _ => str ?? string.Empty
                 };
             });
 

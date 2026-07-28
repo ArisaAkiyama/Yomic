@@ -676,7 +676,9 @@ namespace Yomic.ViewModels
 
         // Event for View to handle scrolling
         public event EventHandler<int>? RequestScroll; // int: 1 for down, -1 for up
+#pragma warning disable CS0067
         public event EventHandler<int>? RequestScrollToPage;
+#pragma warning restore CS0067
         public event EventHandler<double>? RequestScrollToPercent;
 
         public bool IsFullscreen

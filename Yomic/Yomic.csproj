@@ -12,6 +12,7 @@
     <AssemblyVersion>1.7.1.0</AssemblyVersion>
     <FileVersion>1.7.1.0</FileVersion>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
     <!-- Exclude nested project folders to prevent duplicate compilation and attribute errors -->
     <DefaultItemExcludes>$(DefaultItemExcludes);Extensions\**</DefaultItemExcludes>
   </PropertyGroup>
