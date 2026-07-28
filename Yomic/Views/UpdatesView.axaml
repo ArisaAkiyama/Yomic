@@ -55,9 +55,11 @@
                 <StackPanel Grid.Row="0" Margin="30,25,30,15">
                     <Grid ColumnDefinitions="*, Auto">
                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                            <TextBlock Text="&#xE895;" FontFamily="Segoe Fluent Icons" FontSize="24" 
-                                       Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"
-                                       RenderOptions.TextRenderingMode="Antialias"/>
+                            <Viewbox Width="24" Height="24" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                </Canvas>
+                            </Viewbox>
                             <TextBlock Text="{DynamicResource String.Updates}" FontSize="28" FontWeight="Bold" 
                                        Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
                             
@@ -70,7 +72,11 @@
                                     Classes="header-action"
                                     ToolTip.Tip="{DynamicResource String.Updates.ClearAll}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons" FontSize="16" VerticalAlignment="Center"/>
+                                    <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="M4 7l16 0 M10 11l0 6 M14 11l0 6 M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12 M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                        </Canvas>
+                                    </Viewbox>
                                     <TextBlock Text="{DynamicResource String.Updates.ClearAll}" VerticalAlignment="Center" FontSize="13" FontWeight="Medium"/>
                                 </StackPanel>
                             </Button>
@@ -79,15 +85,22 @@
                             <Button Command="{Binding RefreshCommand}"
                                     Classes="header-action"
                                     ToolTip.Tip="{DynamicResource String.Updates.Sync}">
-                                <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" 
-                                           FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Viewbox Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                    </Canvas>
+                                </Viewbox>
                             </Button>
                         </StackPanel>
                     </Grid>
                     <!-- Global Update Education Warning -->
                     <Border IsVisible="False" Background="#1AFFB900" BorderBrush="#FFB900" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,15,0,0">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="&#xE7BA;" FontFamily="Segoe Fluent Icons" Foreground="#FFB900" FontSize="14" VerticalAlignment="Center" Margin="0,0,0,0"/>
+                            <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M12 9v4 M12 17h.01 M12 3a9 9 0 1 0 9 9a9 9 0 0 0 -9 -9" Stroke="#FFB900" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                </Canvas>
+                            </Viewbox>
                             <TextBlock Text="{DynamicResource String.Updates.Warning}"
                                        Foreground="{DynamicResource PrimaryText}"
                                        FontSize="12"
@@ -204,11 +217,15 @@
             </ScrollViewer>
             </Grid>
 
-            <!-- Empty State (Centered Overlay) -->
+             <!-- Empty State (Centered Overlay) -->
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20" IsVisible="{Binding IsEmpty}">
                   <!-- Case 1: Library Is Empty -->
                    <StackPanel Spacing="10" IsVisible="{Binding IsLibraryEmpty}">
-                       <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="64" Foreground="#45475A" HorizontalAlignment="Center"/>
+                       <Viewbox Width="64" Height="64" HorizontalAlignment="Center">
+                           <Canvas Width="24" Height="24">
+                               <Path Data="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" Stroke="#45475A" StrokeThickness="1.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                           </Canvas>
+                       </Viewbox>
                        <TextBlock Text="{DynamicResource String.Updates.Empty}" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
                        <TextBlock Text="{DynamicResource String.Updates.EmptyDesc}" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
                        <Button Command="{Binding GoToLibraryCommand}" Content="{DynamicResource String.Welcome.GoToLibrary}" HorizontalAlignment="Center" Background="#0078D7" Foreground="#FFFFFF" Padding="20,10" CornerRadius="8" Margin="0,15,0,0"/>
@@ -216,7 +233,11 @@
 
                   <!-- Case 2: Library Has Items but No Updates -->
                   <StackPanel Spacing="10" IsVisible="{Binding !IsLibraryEmpty}">
-                       <TextBlock Text="&#xE9D5;" FontFamily="Segoe Fluent Icons" FontSize="64" Foreground="#45475A" HorizontalAlignment="Center"/>
+                       <Viewbox Width="64" Height="64" HorizontalAlignment="Center">
+                           <Canvas Width="24" Height="24">
+                               <Path Data="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M9 12l2 2l4 -4" Stroke="#45475A" StrokeThickness="1.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                           </Canvas>
+                       </Viewbox>
                        <TextBlock Text="{DynamicResource String.Updates.NoRecent}" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
                        <TextBlock Text="{DynamicResource String.Updates.NoRecentDesc}" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
                        <Button Command="{Binding RefreshCommand}" Content="{DynamicResource String.Updates.CheckNow}" HorizontalAlignment="Center" Background="#0078D7" Foreground="#FFFFFF" Padding="20,10" CornerRadius="8" Margin="0,15,0,0"/>
@@ -226,7 +247,11 @@
 
     <!-- Offline State -->
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20" IsVisible="{Binding IsOffline}">
-            <TextBlock Text="&#xEB55;" FontFamily="Segoe Fluent Icons" FontSize="64" Foreground="#F38BA8" HorizontalAlignment="Center"/>
+            <Viewbox Width="64" Height="64" HorizontalAlignment="Center">
+                <Canvas Width="24" Height="24">
+                    <Path Data="M12 18l.01 0 M9.172 15.172a4 4 0 0 1 5.656 0 M6.343 12.343a8 8 0 0 1 11.314 0 M3.515 9.515c4.686 -4.686 12.284 -4.686 16.97 0 M3 3l18 18" Stroke="#F38BA8" StrokeThickness="1.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                </Canvas>
+            </Viewbox>
             <StackPanel Spacing="8">
                 <TextBlock Text="{DynamicResource String.Updates.Offline}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
                 <TextBlock Text="{DynamicResource String.Updates.OfflineDesc}" Foreground="{DynamicResource SecondaryText}" FontSize="14" HorizontalAlignment="Center"/>
