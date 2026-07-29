@@ -104,7 +104,10 @@ namespace Yomic.ViewModels
                         return new SolidColorBrush(Color.Parse("#FFB800")); // Yellow/Amber
                 }
                 
-                return GetThemeBrush("SidebarBackground", new SolidColorBrush(Color.Parse("#20FFFFFF")));
+                bool isLight = Avalonia.Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
+                return isLight 
+                    ? new SolidColorBrush(Color.Parse("#15000000")) 
+                    : new SolidColorBrush(Color.Parse("#20FFFFFF"));
             });
 
         public static readonly IValueConverter GenreToBorder =
@@ -119,7 +122,10 @@ namespace Yomic.ViewModels
                         return new SolidColorBrush(Color.Parse("#FFB800"));
                 }
                     
-                return GetThemeBrush("SeparatorBrush", new SolidColorBrush(Color.Parse("#30FFFFFF")));
+                bool isLight = Avalonia.Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
+                return isLight 
+                    ? new SolidColorBrush(Color.Parse("#25000000")) 
+                    : new SolidColorBrush(Color.Parse("#30FFFFFF"));
             });
 
         public static readonly IValueConverter GenreToForeground =
@@ -136,19 +142,12 @@ namespace Yomic.ViewModels
                         return new SolidColorBrush(Color.Parse("#1F1F1F"));
                 }
                 
-                // Default background -> Dynamic PrimaryText (Black in Light Mode, White in Dark Mode)
-                return GetThemeBrush("PrimaryText", Brushes.Black);
+                // Default background -> White in Dark Mode, Black in Light Mode
+                bool isLight = Avalonia.Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
+                return isLight 
+                    ? new SolidColorBrush(Color.Parse("#1F1F1F")) 
+                    : Brushes.White;
             });
-
-        private static IBrush GetThemeBrush(string key, IBrush fallback)
-        {
-            if (Avalonia.Application.Current != null && Avalonia.Application.Current.TryFindResource(key, out var res))
-            {
-                if (res is IBrush brush) return brush;
-                if (res is Color col) return new SolidColorBrush(col);
-            }
-            return fallback;
-        }
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
