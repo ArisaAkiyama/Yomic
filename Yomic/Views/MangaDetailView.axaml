@@ -653,35 +653,6 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                    <!-- Delete All Downloads Button -->
-                    <Button Command="{Binding DeleteAllDownloadsCommand}"
-                            ToolTip.Tip="Delete All Downloaded Chapters"
-                            Background="#011E1E2E" BorderThickness="0"
-                            Padding="8,4">
-                        <Button.Styles>
-                            <Style Selector="Button">
-                                <Setter Property="Foreground" Value="{DynamicResource SecondaryText}"/>
-                            </Style>
-                            <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="Foreground" Value="#FF5555"/>
-                            </Style>
-                            <Style Selector="Button:pointerover">
-                                <Setter Property="Foreground" Value="#FF5555"/>
-                            </Style>
-                            <Style Selector="Button:pressed /template/ ContentPresenter">
-                                <Setter Property="Background" Value="Transparent"/>
-                            </Style>
-                        </Button.Styles>
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <Viewbox Width="16" Height="16" VerticalAlignment="Center">
-                                <Canvas Width="24" Height="24">
-                                    <Path Data="M4 7l16 0 M10 11l0 6 M14 11l0 6 M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12 M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
-                                </Canvas>
-                            </Viewbox>
-                        </StackPanel>
-                    </Button>
-
                     <!-- Filter Button -->
                     <Button Background="#011E1E2E" BorderThickness="0" Padding="8,4">
                         <Button.Flyout>
@@ -722,6 +693,35 @@
                             <Viewbox Width="16" Height="16" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
                                     <Path Data="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                </Canvas>
+                            </Viewbox>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Delete All Downloads Button -->
+                    <Button Command="{Binding DeleteAllDownloadsCommand}"
+                            ToolTip.Tip="Delete All Downloaded Chapters"
+                            Background="#011E1E2E" BorderThickness="0"
+                            Padding="8,4">
+                        <Button.Styles>
+                            <Style Selector="Button">
+                                <Setter Property="Foreground" Value="{DynamicResource SecondaryText}"/>
+                            </Style>
+                            <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="#FF5555"/>
+                            </Style>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Foreground" Value="#FF5555"/>
+                            </Style>
+                            <Style Selector="Button:pressed /template/ ContentPresenter">
+                                <Setter Property="Background" Value="Transparent"/>
+                            </Style>
+                        </Button.Styles>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M4 7l16 0 M10 11l0 6 M14 11l0 6 M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12 M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
                                 </Canvas>
                             </Viewbox>
                         </StackPanel>
