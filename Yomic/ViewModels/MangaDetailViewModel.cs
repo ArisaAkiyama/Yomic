@@ -411,10 +411,13 @@ namespace Yomic.ViewModels
 
         public ReactiveCommand<Unit, Unit> ToggleLibraryCommand { get; }
         public ReactiveCommand<Unit, Unit> DownloadAllCommand { get; }
+        public ReactiveCommand<Unit, Unit> DeleteAllDownloadsCommand { get; }
         public ReactiveCommand<Unit, Unit> StartReadingCommand { get; }
         public ReactiveCommand<ChapterItem?, Unit> ResumeReadingCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenWebViewCommand { get; }
         public ReactiveCommand<string, Unit> SetChapterFilterCommand { get; }
+
+        public bool HasDownloadedChapters => Chapters != null && Chapters.Any(c => c.IsDownloaded);
         
         private bool _isBypassing;
         public bool IsBypassing
@@ -558,6 +561,7 @@ namespace Yomic.ViewModels
             ToggleLibraryCommand = ReactiveCommand.CreateFromTask(ToggleLibrary);
             RefreshCommand = ReactiveCommand.CreateFromTask(RefreshAsync);
             DownloadAllCommand = ReactiveCommand.CreateFromTask(ConfirmDownloadAllChapters);
+            DeleteAllDownloadsCommand = ReactiveCommand.CreateFromTask(DeleteAllDownloadedChaptersAsync);
             StartReadingCommand = ReactiveCommand.Create(StartReading);
             ResumeReadingCommand = ReactiveCommand.Create<ChapterItem?>(ResumeReading);
             OpenWebViewCommand = ReactiveCommand.CreateFromTask(async () => 
@@ -653,6 +657,7 @@ namespace Yomic.ViewModels
                     {
                         item.IsDownloaded = true;
                         item.IsDownloading = false;
+                        this.RaisePropertyChanged(nameof(HasDownloadedChapters));
                     }
                     else if (e.Status == "Cancelled" || e.Status == "Error")
                     {
@@ -1195,6 +1200,7 @@ namespace Yomic.ViewModels
                  
                  await _libraryService.DeleteChapterDownloadAsync(_model, chapter);
                  item.IsDownloaded = false;
+                 this.RaisePropertyChanged(nameof(HasDownloadedChapters));
             }
             catch (Exception ex)
             {
@@ -1206,6 +1212,39 @@ namespace Yomic.ViewModels
             {
                 item.IsDeleting = false;
             }
+        }
+
+        private async System.Threading.Tasks.Task DeleteAllDownloadedChaptersAsync()
+        {
+            if (Chapters == null) return;
+            var downloaded = Chapters.Where(c => c.IsDownloaded).ToList();
+            if (downloaded.Count == 0) return;
+
+            _mainVM.ShowNotification($"Deleting {downloaded.Count} downloaded chapter(s)...", NotificationType.Info);
+
+            int deletedCount = 0;
+            foreach (var item in downloaded)
+            {
+                try
+                {
+                    item.IsDeleting = true;
+                    var chapterModel = new Core.Models.Chapter { Name = item.Title, Url = item.Url };
+                    await _libraryService.DeleteChapterDownloadAsync(_model, chapterModel);
+                    item.IsDownloaded = false;
+                    deletedCount++;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MangaDetailVM] Error deleting chapter {item.Title}: {ex}");
+                }
+                finally
+                {
+                    item.IsDeleting = false;
+                }
+            }
+
+            this.RaisePropertyChanged(nameof(HasDownloadedChapters));
+            _mainVM.ShowNotification($"Successfully deleted {deletedCount} downloaded chapter(s).", NotificationType.Success);
         }
         
         /// <summary>
