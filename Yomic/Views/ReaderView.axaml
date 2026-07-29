@@ -472,8 +472,21 @@
                     <Button Grid.Column="0" Classes="NavBtn" HotKey="Escape"
                             Command="{Binding BackCommand}"
                             HorizontalAlignment="Left"
-                            VerticalAlignment="Center">
-                        <Viewbox Width="18" Height="18" VerticalAlignment="Center">
+                            VerticalAlignment="Center"
+                            Background="#18FFFFFF"
+                            BorderBrush="#45FFFFFF"
+                            BorderThickness="1"
+                            Width="38" Height="38"
+                            CornerRadius="19"
+                            Padding="0"
+                            ToolTip.Tip="Back">
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                <Setter Property="Background" Value="#25FFFFFF"/>
+                                <Setter Property="BorderBrush" Value="#65FFFFFF"/>
+                            </Style>
+                        </Button.Styles>
+                        <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Canvas Width="24" Height="24">
                                 <Path Data="M5 12l14 0 M5 12l6 6 M5 12l6 -6" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
                             </Canvas>
