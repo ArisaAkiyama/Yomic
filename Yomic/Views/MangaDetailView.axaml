@@ -183,10 +183,10 @@
                                     <DataTemplate>
                                         <Border CornerRadius="16" Padding="12,6" Margin="0,0,8,8"
                                                 BorderThickness="1"
-                                                Background="{Binding Converter={x:Static vm:StatusToColorConverter.GenreToBackground}}"
-                                                BorderBrush="{Binding Converter={x:Static vm:StatusToColorConverter.GenreToBorder}}">
-                                            <TextBlock Text="{Binding}" FontSize="12"
-                                                       Foreground="{Binding Converter={x:Static vm:StatusToColorConverter.GenreToForeground}}"/>
+                                                Background="{Binding Converter={x:Static vm:StatusToColorConverter.GenreToBackground}, FallbackValue={DynamicResource SidebarBackground}}"
+                                                BorderBrush="{Binding Converter={x:Static vm:StatusToColorConverter.GenreToBorder}, FallbackValue={DynamicResource SeparatorBrush}}">
+                                            <TextBlock Text="{Binding}" FontSize="12" FontWeight="SemiBold"
+                                                       Foreground="{Binding Converter={x:Static vm:StatusToColorConverter.GenreToForeground}, FallbackValue={DynamicResource PrimaryText}}"/>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>

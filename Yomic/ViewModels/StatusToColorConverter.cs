@@ -93,9 +93,9 @@ namespace Yomic.ViewModels
         private static readonly string[] YellowGenres = { "Mature", "Adult", "Smut", "Harem", "Psychological", "Sexual Content", "Horror", "Seinen", "Josei" };
 
         public static readonly IValueConverter GenreToBackground =
-            new FuncValueConverter<string, IBrush>(g => 
+            new FuncValueConverter<string, IBrush?>(g => 
             {
-                if (string.IsNullOrEmpty(g)) return new SolidColorBrush(Color.Parse("#20FFFFFF"));
+                if (string.IsNullOrEmpty(g)) return null;
                 
                 if (RedGenres.Any(rg => rg.Equals(g, StringComparison.OrdinalIgnoreCase)))
                     return new SolidColorBrush(Color.Parse("#D93025")); // Red
@@ -103,13 +103,13 @@ namespace Yomic.ViewModels
                 if (YellowGenres.Any(yg => yg.Equals(g, StringComparison.OrdinalIgnoreCase)))
                     return new SolidColorBrush(Color.Parse("#FFB800")); // Yellow/Amber
                 
-                return new SolidColorBrush(Color.Parse("#20FFFFFF")); // Default
+                return null;
             });
 
         public static readonly IValueConverter GenreToBorder =
-            new FuncValueConverter<string, IBrush>(g => 
+            new FuncValueConverter<string, IBrush?>(g => 
             {
-                if (string.IsNullOrEmpty(g)) return new SolidColorBrush(Color.Parse("#30FFFFFF"));
+                if (string.IsNullOrEmpty(g)) return null;
                 
                 if (RedGenres.Any(rg => rg.Equals(g, StringComparison.OrdinalIgnoreCase)))
                     return new SolidColorBrush(Color.Parse("#D93025"));
@@ -117,20 +117,21 @@ namespace Yomic.ViewModels
                 if (YellowGenres.Any(yg => yg.Equals(g, StringComparison.OrdinalIgnoreCase)))
                     return new SolidColorBrush(Color.Parse("#FFB800"));
                     
-                return new SolidColorBrush(Color.Parse("#30FFFFFF"));
+                return null;
             });
 
         public static readonly IValueConverter GenreToForeground =
-            new FuncValueConverter<string, IBrush>(g => 
+            new FuncValueConverter<string, IBrush?>(g => 
             {
-                if (string.IsNullOrEmpty(g)) return new SolidColorBrush(Color.Parse("#EEF"));
+                if (string.IsNullOrEmpty(g)) return null;
                 
-                // Use White text for both categories for high contrast in dark theme
-                if (RedGenres.Any(rg => rg.Equals(g, StringComparison.OrdinalIgnoreCase)) ||
-                    YellowGenres.Any(yg => yg.Equals(g, StringComparison.OrdinalIgnoreCase)))
+                if (RedGenres.Any(rg => rg.Equals(g, StringComparison.OrdinalIgnoreCase)))
                     return Brushes.White;
+
+                if (YellowGenres.Any(yg => yg.Equals(g, StringComparison.OrdinalIgnoreCase)))
+                    return new SolidColorBrush(Color.Parse("#1F1F1F"));
                 
-                return new SolidColorBrush(Color.Parse("#EEF"));
+                return null;
             });
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
