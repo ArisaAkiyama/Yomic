@@ -438,22 +438,5 @@ namespace Yomic.Views
                 Console.WriteLine($"Reload Error: {ex}");
             }
         }
-
-        private async void OnTestUpdateClick(object? sender, RoutedEventArgs e)
-        {
-            if (DataContext is MainWindowViewModel vm)
-            {
-                var testInfo = new UpdateService.UpdateInfo
-                {
-                    IsUpdateAvailable = true,
-                    LatestVersion = "v9.9.9-test",
-                    DownloadUrl = "https://github.com/ArisaAkiyama/yomic/releases",
-                    ReleaseNotes = "# Test Auto-Update Release\n\n- Realtime Background Polling Verification\n- GitHub Markdown Formatted Release Notes\n- Update & Cancel Button Functionality Test",
-                    PublishedAt = DateTime.UtcNow.ToString("o")
-                };
-
-                await vm.PromptUpdateDialogAsync(testInfo);
-            }
-        }
     }
 }
