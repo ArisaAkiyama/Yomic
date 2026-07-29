@@ -91,6 +91,14 @@
                             Padding="24,10"
                             FontWeight="SemiBold"
                             BorderThickness="0"/>
+                    <Button Content="Export PDF (.zip)"
+                            Click="OnExportZipClick"
+                            Background="{DynamicResource HoverBackground}"
+                            Foreground="{DynamicResource PrimaryText}"
+                            CornerRadius="20"
+                            Padding="20,10"
+                            FontWeight="SemiBold"
+                            BorderThickness="0"/>
                     <Button Content="{DynamicResource String.Dialog.StartDownload}"
                             Click="OnStartClick"
                             Background="{DynamicResource AccentColor}"

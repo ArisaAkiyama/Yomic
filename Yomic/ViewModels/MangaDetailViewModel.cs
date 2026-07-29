@@ -153,7 +153,9 @@ namespace Yomic.ViewModels
     public enum DownloadAllMode
     {
         NotDownloaded,
-        UnreadNotDownloaded
+        UnreadNotDownloaded,
+        ExportZipPdf,
+        ExportZipPdfUnread
     }
 
     public class DownloadAllDialogInfo
@@ -1369,7 +1371,56 @@ namespace Yomic.ViewModels
                 return;
             }
 
+            if (mode == DownloadAllMode.ExportZipPdf || mode == DownloadAllMode.ExportZipPdfUnread)
+            {
+                var targetChapters = mode == DownloadAllMode.ExportZipPdfUnread
+                    ? Chapters.Where(c => !c.IsRead).ToList()
+                    : Chapters.ToList();
+
+                ExportSelectedChaptersToZipPdfAsync(targetChapters);
+                return;
+            }
+
             DownloadAllChapters(mode.Value);
+        }
+
+        private async void ExportSelectedChaptersToZipPdfAsync(List<ChapterItem> chapters)
+        {
+            if (chapters == null || chapters.Count == 0) return;
+
+            _mainVM.ShowNotification("Generating PDF (.zip)...", NotificationType.Info);
+
+            int exportedCount = 0;
+            string lastExportPath = string.Empty;
+
+            foreach (var chapter in chapters)
+            {
+                var chapterModel = new Core.Models.Chapter { Name = chapter.Title, Url = chapter.Url };
+                var chapterFolder = Core.Services.DownloadPathService.FindCompletedChapterDirectory(_model, chapterModel)
+                    ?? Core.Services.DownloadPathService.GetChapterDirectory(_model, chapterModel);
+
+                if (Directory.Exists(chapterFolder))
+                {
+                    try
+                    {
+                        lastExportPath = await Core.Services.PdfExportService.ExportChapterImagesToZipPdfAsync(Title, chapter.Title, chapterFolder);
+                        exportedCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[MangaDetailVM] PDF export error for {chapter.Title}: {ex.Message}");
+                    }
+                }
+            }
+
+            if (exportedCount > 0)
+            {
+                _mainVM.ShowNotification($"Exported {exportedCount} chapter(s) as PDF (.zip) to Downloads/Yomic_Exports!", NotificationType.Success);
+            }
+            else
+            {
+                _mainVM.ShowNotification("Downloaded chapter files not found. Please download chapters first before exporting as PDF (.zip).", NotificationType.Warning);
+            }
         }
 
         private void DownloadAllChapters(DownloadAllMode mode)

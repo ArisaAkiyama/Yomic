@@ -52,5 +52,14 @@ namespace Yomic.Views
 
             Close(mode);
         }
+
+        private void OnExportZipClick(object? sender, RoutedEventArgs e)
+        {
+            var mode = UnreadOption.IsChecked == true
+                ? DownloadAllMode.ExportZipPdfUnread
+                : DownloadAllMode.ExportZipPdf;
+
+            Close(mode);
+        }
     }
 }
