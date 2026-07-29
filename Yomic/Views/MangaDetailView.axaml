@@ -41,14 +41,18 @@
                         <Rectangle Fill="{DynamicResource MangaFadeGradient}"/>
                     </Grid>
 
-                    <!-- Back Button -->
+                    <!-- Back Button (Soft Translucent Overlay) -->
                     <Button Click="OnBackClick" HotKey="Escape" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,30,0,0"
                             Width="40" Height="40" CornerRadius="20" Padding="0"
-                            Background="#30000000" BorderBrush="#20FFFFFF" BorderThickness="1"
-                            Foreground="{DynamicResource PrimaryText}">
+                            Background="#35FFFFFF" BorderThickness="0"
+                            Foreground="White"
+                            ToolTip.Tip="Back (Esc)">
                         <Button.Styles>
                             <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                <Setter Property="Background" Value="#60000000"/>
+                                <Setter Property="Background" Value="#55FFFFFF"/>
+                            </Style>
+                            <Style Selector="Button:pressed /template/ ContentPresenter">
+                                <Setter Property="Background" Value="#25FFFFFF"/>
                             </Style>
                         </Button.Styles>
                         <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -350,8 +354,8 @@
                         <Grid x:Name="ChaptersDivider" Grid.Row="1" Grid.ColumnSpan="2" Margin="0,35,0,15" ColumnDefinitions="Auto, *, Auto">
                             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                                 <TextBlock Text="Chapters" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}"/>
-                                <Border Background="#35FFFFFF" CornerRadius="16" BorderThickness="0" Padding="12,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding VisibleChaptersCount}" Foreground="White" FontWeight="Bold" FontSize="12"/>
+                                <Border Background="#18FFFFFF" CornerRadius="12" BorderBrush="#45FFFFFF" BorderThickness="1" Padding="10,3" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding VisibleChaptersCount}" Foreground="{DynamicResource PrimaryText}" FontWeight="Bold" FontSize="12"/>
                                 </Border>
                             </StackPanel>
 
@@ -647,8 +651,8 @@
             <Grid Margin="40,15,40,15" ColumnDefinitions="Auto, *, Auto">
                 <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                     <TextBlock Text="Chapters" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}"/>
-                    <Border Background="#35FFFFFF" CornerRadius="16" BorderThickness="0" Padding="12,4" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Chapters.Count}" Foreground="White" FontWeight="Bold" FontSize="12"/>
+                    <Border Background="#18FFFFFF" CornerRadius="12" BorderBrush="#45FFFFFF" BorderThickness="1" Padding="10,3" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Chapters.Count}" Foreground="{DynamicResource PrimaryText}" FontWeight="Bold" FontSize="12"/>
                     </Border>
                 </StackPanel>
 
@@ -818,14 +822,17 @@
                 </Grid>
             </ScrollViewer>
 
-            <!-- Back Button while loading -->
+            <!-- Back Button while loading (Soft Translucent Overlay) -->
             <Button Click="OnBackClick" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,30,0,0"
                     Width="40" Height="40" CornerRadius="20" Padding="0"
-                    Background="#30000000" BorderBrush="#20FFFFFF" BorderThickness="1"
-                    Foreground="{DynamicResource PrimaryText}">
+                    Background="#35FFFFFF" BorderThickness="0"
+                    Foreground="White">
                 <Button.Styles>
                     <Style Selector="Button:pointerover /template/ ContentPresenter">
-                        <Setter Property="Background" Value="#60000000"/>
+                        <Setter Property="Background" Value="#55FFFFFF"/>
+                    </Style>
+                    <Style Selector="Button:pressed /template/ ContentPresenter">
+                        <Setter Property="Background" Value="#25FFFFFF"/>
                     </Style>
                 </Button.Styles>
                 <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
