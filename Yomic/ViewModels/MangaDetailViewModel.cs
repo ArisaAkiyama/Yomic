@@ -1450,7 +1450,7 @@ namespace Yomic.ViewModels
                                 try
                                 {
                                     await Core.Services.PdfExportService.ExportChapterImagesToZipPdfAsync(Title, chapter.Title, completedFolder);
-                                    _mainVM.ShowNotification($"Exported {chapter.Title} as PDF (.zip) to Downloads/Yomic_Exports!", NotificationType.Success);
+                                    _mainVM.ShowNotification($"Exported {chapter.Title} as PDF (.zip) to Downloads/Yomic_Exports/{Title}!", NotificationType.Success);
                                 }
                                 catch (Exception exExp)
                                 {
@@ -1464,7 +1464,7 @@ namespace Yomic.ViewModels
             }
             else if (exportedCount > 0)
             {
-                _mainVM.ShowNotification($"Successfully exported {exportedCount} chapter(s) as PDF (.zip) to Downloads/Yomic_Exports!", NotificationType.Success);
+                _mainVM.ShowNotification($"Successfully exported {exportedCount} chapter(s) as PDF (.zip) to Downloads/Yomic_Exports/{Title}!", NotificationType.Success);
             }
         }
 

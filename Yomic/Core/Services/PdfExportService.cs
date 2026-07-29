@@ -54,12 +54,13 @@ namespace Yomic.Core.Services
 
         public static async Task<string> ExportChapterImagesToZipPdfAsync(string mangaTitle, string chapterName, string chapterFolder)
         {
-            var userDownloads = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
-            var exportFolder = Path.Combine(userDownloads, "Yomic_Exports");
-            if (!Directory.Exists(exportFolder)) Directory.CreateDirectory(exportFolder);
-
             var safeTitle = DownloadPathService.SanitizePathSegment(mangaTitle);
             var safeChapter = DownloadPathService.SanitizePathSegment(chapterName);
+
+            var userDownloads = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+            var exportFolder = Path.Combine(userDownloads, "Yomic_Exports", safeTitle);
+            if (!Directory.Exists(exportFolder)) Directory.CreateDirectory(exportFolder);
+
             var tempDir = Path.Combine(Path.GetTempPath(), "Yomic_Pdf_Temp_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
 
@@ -70,7 +71,7 @@ namespace Yomic.Core.Services
 
                 await CreatePdfFromImageFolderAsync(chapterFolder, tempPdfPath);
 
-                var zipFileName = $"{safeTitle} - {safeChapter}.zip";
+                var zipFileName = $"{safeChapter}.zip";
                 var destZipPath = Path.Combine(exportFolder, zipFileName);
 
                 if (File.Exists(destZipPath)) File.Delete(destZipPath);
