@@ -34,12 +34,41 @@ namespace Yomic.Core.Services
                 {
                     try
                     {
-                        using var bitmap = SKBitmap.Decode(file);
-                        if (bitmap == null) continue;
+                        using var fileStream = File.OpenRead(file);
+                        using var data = SKData.Create(fileStream);
+                        using var image = SKImage.FromEncodedData(data);
+                        if (image == null) continue;
 
-                        using var canvas = pdfDocument.BeginPage(bitmap.Width, bitmap.Height);
-                        canvas.DrawBitmap(bitmap, 0, 0, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None));
-                        pdfDocument.EndPage();
+                        SKImage imageToDraw = image;
+                        bool needsDispose = false;
+
+                        var ext = Path.GetExtension(file).ToLowerInvariant();
+                        // If file is PNG/BMP or over 1.5MB, re-encode to high quality JPEG (85%) to compress PDF drastically
+                        if (ext == ".png" || ext == ".bmp" || fileStream.Length > 1500 * 1024)
+                        {
+                            using var bitmap = SKBitmap.FromImage(image);
+                            using var encoded = bitmap.Encode(SKEncodedImageFormat.Jpeg, 85);
+                            if (encoded != null)
+                            {
+                                var compressedImg = SKImage.FromEncodedData(encoded);
+                                if (compressedImg != null)
+                                {
+                                    imageToDraw = compressedImg;
+                                    needsDispose = true;
+                                }
+                            }
+                        }
+
+                        try
+                        {
+                            using var canvas = pdfDocument.BeginPage(imageToDraw.Width, imageToDraw.Height);
+                            canvas.DrawImage(imageToDraw, 0, 0);
+                            pdfDocument.EndPage();
+                        }
+                        finally
+                        {
+                            if (needsDispose) imageToDraw.Dispose();
+                        }
                     }
                     catch
                     {
