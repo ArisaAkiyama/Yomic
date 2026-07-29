@@ -28,7 +28,7 @@ namespace Yomic.Views
         public void PopulateData(UpdateService.UpdateInfo updateInfo)
         {
             _downloadUrl = updateInfo.DownloadUrl;
-            TagText.Text = $"Tag: {updateInfo.LatestVersion}";
+            TagText.Text = $"New version: {updateInfo.LatestVersion}";
             CurrentVersionText.Text = $"Current: v{UpdateService.CURRENT_VERSION}";
 
             PopulateMarkdownReleaseNotes(updateInfo.ReleaseNotes);

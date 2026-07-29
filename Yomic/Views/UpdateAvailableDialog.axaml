@@ -9,7 +9,7 @@
         Background="Transparent"
         TransparencyLevelHint="Transparent">
 
-    <Border Background="{DynamicResource PrimaryBackground}" CornerRadius="16" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1" Padding="24">
+    <Border Background="{DynamicResource PrimaryBackground}" CornerRadius="12" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" Padding="24">
         <Grid RowDefinitions="Auto, Auto, *, Auto">
             
             <!-- Header -->
@@ -26,23 +26,23 @@
 
                 <StackPanel VerticalAlignment="Center" Spacing="2">
                     <TextBlock Text="New Version Available! 🎉" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}"/>
-                    <TextBlock Text="A new update is available on GitHub." FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                    <TextBlock Text="A new update is available." FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                 </StackPanel>
             </StackPanel>
 
             <!-- Version Tag & Info Badge -->
             <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,0,0,16">
-                <Border Background="{DynamicResource PrimaryAccent}" CornerRadius="8" Padding="10,4">
-                    <TextBlock x:Name="TagText" Text="Tag: v1.8.0" FontSize="12" FontWeight="Bold" Foreground="White"/>
+                <Border Background="{DynamicResource PrimaryAccent}" CornerRadius="6" Padding="10,4">
+                    <TextBlock x:Name="TagText" Text="New version: v1.8.0" FontSize="12" FontWeight="Bold" Foreground="White"/>
                 </Border>
 
-                <Border Background="#20FFFFFF" CornerRadius="8" Padding="10,4">
+                <Border Background="#20FFFFFF" CornerRadius="6" Padding="10,4">
                     <TextBlock x:Name="CurrentVersionText" Text="Current: v1.7.1" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
                 </Border>
             </StackPanel>
 
             <!-- GitHub Release Notes (Markdown Container) -->
-            <Border Grid.Row="2" Background="#0CFFFFFF" CornerRadius="10" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" Padding="14">
+            <Border Grid.Row="2" Background="{DynamicResource SidebarBackground}" CornerRadius="6" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" Padding="14">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel x:Name="ReleaseNotesContainer" Spacing="8">
                         <!-- Populated dynamically in code-behind with parsed markdown blocks -->
@@ -50,12 +50,12 @@
                 </ScrollViewer>
             </Border>
 
-            <!-- Actions (Update & Cancel) -->
+            <!-- Actions (Update & Cancel styled like Send Feedback) -->
             <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,20,0,0">
-                <!-- Cancel Button -->
-                <Button Content="Cancel" Click="OnCancelClick"
-                        Background="Transparent" Foreground="{DynamicResource SecondaryText}" FontWeight="SemiBold"
-                        CornerRadius="8" Padding="20,10" Cursor="Hand" BorderThickness="0">
+                <!-- Update Button -->
+                <Button x:Name="UpdateButton" Content="Update" Click="OnUpdateClick"
+                        Background="{DynamicResource SidebarBackground}" Foreground="{DynamicResource PrimaryText}" FontWeight="SemiBold"
+                        FontSize="13" CornerRadius="4" Padding="20,8" Cursor="Hand" BorderThickness="1" BorderBrush="{DynamicResource SeparatorBrush}">
                     <Button.Styles>
                         <Style Selector="Button:pointerover /template/ ContentPresenter">
                             <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
@@ -64,13 +64,14 @@
                     </Button.Styles>
                 </Button>
 
-                <!-- Update Button -->
-                <Button x:Name="UpdateButton" Content="Update Now" Click="OnUpdateClick"
-                        Background="{DynamicResource PrimaryAccent}" Foreground="White" FontWeight="Bold"
-                        CornerRadius="8" Padding="24,10" Cursor="Hand" BorderThickness="0">
+                <!-- Cancel Button -->
+                <Button Content="Cancel" Click="OnCancelClick"
+                        Background="{DynamicResource SidebarBackground}" Foreground="{DynamicResource PrimaryText}" FontWeight="SemiBold"
+                        FontSize="13" CornerRadius="4" Padding="20,8" Cursor="Hand" BorderThickness="1" BorderBrush="{DynamicResource SeparatorBrush}">
                     <Button.Styles>
                         <Style Selector="Button:pointerover /template/ ContentPresenter">
-                            <Setter Property="Background" Value="#005A9E"/>
+                            <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
                         </Style>
                     </Button.Styles>
                 </Button>
