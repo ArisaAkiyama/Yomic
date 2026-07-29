@@ -35,39 +35,45 @@ namespace Yomic.Core.Services
                     try
                     {
                         using var fileStream = File.OpenRead(file);
-                        using var data = SKData.Create(fileStream);
-                        using var image = SKImage.FromEncodedData(data);
-                        if (image == null) continue;
+                        using var originalBitmap = SKBitmap.Decode(fileStream);
+                        if (originalBitmap == null) continue;
 
-                        SKImage imageToDraw = image;
-                        bool needsDispose = false;
+                        // Downscale if width > 1440px to preserve crisp 4K readability while saving 90% PDF storage
+                        int maxW = 1440;
+                        int width = originalBitmap.Width;
+                        int height = originalBitmap.Height;
 
-                        var ext = Path.GetExtension(file).ToLowerInvariant();
-                        // If file is PNG/BMP or over 1.5MB, re-encode to high quality JPEG (85%) to compress PDF drastically
-                        if (ext == ".png" || ext == ".bmp" || fileStream.Length > 1500 * 1024)
+                        SKBitmap bitmapToUse = originalBitmap;
+                        bool isScaled = false;
+
+                        if (width > maxW)
                         {
-                            using var bitmap = SKBitmap.FromImage(image);
-                            using var encoded = bitmap.Encode(SKEncodedImageFormat.Jpeg, 85);
-                            if (encoded != null)
+                            int targetW = maxW;
+                            int targetH = (int)((double)height / width * targetW);
+                            var scaled = originalBitmap.Resize(new SKImageInfo(targetW, targetH), SKSamplingOptions.Default);
+                            if (scaled != null)
                             {
-                                var compressedImg = SKImage.FromEncodedData(encoded);
-                                if (compressedImg != null)
-                                {
-                                    imageToDraw = compressedImg;
-                                    needsDispose = true;
-                                }
+                                bitmapToUse = scaled;
+                                isScaled = true;
                             }
                         }
 
                         try
                         {
-                            using var canvas = pdfDocument.BeginPage(imageToDraw.Width, imageToDraw.Height);
-                            canvas.DrawImage(imageToDraw, 0, 0, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None));
-                            pdfDocument.EndPage();
+                            // Encode to Jpeg at 80% quality for maximum PDF stream compression
+                            using var data = bitmapToUse.Encode(SKEncodedImageFormat.Jpeg, 80);
+                            using var compressedImage = data != null ? SKImage.FromEncodedData(data) : null;
+
+                            if (compressedImage != null)
+                            {
+                                using var canvas = pdfDocument.BeginPage(compressedImage.Width, compressedImage.Height);
+                                canvas.DrawImage(compressedImage, 0, 0, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None));
+                                pdfDocument.EndPage();
+                            }
                         }
                         finally
                         {
-                            if (needsDispose) imageToDraw.Dispose();
+                            if (isScaled) bitmapToUse.Dispose();
                         }
                     }
                     catch
