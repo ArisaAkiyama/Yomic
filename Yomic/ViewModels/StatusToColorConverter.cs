@@ -93,46 +93,62 @@ namespace Yomic.ViewModels
         private static readonly string[] YellowGenres = { "Mature", "Adult", "Smut", "Harem", "Psychological", "Sexual Content", "Horror", "Seinen", "Josei" };
 
         public static readonly IValueConverter GenreToBackground =
-            new FuncValueConverter<string, IBrush?>(g => 
+            new FuncValueConverter<string, IBrush>(g => 
             {
-                if (string.IsNullOrEmpty(g)) return null;
+                if (!string.IsNullOrEmpty(g))
+                {
+                    if (RedGenres.Any(rg => rg.Equals(g, StringComparison.OrdinalIgnoreCase)))
+                        return new SolidColorBrush(Color.Parse("#D93025")); // Red
+                    
+                    if (YellowGenres.Any(yg => yg.Equals(g, StringComparison.OrdinalIgnoreCase)))
+                        return new SolidColorBrush(Color.Parse("#FFB800")); // Yellow/Amber
+                }
                 
-                if (RedGenres.Any(rg => rg.Equals(g, StringComparison.OrdinalIgnoreCase)))
-                    return new SolidColorBrush(Color.Parse("#D93025")); // Red
-                
-                if (YellowGenres.Any(yg => yg.Equals(g, StringComparison.OrdinalIgnoreCase)))
-                    return new SolidColorBrush(Color.Parse("#FFB800")); // Yellow/Amber
-                
-                return null;
+                return GetThemeBrush("SidebarBackground", new SolidColorBrush(Color.Parse("#20FFFFFF")));
             });
 
         public static readonly IValueConverter GenreToBorder =
-            new FuncValueConverter<string, IBrush?>(g => 
+            new FuncValueConverter<string, IBrush>(g => 
             {
-                if (string.IsNullOrEmpty(g)) return null;
-                
-                if (RedGenres.Any(rg => rg.Equals(g, StringComparison.OrdinalIgnoreCase)))
-                    return new SolidColorBrush(Color.Parse("#D93025"));
+                if (!string.IsNullOrEmpty(g))
+                {
+                    if (RedGenres.Any(rg => rg.Equals(g, StringComparison.OrdinalIgnoreCase)))
+                        return new SolidColorBrush(Color.Parse("#D93025"));
+                        
+                    if (YellowGenres.Any(yg => yg.Equals(g, StringComparison.OrdinalIgnoreCase)))
+                        return new SolidColorBrush(Color.Parse("#FFB800"));
+                }
                     
-                if (YellowGenres.Any(yg => yg.Equals(g, StringComparison.OrdinalIgnoreCase)))
-                    return new SolidColorBrush(Color.Parse("#FFB800"));
-                    
-                return null;
+                return GetThemeBrush("SeparatorBrush", new SolidColorBrush(Color.Parse("#30FFFFFF")));
             });
 
         public static readonly IValueConverter GenreToForeground =
-            new FuncValueConverter<string, IBrush?>(g => 
+            new FuncValueConverter<string, IBrush>(g => 
             {
-                if (string.IsNullOrEmpty(g)) return null;
+                if (!string.IsNullOrEmpty(g))
+                {
+                    // Red background -> White text
+                    if (RedGenres.Any(rg => rg.Equals(g, StringComparison.OrdinalIgnoreCase)))
+                        return Brushes.White;
+                    
+                    // Yellow background -> Black text
+                    if (YellowGenres.Any(yg => yg.Equals(g, StringComparison.OrdinalIgnoreCase)))
+                        return new SolidColorBrush(Color.Parse("#1F1F1F"));
+                }
                 
-                if (RedGenres.Any(rg => rg.Equals(g, StringComparison.OrdinalIgnoreCase)))
-                    return Brushes.White;
-
-                if (YellowGenres.Any(yg => yg.Equals(g, StringComparison.OrdinalIgnoreCase)))
-                    return new SolidColorBrush(Color.Parse("#1F1F1F"));
-                
-                return null;
+                // Default background -> Dynamic PrimaryText (Black in Light Mode, White in Dark Mode)
+                return GetThemeBrush("PrimaryText", Brushes.Black);
             });
+
+        private static IBrush GetThemeBrush(string key, IBrush fallback)
+        {
+            if (Avalonia.Application.Current != null && Avalonia.Application.Current.TryFindResource(key, out var res))
+            {
+                if (res is IBrush brush) return brush;
+                if (res is Color col) return new SolidColorBrush(col);
+            }
+            return fallback;
+        }
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
