@@ -58,30 +58,39 @@ namespace Yomic.Core.Services
             var safeChapter = DownloadPathService.SanitizePathSegment(chapterName);
 
             var userDownloads = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
-            var exportFolder = Path.Combine(userDownloads, "Yomic_Exports", safeTitle);
+            var exportFolder = Path.Combine(userDownloads, "Yomic_Exports");
             if (!Directory.Exists(exportFolder)) Directory.CreateDirectory(exportFolder);
 
-            var tempDir = Path.Combine(Path.GetTempPath(), "Yomic_Pdf_Temp_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(tempDir);
+            var zipPath = Path.Combine(exportFolder, $"{safeTitle}.zip");
+            var tempPdfPath = Path.Combine(Path.GetTempPath(), $"Yomic_Chapter_Pdf_{Guid.NewGuid():N}.pdf");
 
             try
             {
-                var pdfFileName = $"{safeTitle} - {safeChapter}.pdf";
-                var tempPdfPath = Path.Combine(tempDir, pdfFileName);
-
+                // 1. Generate single chapter PDF
                 await CreatePdfFromImageFolderAsync(chapterFolder, tempPdfPath);
 
-                var zipFileName = $"{safeChapter}.zip";
-                var destZipPath = Path.Combine(exportFolder, zipFileName);
+                // 2. Open or Create ZipArchive in Update mode
+                using (var zipStream = new FileStream(zipPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+                using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Update))
+                {
+                    var pdfEntryName = $"{safeChapter}.pdf";
 
-                if (File.Exists(destZipPath)) File.Delete(destZipPath);
-                ZipFile.CreateFromDirectory(tempDir, destZipPath);
+                    // Delete existing entry if present to overwrite cleanly
+                    var existingEntry = archive.GetEntry(pdfEntryName);
+                    existingEntry?.Delete();
 
-                return destZipPath;
+                    // Create new entry and copy PDF bytes
+                    var newEntry = archive.CreateEntry(pdfEntryName, CompressionLevel.Optimal);
+                    using var entryStream = newEntry.Open();
+                    using var pdfStream = File.OpenRead(tempPdfPath);
+                    await pdfStream.CopyToAsync(entryStream);
+                }
+
+                return zipPath;
             }
             finally
             {
-                try { Directory.Delete(tempDir, true); } catch { }
+                try { if (File.Exists(tempPdfPath)) File.Delete(tempPdfPath); } catch { }
             }
         }
     }
