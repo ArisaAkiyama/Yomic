@@ -44,13 +44,13 @@
                     <!-- Back Button -->
                     <Button Click="OnBackClick" HotKey="Escape" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,30,0,0"
                             Width="40" Height="40" CornerRadius="20" Padding="0"
-                            Background="{DynamicResource HoverBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1"
+                            Background="#18FFFFFF" BorderBrush="#45FFFFFF" BorderThickness="1"
                             Foreground="{DynamicResource PrimaryText}"
                             ToolTip.Tip="Back (Esc)">
                         <Button.Styles>
                             <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                <Setter Property="Background" Value="{DynamicResource PrimaryAccent}"/>
-                                <Setter Property="BorderBrush" Value="{DynamicResource PrimaryAccent}"/>
+                                <Setter Property="Background" Value="#25FFFFFF"/>
+                                <Setter Property="BorderBrush" Value="#65FFFFFF"/>
                             </Style>
                         </Button.Styles>
                         <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
