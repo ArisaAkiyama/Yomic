@@ -473,8 +473,8 @@
                             Command="{Binding BackCommand}"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
-                            Background="#18FFFFFF"
-                            BorderBrush="#45FFFFFF"
+                            Background="{DynamicResource HoverBackground}"
+                            BorderBrush="{DynamicResource SeparatorBrush}"
                             BorderThickness="1"
                             Width="36" Height="36"
                             CornerRadius="18"
@@ -482,8 +482,8 @@
                             ToolTip.Tip="Back (Esc)">
                         <Button.Styles>
                             <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                <Setter Property="Background" Value="#25FFFFFF"/>
-                                <Setter Property="BorderBrush" Value="#65FFFFFF"/>
+                                <Setter Property="Background" Value="{DynamicResource PrimaryAccent}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource PrimaryAccent}"/>
                             </Style>
                         </Button.Styles>
                         <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
