@@ -198,8 +198,8 @@ namespace Yomic.ViewModels
                 }
                 
                 // Avalonia Bitmap does not natively support AVIF on all platforms.
-                // Transparently proxy AVIF images through wsrv.nl to convert them to webp.
-                if (requestUrl.Contains(".avif", StringComparison.OrdinalIgnoreCase))
+                // Transparently proxy AVIF images through wsrv.nl to convert them to webp (except gmbr.pro which blocks wsrv.nl).
+                if (requestUrl.Contains(".avif", StringComparison.OrdinalIgnoreCase) && !requestUrl.Contains("gmbr.pro") && !requestUrl.Contains("kacu.gmbr"))
                 {
                     requestUrl = $"https://wsrv.nl/?url={Uri.EscapeDataString(requestUrl)}&output=webp";
                 }
@@ -278,16 +278,28 @@ namespace Yomic.ViewModels
                 // Accept header for images
                 req.Headers.TryAddWithoutValidation("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8");
 
+                byte[] data;
                 var response = await client.SendAsync(req, _cancellationToken);
-                // System.Diagnostics.Debug.WriteLine($"[PageVM] Response: {response.StatusCode}, ContentType: {response.Content.Headers.ContentType}, Size: {response.Content.Headers.ContentLength}");
                 
                 if (!response.IsSuccessStatusCode)
                 {
-                     throw new Exception($"HTTP {response.StatusCode} {response.ReasonPhrase}");
+                    if (response.StatusCode == System.Net.HttpStatusCode.Forbidden || requestUrl.Contains("gmbr.pro"))
+                    {
+                        var refHeader = customHeaders.ContainsKey("Referer") ? customHeaders["Referer"] : "https://www.manhwaindo.my/";
+                        var curlData = await DownloadPageWithCurlAsync(requestUrl, refHeader, _cancellationToken);
+                        if (curlData != null && curlData.Length > 0)
+                        {
+                            data = curlData;
+                            goto ProcessPageData;
+                        }
+                    }
+                    throw new Exception($"HTTP {response.StatusCode} {response.ReasonPhrase}");
                 }
                 
                 _cancellationToken.ThrowIfCancellationRequested();
-                var data = await response.Content.ReadAsByteArrayAsync(_cancellationToken);
+                data = await response.Content.ReadAsByteArrayAsync(_cancellationToken);
+
+            ProcessPageData:
                 
                 // Log first few bytes to detect if it's the placeholder
                 if (data.Length > 20)
@@ -332,6 +344,37 @@ namespace Yomic.ViewModels
                     _downloadThrottle.Release();
                 }
             }
+        }
+
+        private static async System.Threading.Tasks.Task<byte[]?> DownloadPageWithCurlAsync(string url, string? referer, System.Threading.CancellationToken ct)
+        {
+            try
+            {
+                var tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".tmp");
+                var refUrl = !string.IsNullOrEmpty(referer) ? referer : "https://www.manhwaindo.my/";
+                var psi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "curl.exe",
+                    Arguments = $"-s -f -k -A \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36\" -H \"Referer: {refUrl}\" \"{url}\" -o \"{tempFile}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using var proc = System.Diagnostics.Process.Start(psi);
+                if (proc != null)
+                {
+                    await proc.WaitForExitAsync(ct);
+                    if (proc.ExitCode == 0 && System.IO.File.Exists(tempFile))
+                    {
+                        var bytes = await System.IO.File.ReadAllBytesAsync(tempFile, ct);
+                        try { System.IO.File.Delete(tempFile); } catch { }
+                        return bytes;
+                    }
+                    try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
+                }
+            }
+            catch { }
+            return null;
         }
     }
 

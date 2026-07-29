@@ -53,6 +53,7 @@
     <PackageReference Include="System.IO.Hashing" Version="10.0.10" />
     <PackageReference Include="System.Net.Http.WinHttpHandler" Version="10.0.10" />
     <PackageReference Include="Tmds.DBus.Protocol" Version="0.93.0" />
+    <PackageReference Include="FluentAvaloniaUI" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -64,7 +65,6 @@
 
   <!-- Auto-compile Inno Setup installer after dotnet publish in Release mode -->
   <Target Name="BuildInnoSetupInstaller" AfterTargets="Publish" Condition="'$(Configuration)' == 'Release'">
-    <Exec Command="&quot;C:\Users\ASUS\AppData\Local\Programs\Inno Setup 6\ISCC.exe&quot; &quot;$(MSBuildThisFileDirectory)..\setup.iss&quot;"
-          ContinueOnError="false" />
+    <Exec Command="&quot;C:\Users\ASUS\AppData\Local\Programs\Inno Setup 6\ISCC.exe&quot; &quot;$(MSBuildThisFileDirectory)..\setup.iss&quot;" ContinueOnError="false" />
   </Target>
 </Project>

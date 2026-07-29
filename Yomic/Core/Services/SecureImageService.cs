@@ -52,6 +52,11 @@ namespace Yomic.Core.Services
         {
             if (string.IsNullOrEmpty(url)) return null;
 
+            if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+            {
+                url = "https://" + url.Substring("http://".Length);
+            }
+
             string? userAgent = null;
 
             // Handle URL|Referer= and URL|UserAgent= syntax
@@ -71,8 +76,8 @@ namespace Yomic.Core.Services
             }
 
             // Avalonia Bitmap does not natively support AVIF on all platforms.
-            // Transparently proxy AVIF images through wsrv.nl to convert them to webp.
-            if (url.Contains(".avif", StringComparison.OrdinalIgnoreCase))
+            // Transparently proxy AVIF images through wsrv.nl to convert them to webp (except gmbr.pro which blocks wsrv.nl).
+            if (url.Contains(".avif", StringComparison.OrdinalIgnoreCase) && !url.Contains("gmbr.pro") && !url.Contains("kacu.gmbr"))
             {
                 url = $"https://wsrv.nl/?url={Uri.EscapeDataString(url)}&output=webp";
             }
@@ -90,13 +95,22 @@ namespace Yomic.Core.Services
             {
                 try
                 {
-                    using var stream = File.OpenRead(cachePath);
-                    var bitmap = DecodeAndResizeBitmap(stream, decodeWidth);
+                    Bitmap? bitmap = null;
+                    using (var stream = File.OpenRead(cachePath))
+                    {
+                        bitmap = DecodeAndResizeBitmap(stream, decodeWidth);
+                    }
+
                     if (bitmap != null)
                     {
                         _imageCacheService.AddImage(url, bitmap);
+                        return bitmap;
                     }
-                    return bitmap;
+                    else
+                    {
+                        // Stream is now fully disposed -> safely delete corrupt cache file
+                        try { File.Delete(cachePath); } catch { }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -137,14 +151,18 @@ namespace Yomic.Core.Services
                 {
                     client = _sharedClient ??= _networkService.CreateOptimizedHttpClient();
                 }
-                var req = new HttpRequestMessage(HttpMethod.Get, url);
-
-                // Apply custom User-Agent if provided
-                if (!string.IsNullOrEmpty(userAgent))
+                var req = new HttpRequestMessage(HttpMethod.Get, url)
                 {
-                    req.Headers.Remove("User-Agent");
-                    req.Headers.TryAddWithoutValidation("User-Agent", userAgent);
-                }
+                    Version = System.Net.HttpVersion.Version20,
+                    VersionPolicy = HttpVersionPolicy.RequestVersionOrHigher
+                };
+                req.Headers.TryAddWithoutValidation("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8");
+                req.Headers.TryAddWithoutValidation("Accept-Language", "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7");
+
+                string uaToUse = !string.IsNullOrEmpty(userAgent) 
+                    ? userAgent 
+                    : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+                req.Headers.TryAddWithoutValidation("User-Agent", uaToUse);
                 
                 // Smart Referer
                 if (referer == "none" || referer == "null")
@@ -163,6 +181,7 @@ namespace Yomic.Core.Services
                     else if (url.Contains("mangabats") || url.Contains("2xstorage.com") || url.Contains("waitst.com")) req.Headers.Referrer = new Uri("https://www.mangabats.com/");
                     else if (url.Contains("weebcentral")) req.Headers.Referrer = new Uri("https://weebcentral.com/");
                     else if (url.Contains("komiku") || url.Contains("img.komiku")) req.Headers.Referrer = new Uri("https://komiku.org/");
+                    else if (url.Contains("gmbr.pro") || url.Contains("kacu.gmbr")) req.Headers.Referrer = new Uri("https://www.manhwaindo.my/");
                     else
                     {
                         // Use the image URL's own origin as referer
@@ -217,6 +236,14 @@ namespace Yomic.Core.Services
                 {
                     if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
                     {
+                        System.Diagnostics.Debug.WriteLine($"[SecureImageService] 403 Forbidden for {url}, attempting curl.exe fallback...");
+                        var curlBitmap = await DownloadWithCurlAsync(url, cachePath, referer, decodeWidth);
+                        if (curlBitmap != null)
+                        {
+                            _imageCacheService.AddImage(url, curlBitmap);
+                            return curlBitmap;
+                        }
+
                         var freshUrl = await RefreshExpiredPresignedUrlAsync(client, url);
                         if (!string.IsNullOrEmpty(freshUrl))
                         {
@@ -272,11 +299,13 @@ namespace Yomic.Core.Services
             }
         }
 
-        private static Bitmap? DecodeAndResizeBitmap(Stream stream, int? decodeWidth)
+        private static Bitmap? DecodeAndResizeBitmap(Stream? stream, int? decodeWidth)
         {
+            if (stream == null) return null;
             try
             {
                 if (stream.CanSeek) stream.Position = 0;
+                if (stream.Length == 0) return null;
 
                 if (decodeWidth.HasValue && decodeWidth.Value > 0)
                 {
@@ -330,6 +359,50 @@ namespace Yomic.Core.Services
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[SecureImageService] Presigned URL recovery error: {ex.Message}");
+            }
+            return null;
+        }
+
+        private static async Task<Bitmap?> DownloadWithCurlAsync(string url, string cachePath, string? referer, int? decodeWidth)
+        {
+            try
+            {
+                var refUrl = !string.IsNullOrEmpty(referer) ? referer : "https://www.manhwaindo.my/";
+                var psi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "curl.exe",
+                    Arguments = $"-s -f -k -A \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36\" -H \"Referer: {refUrl}\" \"{url}\" -o \"{cachePath}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using var proc = System.Diagnostics.Process.Start(psi);
+                if (proc != null)
+                {
+                    await proc.WaitForExitAsync();
+                    if (proc.ExitCode == 0 && File.Exists(cachePath))
+                    {
+                        var fi = new FileInfo(cachePath);
+                        if (fi.Length > 0)
+                        {
+                            Bitmap? bitmap = null;
+                            using (var stream = File.OpenRead(cachePath))
+                            {
+                                bitmap = DecodeAndResizeBitmap(stream, decodeWidth);
+                            }
+
+                            if (bitmap == null)
+                            {
+                                try { File.Delete(cachePath); } catch { }
+                            }
+                            return bitmap;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[SecureImageService] Curl fallback failed: {ex.Message}");
             }
             return null;
         }

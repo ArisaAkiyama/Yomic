@@ -4,6 +4,7 @@
              xmlns:vm="using:Yomic.ViewModels"
              xmlns:views="using:Yomic.Views"
              xmlns:components="using:Yomic.Views.Components"
+             xmlns:sty="using:FluentAvalonia.Styling"
              x:Class="Yomic.App">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -131,7 +132,7 @@
     </Application.Resources>
 
     <Application.Styles>
-        <FluentTheme />
+        <sty:FluentAvaloniaTheme CustomAccentColor="#0078D4" />
         
         <!-- Global Typography -->
         <!-- Global Typography -->

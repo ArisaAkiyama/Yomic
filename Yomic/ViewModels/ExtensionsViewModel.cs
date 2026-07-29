@@ -462,13 +462,13 @@ namespace Yomic.ViewModels
         {
             try
             {
-                if (!_extensionClient.DefaultRequestHeaders.UserAgent.Any())
-                {
-                    _extensionClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Yomic/1.7");
-                }
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Yomic/1.7");
+                request.Headers.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue { NoCache = true, NoStore = true };
+                request.Headers.TryAddWithoutValidation("Pragma", "no-cache");
 
                 using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromMilliseconds(timeoutMs));
-                using var response = await _extensionClient.GetAsync(url, cts.Token).ConfigureAwait(false);
+                using var response = await _extensionClient.SendAsync(request, cts.Token).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
                     return await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
@@ -493,19 +493,30 @@ namespace Yomic.ViewModels
 
             try
             {
+                if (force)
+                {
+                    try
+                    {
+                        var cachePath = GetLocalIndexCachePath();
+                        if (System.IO.File.Exists(cachePath)) System.IO.File.Delete(cachePath);
+                    }
+                    catch { }
+                }
+
                 // Run network fetch on background threadpool worker (Mihon-style Dispatchers.IO)
                 // to prevent Avalonia UI SynchronizationContext deadlocks!
                 await System.Threading.Tasks.Task.Run(async () =>
                 {
                     string? responseText = null;
 
+                    var guid = Guid.NewGuid().ToString("N");
                     var urlsToTry = new[]
                     {
-                        $"https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/repo/index.min.json?t={DateTime.UtcNow.Ticks}",
-                        $"https://cdn.jsdelivr.net/gh/ArisaAkiyama/extension-yomic@repo/index.min.json?t={DateTime.UtcNow.Ticks}",
-                        $"https://fastly.jsdelivr.net/gh/ArisaAkiyama/extension-yomic@repo/index.min.json?t={DateTime.UtcNow.Ticks}",
-                        $"https://raw.githack.com/ArisaAkiyama/extension-yomic/repo/index.min.json?t={DateTime.UtcNow.Ticks}",
-                        $"https://ghproxy.net/https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/repo/index.min.json?t={DateTime.UtcNow.Ticks}"
+                        $"https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/repo/index.min.json?t={DateTime.UtcNow.Ticks}_{guid}",
+                        $"https://raw.githack.com/ArisaAkiyama/extension-yomic/repo/index.min.json?t={DateTime.UtcNow.Ticks}_{guid}",
+                        $"https://cdn.jsdelivr.net/gh/ArisaAkiyama/extension-yomic@repo/index.min.json?t={DateTime.UtcNow.Ticks}_{guid}",
+                        $"https://fastly.jsdelivr.net/gh/ArisaAkiyama/extension-yomic@repo/index.min.json?t={DateTime.UtcNow.Ticks}_{guid}",
+                        $"https://ghproxy.net/https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/repo/index.min.json?t={DateTime.UtcNow.Ticks}_{guid}"
                     };
 
                     foreach (var url in urlsToTry)
@@ -654,6 +665,9 @@ namespace Yomic.ViewModels
             {
                 if (string.IsNullOrEmpty(existing.RemoteDownloadUrl))
                     existing.RemoteDownloadUrl = downloadUrl;
+
+                // Always sync IsNsfw flag from the latest remote index
+                existing.IsNsfw = nsfwFlag == 1 || cleanName.Contains("nhentai", StringComparison.OrdinalIgnoreCase);
 
                 // Mihon-style: compare integer code (higher = newer)
                 if (remoteCode > 0 && existing.VersionCode > 0)
@@ -1013,6 +1027,7 @@ namespace Yomic.ViewModels
         private async System.Threading.Tasks.Task RefreshExtensionsAsync()
         {
             _mainVM.ShowNotification("Memeriksa pembaruan ekstensi...", NotificationType.Info);
+            LoadExtensions();
             await FetchRemoteExtensionsAsync(force: true);
             _mainVM.ShowNotification("Pemeriksaan ekstensi selesai!", NotificationType.Success);
         }
@@ -1074,6 +1089,7 @@ namespace Yomic.ViewModels
                 _sourceManager.AddSource(newSource);
 
                 item.Version = newSource.Version;
+                item.VersionCode = VersionStringToCode(newSource.Version);
                 item.SourceInstance = newSource;
                 item.FilePath = localPath;
                 item.IsInstalled = true;
@@ -1144,7 +1160,6 @@ namespace Yomic.ViewModels
                 "izanamiscans" => "izanamiscans.org",
                 "kanzenin" => "kanzenin.xyz",
                 "kiryuu" => "kiryuu.id",
-                "klikmanga" => "klikmanga.com",
                 "komikav" => "komikav.com",
                 "komikcast" => "komikcast.cz",
                 "komikdewasa" => "komikdewasa.org",
