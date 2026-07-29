@@ -1,3 +1,28 @@
-# Ignore PowerShell scripts from GitHub language statistics
+# Auto-generated .gitattributes for GitHub Linguist (100% C# Repository Focus)
+
+# Ignore PowerShell, Inno Setup, and Build scripts
 *.ps1 linguist-detectable=false
 *.ps1 linguist-vendored=true
+*.iss linguist-detectable=false
+*.iss linguist-vendored=true
+*.isl linguist-detectable=false
+*.isl linguist-vendored=true
+
+# Ignore Tabler Icons & Vendor Assets
+Yomic/Assets/** linguist-vendored=true
+Yomic/Assets/tabler-icons-3.45.0/** linguist-vendored=true
+Yomic/Assets/tabler-icons-3.45.0/** linguist-detectable=false
+
+# Ignore Website & External Docs
+yomic-website/** linguist-documentation=true
+yomic-website/** linguist-detectable=false
+
+# Ignore Non-C# Code (JS, TS, TSX, CSS, MDX, Astro, Svelte, Vue)
+*.js linguist-vendored=true
+*.ts linguist-vendored=true
+*.tsx linguist-vendored=true
+*.css linguist-vendored=true
+*.astro linguist-vendored=true
+*.svelte linguist-vendored=true
+*.vue linguist-vendored=true
+*.mdx linguist-documentation=true
