@@ -713,7 +713,7 @@ namespace Yomic.ViewModels
                           // Let's assume 0 is fine or try to parse locally if really needed, but usually 0 is fine for list.
                      }).ToList();
                      
-                     await _libraryService.UpdateChaptersAsync(_model, dbChapters, isInitialLoad: true);
+                     await _libraryService.UpdateChaptersAsync(_model, dbChapters, isInitialLoad: false);
                  }
 
 
@@ -955,7 +955,7 @@ namespace Yomic.ViewModels
                          ChapterNumber = c.ChapterNumber 
                     }).ToList();
                     
-                    await _libraryService.UpdateChaptersAsync(_model, dbChapters, skipPrune: true);
+                    await _libraryService.UpdateChaptersAsync(_model, dbChapters, skipPrune: false);
 
                     System.Diagnostics.Debug.WriteLine($"[MangaDetailVM] Synced {dbChapters.Count} chapters to DB (Cache)");
                 }
