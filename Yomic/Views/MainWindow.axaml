@@ -262,6 +262,18 @@
                                     <TextBlock Text="{DynamicResource String.SendFeedback}" Classes="NavLabel" VerticalAlignment="Center" FontWeight="Medium"/>
                                 </StackPanel>
                             </Button>
+
+                            <!-- Test Update UI Button -->
+                            <Button Classes="SidebarBtn" Click="OnTestUpdateClick" ToolTip.Tip="Test Update Pop-up">
+                                <StackPanel Orientation="Horizontal" Spacing="16">
+                                    <Viewbox Width="20" Height="20" VerticalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="M4 13a8 8 0 0 1 7 -7a6 6 0 0 0 3 -3a1 1 0 0 1 1.414 0a1 1 0 0 1 0 1.414a6 6 0 0 0 -3 3a8 8 0 0 1 -7 7m7 -7l-6 6m11 -11a2 2 0 1 1 -4 0a2 2 0 0 1 4 0z" Stroke="{DynamicResource PrimaryAccent}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <TextBlock Text="Test Update UI" Foreground="{DynamicResource PrimaryAccent}" Classes="NavLabel" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
  
                             <Separator Background="{DynamicResource SeparatorBrush}" Height="1" Margin="10,5" Opacity="0.5"/>
  
