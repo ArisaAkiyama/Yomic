@@ -41,18 +41,14 @@
                         <Rectangle Fill="{DynamicResource MangaFadeGradient}"/>
                     </Grid>
 
-                    <!-- Back Button (Soft Translucent Overlay) -->
+                    <!-- Back Button -->
                     <Button Click="OnBackClick" HotKey="Escape" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,30,0,0"
                             Width="40" Height="40" CornerRadius="20" Padding="0"
-                            Background="#35FFFFFF" BorderThickness="0"
-                            Foreground="White"
-                            ToolTip.Tip="Back (Esc)">
+                            Background="#30000000" BorderBrush="#20FFFFFF" BorderThickness="1"
+                            Foreground="{DynamicResource PrimaryText}">
                         <Button.Styles>
                             <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                <Setter Property="Background" Value="#55FFFFFF"/>
-                            </Style>
-                            <Style Selector="Button:pressed /template/ ContentPresenter">
-                                <Setter Property="Background" Value="#25FFFFFF"/>
+                                <Setter Property="Background" Value="#60000000"/>
                             </Style>
                         </Button.Styles>
                         <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -822,17 +818,14 @@
                 </Grid>
             </ScrollViewer>
 
-            <!-- Back Button while loading (Soft Translucent Overlay) -->
+            <!-- Back Button while loading -->
             <Button Click="OnBackClick" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,30,0,0"
                     Width="40" Height="40" CornerRadius="20" Padding="0"
-                    Background="#35FFFFFF" BorderThickness="0"
-                    Foreground="White">
+                    Background="#30000000" BorderBrush="#20FFFFFF" BorderThickness="1"
+                    Foreground="{DynamicResource PrimaryText}">
                 <Button.Styles>
                     <Style Selector="Button:pointerover /template/ ContentPresenter">
-                        <Setter Property="Background" Value="#55FFFFFF"/>
-                    </Style>
-                    <Style Selector="Button:pressed /template/ ContentPresenter">
-                        <Setter Property="Background" Value="#25FFFFFF"/>
+                        <Setter Property="Background" Value="#60000000"/>
                     </Style>
                 </Button.Styles>
                 <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
