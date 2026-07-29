@@ -136,8 +136,11 @@ namespace Yomic.ViewModels
                         return new SolidColorBrush(Color.Parse("#1F1F1F"));
                 }
                 
-                // Default background -> White text matching white glass border & back button
-                return Brushes.White;
+                // White glass background & border: Black text in Light Mode, White text in Dark Mode
+                bool isLight = Avalonia.Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
+                return isLight 
+                    ? new SolidColorBrush(Color.Parse("#1F1F1F")) 
+                    : Brushes.White;
             });
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
