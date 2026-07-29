@@ -1,0 +1,81 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Yomic.Views.UpdateAvailableDialog"
+        Width="520" Height="420"
+        WindowStartupLocation="CenterOwner"
+        SystemDecorations="None"
+        ShowInTaskbar="False"
+        CanResize="False"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent">
+
+    <Border Background="{DynamicResource PrimaryBackground}" CornerRadius="16" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1" Padding="24">
+        <Grid RowDefinitions="Auto, Auto, *, Auto">
+            
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,16">
+                <!-- Sparkle / Rocket Icon -->
+                <Border Background="#250078D4" CornerRadius="12" Width="42" Height="42" VerticalAlignment="Center">
+                    <Viewbox Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Canvas Width="24" Height="24">
+                            <Path Data="M4 13a8 8 0 0 1 7 -7a6 6 0 0 0 3 -3a1 1 0 0 1 1.414 0a1 1 0 0 1 0 1.414a6 6 0 0 0 -3 3a8 8 0 0 1 -7 7m7 -7l-6 6m11 -11a2 2 0 1 1 -4 0a2 2 0 0 1 4 0z"
+                                  Stroke="{DynamicResource PrimaryAccent}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                        </Canvas>
+                    </Viewbox>
+                </Border>
+
+                <StackPanel VerticalAlignment="Center" Spacing="2">
+                    <TextBlock Text="New Version Available! 🎉" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}"/>
+                    <TextBlock Text="A new update is available on GitHub." FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Version Tag & Info Badge -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,0,0,16">
+                <Border Background="{DynamicResource PrimaryAccent}" CornerRadius="8" Padding="10,4">
+                    <TextBlock x:Name="TagText" Text="Tag: v1.8.0" FontSize="12" FontWeight="Bold" Foreground="White"/>
+                </Border>
+
+                <Border Background="#20FFFFFF" CornerRadius="8" Padding="10,4">
+                    <TextBlock x:Name="CurrentVersionText" Text="Current: v1.7.1" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
+                </Border>
+            </StackPanel>
+
+            <!-- GitHub Release Notes (Markdown Container) -->
+            <Border Grid.Row="2" Background="#0CFFFFFF" CornerRadius="10" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" Padding="14">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="ReleaseNotesContainer" Spacing="8">
+                        <!-- Populated dynamically in code-behind with parsed markdown blocks -->
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Actions (Update & Cancel) -->
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,20,0,0">
+                <!-- Cancel Button -->
+                <Button Content="Cancel" Click="OnCancelClick"
+                        Background="Transparent" Foreground="{DynamicResource SecondaryText}" FontWeight="SemiBold"
+                        CornerRadius="8" Padding="20,10" Cursor="Hand" BorderThickness="0">
+                    <Button.Styles>
+                        <Style Selector="Button:pointerover /template/ ContentPresenter">
+                            <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+                        </Style>
+                    </Button.Styles>
+                </Button>
+
+                <!-- Update Button -->
+                <Button x:Name="UpdateButton" Content="Update Now" Click="OnUpdateClick"
+                        Background="{DynamicResource PrimaryAccent}" Foreground="White" FontWeight="Bold"
+                        CornerRadius="8" Padding="24,10" Cursor="Hand" BorderThickness="0">
+                    <Button.Styles>
+                        <Style Selector="Button:pointerover /template/ ContentPresenter">
+                            <Setter Property="Background" Value="#005A9E"/>
+                        </Style>
+                    </Button.Styles>
+                </Button>
+            </StackPanel>
+
+        </Grid>
+    </Border>
+</Window>

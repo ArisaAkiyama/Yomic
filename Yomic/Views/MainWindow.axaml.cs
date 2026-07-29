@@ -49,6 +49,12 @@ namespace Yomic.Views
                 // Subscribe to Theme Change Request
                 vm.RequestThemeChange -= OnThemeChangeRequested;
                 vm.RequestThemeChange += OnThemeChangeRequested;
+
+                // Subscribe to Update Dialog Request
+                vm.ShowUpdateDialogAsync = async (updateInfo) =>
+                {
+                    return await UpdateAvailableDialog.ShowDialogAsync(this, updateInfo);
+                };
             }
         }
 

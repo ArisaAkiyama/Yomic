@@ -286,7 +286,7 @@ namespace Yomic.ViewModels
                     LatestVersion = updateInfo.LatestVersion;
                     _downloadUrl = updateInfo.DownloadUrl;
                     UpdateState = UpdateStatus.UpdateAvailable;
-                    _mainViewModel.ShowNotification($"Update Available: {updateInfo.LatestVersion}", NotificationType.Success);
+                    await _mainViewModel.PromptUpdateDialogAsync(updateInfo);
                 }
                 else
                 {

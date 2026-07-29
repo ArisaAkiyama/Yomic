@@ -183,6 +183,45 @@ namespace Yomic.ViewModels
         public Action? RequestFeedbackDialog;
         public Action<bool>? RequestThemeChange;
 
+        private readonly Core.Services.UpdateService _updateService = new Core.Services.UpdateService();
+        private bool _isUpdateDialogOpen;
+        public Func<Core.Services.UpdateService.UpdateInfo, Task<bool>>? ShowUpdateDialogAsync { get; set; }
+        public Core.Services.UpdateService UpdateService => _updateService;
+
+        private void SetupUpdateService()
+        {
+            _updateService.UpdateAvailableDetected += (s, info) =>
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+                {
+                    await PromptUpdateDialogAsync(info);
+                });
+            };
+
+            if (_settingsService.CheckAppUpdateOnStart)
+            {
+                _updateService.StartRealtimeMonitoring(3);
+            }
+        }
+
+        public async Task PromptUpdateDialogAsync(Core.Services.UpdateService.UpdateInfo updateInfo)
+        {
+            if (_isUpdateDialogOpen || updateInfo == null || !updateInfo.IsUpdateAvailable) return;
+            _isUpdateDialogOpen = true;
+            try
+            {
+                LatestUpdateInfo = updateInfo;
+                if (ShowUpdateDialogAsync != null)
+                {
+                    await ShowUpdateDialogAsync.Invoke(updateInfo);
+                }
+            }
+            finally
+            {
+                _isUpdateDialogOpen = false;
+            }
+        }
+
         private ViewModelBase? _currentPage;
         public ViewModelBase? CurrentPage
         {
@@ -296,6 +335,7 @@ namespace Yomic.ViewModels
 
             TogglePaneCommand = ReactiveCommand.Create(() => { IsPaneOpen = !IsPaneOpen; });
             CheckFirstRun();
+            SetupUpdateService();
         }
 
         // Default constructor for Designer Preview (Optional, but good practice)
@@ -598,14 +638,12 @@ namespace Yomic.ViewModels
             // App Update Check
             if (_settingsService.CheckAppUpdateOnStart)
             {
-                var updateService = new Core.Services.UpdateService();
                 try
                 {
-                    var updateInfo = await updateService.CheckForUpdatesAsync();
+                    var updateInfo = await _updateService.CheckForUpdatesAsync();
                     if (updateInfo.IsUpdateAvailable)
                     {
-                        LatestUpdateInfo = updateInfo;
-                        ShowNotification($"Update Available: {updateInfo.LatestVersion}", NotificationType.Success);
+                        await PromptUpdateDialogAsync(updateInfo);
                     }
                 }
                 catch (Exception ex)
