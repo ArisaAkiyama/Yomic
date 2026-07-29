@@ -468,23 +468,22 @@
                     Padding="20,10" BorderThickness="0">
 
                 <Grid ColumnDefinitions="Auto, *, Auto">
-                    <!-- Back Button (Left - Soft Translucent Overlay) -->
+                    <!-- Back Button (Left) -->
                     <Button Grid.Column="0" Classes="NavBtn" HotKey="Escape"
                             Command="{Binding BackCommand}"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
-                            Background="#20FFFFFF"
-                            BorderThickness="0"
+                            Background="#18FFFFFF"
+                            BorderBrush="#45FFFFFF"
+                            BorderThickness="1"
                             Width="36" Height="36"
                             CornerRadius="18"
                             Padding="0"
                             ToolTip.Tip="Back (Esc)">
                         <Button.Styles>
                             <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                <Setter Property="Background" Value="#35FFFFFF"/>
-                            </Style>
-                            <Style Selector="Button:pressed /template/ ContentPresenter">
-                                <Setter Property="Background" Value="#45FFFFFF"/>
+                                <Setter Property="Background" Value="#25FFFFFF"/>
+                                <Setter Property="BorderBrush" Value="#65FFFFFF"/>
                             </Style>
                         </Button.Styles>
                         <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
