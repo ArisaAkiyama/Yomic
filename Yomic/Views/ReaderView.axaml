@@ -631,10 +631,24 @@
                                 IsEnabled="{Binding HasPrevChapter}"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Center"
-                                Background="Transparent"
-                                Padding="10"
-                                CornerRadius="20"
+                                Background="#18FFFFFF"
+                                BorderBrush="#45FFFFFF"
+                                BorderThickness="1"
+                                Width="38" Height="38"
+                                CornerRadius="19"
+                                Padding="0"
                                 ToolTip.Tip="Previous Chapter">
+                            <Button.Styles>
+                                <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                    <Setter Property="Background" Value="#25FFFFFF"/>
+                                    <Setter Property="BorderBrush" Value="#65FFFFFF"/>
+                                </Style>
+                                <Style Selector="Button:disabled /template/ ContentPresenter">
+                                    <Setter Property="Background" Value="#08FFFFFF"/>
+                                    <Setter Property="BorderBrush" Value="#15FFFFFF"/>
+                                    <Setter Property="Opacity" Value="0.3"/>
+                                </Style>
+                            </Button.Styles>
                             <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
                                     <Path Data="M5 12l14 0 M5 12l6 6 M5 12l6 -6" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
@@ -680,10 +694,24 @@
                                 IsEnabled="{Binding HasNextChapter}"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
-                                Background="Transparent" 
-                                CornerRadius="20"
-                                Padding="10"
-                                ToolTip.Tip="Next Chapter"> 
+                                Background="#18FFFFFF" 
+                                BorderBrush="#45FFFFFF"
+                                BorderThickness="1"
+                                Width="38" Height="38"
+                                CornerRadius="19"
+                                Padding="0"
+                                ToolTip.Tip="Next Chapter">
+                            <Button.Styles>
+                                <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                    <Setter Property="Background" Value="#25FFFFFF"/>
+                                    <Setter Property="BorderBrush" Value="#65FFFFFF"/>
+                                </Style>
+                                <Style Selector="Button:disabled /template/ ContentPresenter">
+                                    <Setter Property="Background" Value="#08FFFFFF"/>
+                                    <Setter Property="BorderBrush" Value="#15FFFFFF"/>
+                                    <Setter Property="Opacity" Value="0.3"/>
+                                </Style>
+                            </Button.Styles>
                             <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
                                     <Path Data="M5 12l14 0 M13 18l6 -6 M13 6l6 6" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
