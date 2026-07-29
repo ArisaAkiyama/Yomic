@@ -23,14 +23,14 @@
                 </StackPanel>
             </StackPanel>
 
-            <!-- Version Tag & Info Badge (Genre Tag Pill Style) -->
+            <!-- Version Tag & Info Badge (Glassmorphic Frosted Glass Pill Style) -->
             <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,0,0,16">
-                <Border Background="#1C1C2C" CornerRadius="16" BorderBrush="#35FFFFFF" BorderThickness="1" Padding="14,6">
+                <Border Background="#18FFFFFF" CornerRadius="16" BorderBrush="#45FFFFFF" BorderThickness="1" Padding="14,6">
                     <TextBlock x:Name="TagText" Text="New version: v1.8.0" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource PrimaryText}"/>
                 </Border>
 
-                <Border Background="#1C1C2C" CornerRadius="16" BorderBrush="#35FFFFFF" BorderThickness="1" Padding="14,6">
-                    <TextBlock x:Name="CurrentVersionText" Text="Current: v1.7.1" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource PrimaryText}"/>
+                <Border Background="#10FFFFFF" CornerRadius="16" BorderBrush="#30FFFFFF" BorderThickness="1" Padding="14,6">
+                    <TextBlock x:Name="CurrentVersionText" Text="Current: v1.7.1" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource SecondaryText}"/>
                 </Border>
             </StackPanel>
 
