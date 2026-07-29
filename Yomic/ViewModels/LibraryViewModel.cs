@@ -43,8 +43,6 @@ namespace Yomic.ViewModels
             {
                 this.RaiseAndSetIfChanged(ref _color, value);
                 this.RaisePropertyChanged(nameof(ColorBrush));
-                this.RaisePropertyChanged(nameof(BackgroundBrush));
-                this.RaisePropertyChanged(nameof(ForegroundBrush));
             }
         }
 
@@ -52,22 +50,11 @@ namespace Yomic.ViewModels
         public bool IsSelected
         {
             get => _isSelected;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _isSelected, value);
-                this.RaisePropertyChanged(nameof(BackgroundBrush));
-                this.RaisePropertyChanged(nameof(ForegroundBrush));
-            }
+            set => this.RaiseAndSetIfChanged(ref _isSelected, value);
         }
 
         public bool ShowColorDot => Id > 0;
         public string ColorBrush => Color;
-
-        // Glassmorphic frosted glass style depending on IsSelected
-        public string BackgroundBrush => IsSelected ? "#22FFFFFF" : "#10FFFFFF";
-        public string BorderBrush => IsSelected ? "#55FFFFFF" : "#30FFFFFF";
-        
-        public string ForegroundBrush => IsSelected ? "White" : "#CCCCCC";
     }
 
     public class LibraryViewModel : ViewModelBase, IDisposable

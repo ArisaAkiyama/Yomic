@@ -469,6 +469,37 @@
                                  SelectedItem="{Binding SelectedCategoryTab}"
                                  Background="Transparent" BorderThickness="0"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.Styles>
+                                <Style Selector="ListBoxItem">
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                </Style>
+                                <Style Selector="ListBoxItem /template/ ContentPresenter">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                </Style>
+                                <!-- Unselected Tab -->
+                                <Style Selector="ListBoxItem Border#TabBorder">
+                                    <Setter Property="Background" Value="{DynamicResource SidebarBackground}"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}"/>
+                                    <Setter Property="Opacity" Value="0.85"/>
+                                </Style>
+                                <!-- Selected Tab -->
+                                <Style Selector="ListBoxItem:selected Border#TabBorder">
+                                    <Setter Property="Background" Value="{DynamicResource PrimaryAccent}"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource PrimaryAccent}"/>
+                                    <Setter Property="Opacity" Value="1.0"/>
+                                </Style>
+                                <Style Selector="ListBoxItem:selected TextBlock#TabText">
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                </Style>
+                                <!-- Pointer Over -->
+                                <Style Selector="ListBoxItem:pointerover Border#TabBorder">
+                                    <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+                                    <Setter Property="Opacity" Value="1.0"/>
+                                </Style>
+                            </ListBox.Styles>
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Orientation="Horizontal" Spacing="8"/>
@@ -476,9 +507,8 @@
                             </ListBox.ItemsPanel>
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="vm:CategoryTabItem">
-                                    <Border Background="{Binding BackgroundBrush}" 
+                                    <Border x:Name="TabBorder"
                                             CornerRadius="16" 
-                                            BorderBrush="{Binding BorderBrush}"
                                             BorderThickness="1"
                                             Padding="14,6"
                                             DragDrop.AllowDrop="True"
@@ -486,7 +516,7 @@
                                             DragDrop.Drop="OnTabDrop">
                                         <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                                             <Ellipse Width="8" Height="8" Fill="{Binding ColorBrush}" IsVisible="{Binding ShowColorDot}"/>
-                                            <TextBlock Text="{Binding Name}" Foreground="{Binding ForegroundBrush}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="TabText" Text="{Binding Name}" Foreground="{DynamicResource PrimaryText}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Border>
                                 </DataTemplate>
