@@ -448,7 +448,7 @@ namespace Yomic.Views
                     IsUpdateAvailable = true,
                     LatestVersion = "v9.9.9-test",
                     DownloadUrl = "https://github.com/ArisaAkiyama/yomic/releases",
-                    ReleaseNotes = "# Test Auto-Update Release 🎉\n\n- Realtime Background Polling Verification\n- GitHub Markdown Formatted Release Notes\n- Update & Cancel Button Functionality Test",
+                    ReleaseNotes = "# Test Auto-Update Release\n\n- Realtime Background Polling Verification\n- GitHub Markdown Formatted Release Notes\n- Update & Cancel Button Functionality Test",
                     PublishedAt = DateTime.UtcNow.ToString("o")
                 };
 
