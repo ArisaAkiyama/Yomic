@@ -477,8 +477,8 @@
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="vm:CategoryTabItem">
                                     <Border Background="{Binding BackgroundBrush}" 
-                                            CornerRadius="14" 
-                                            BorderBrush="{DynamicResource SeparatorBrush}"
+                                            CornerRadius="16" 
+                                            BorderBrush="{Binding BorderBrush}"
                                             BorderThickness="1"
                                             Padding="14,6"
                                             DragDrop.AllowDrop="True"

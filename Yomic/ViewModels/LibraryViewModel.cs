@@ -63,34 +63,11 @@ namespace Yomic.ViewModels
         public bool ShowColorDot => Id > 0;
         public string ColorBrush => Color;
 
-        // Custom style depending on IsSelected
-        public string BackgroundBrush => IsSelected ? Color : "Transparent";
+        // Glassmorphic frosted glass style depending on IsSelected
+        public string BackgroundBrush => IsSelected ? "#22FFFFFF" : "#10FFFFFF";
+        public string BorderBrush => IsSelected ? "#55FFFFFF" : "#30FFFFFF";
         
-        public string ForegroundBrush
-        {
-            get
-            {
-                if (!IsSelected) return "#8C8C8C"; // Dim grey for unselected
-                
-                // For selected, use white or dark text depending on how light the background is
-                if (string.IsNullOrEmpty(Color)) return "White";
-                try
-                {
-                    string hexColor = Color;
-                    if (hexColor.StartsWith("#")) hexColor = hexColor.Substring(1);
-                    if (hexColor.Length == 6)
-                    {
-                        int r = Convert.ToInt32(hexColor.Substring(0, 2), 16);
-                        int g = Convert.ToInt32(hexColor.Substring(2, 2), 16);
-                        int b = Convert.ToInt32(hexColor.Substring(4, 2), 16);
-                        double yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000.0;
-                        return (yiq >= 128) ? "#1E1E2E" : "White";
-                    }
-                }
-                catch { }
-                return "White";
-            }
-        }
+        public string ForegroundBrush => IsSelected ? "White" : "#CCCCCC";
     }
 
     public class LibraryViewModel : ViewModelBase, IDisposable
