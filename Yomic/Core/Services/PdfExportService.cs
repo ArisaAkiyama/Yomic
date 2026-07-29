@@ -62,7 +62,7 @@ namespace Yomic.Core.Services
                         try
                         {
                             using var canvas = pdfDocument.BeginPage(imageToDraw.Width, imageToDraw.Height);
-                            canvas.DrawImage(imageToDraw, 0, 0);
+                            canvas.DrawImage(imageToDraw, 0, 0, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None));
                             pdfDocument.EndPage();
                         }
                         finally
