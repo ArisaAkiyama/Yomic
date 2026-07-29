@@ -1218,7 +1218,11 @@ namespace Yomic.ViewModels
         {
             if (Chapters == null) return;
             var downloaded = Chapters.Where(c => c.IsDownloaded).ToList();
-            if (downloaded.Count == 0) return;
+            if (downloaded.Count == 0)
+            {
+                _mainVM.ShowNotification("No downloaded chapters to delete.", NotificationType.Info);
+                return;
+            }
 
             _mainVM.ShowNotification($"Deleting {downloaded.Count} downloaded chapter(s)...", NotificationType.Info);
 

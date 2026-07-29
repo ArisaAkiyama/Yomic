@@ -405,8 +405,7 @@
                                 <Button Command="{Binding DeleteAllDownloadsCommand}"
                                         ToolTip.Tip="Delete All Downloaded Chapters"
                                         Background="#011E1E2E" BorderThickness="0"
-                                        Padding="8,4"
-                                        IsVisible="{Binding HasDownloadedChapters}">
+                                        Padding="8,4">
                                     <Button.Styles>
                                         <Style Selector="Button">
                                             <Setter Property="Foreground" Value="{DynamicResource SecondaryText}"/>
