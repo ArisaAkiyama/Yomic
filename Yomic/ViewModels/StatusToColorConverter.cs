@@ -104,10 +104,7 @@ namespace Yomic.ViewModels
                         return new SolidColorBrush(Color.Parse("#FFB800")); // Yellow/Amber
                 }
                 
-                bool isLight = Avalonia.Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
-                return isLight 
-                    ? new SolidColorBrush(Color.Parse("#15000000")) 
-                    : new SolidColorBrush(Color.Parse("#20FFFFFF"));
+                return new SolidColorBrush(Color.Parse("#18FFFFFF")); // Frosted Glass White
             });
 
         public static readonly IValueConverter GenreToBorder =
@@ -122,10 +119,7 @@ namespace Yomic.ViewModels
                         return new SolidColorBrush(Color.Parse("#FFB800"));
                 }
                     
-                bool isLight = Avalonia.Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
-                return isLight 
-                    ? new SolidColorBrush(Color.Parse("#25000000")) 
-                    : new SolidColorBrush(Color.Parse("#30FFFFFF"));
+                return new SolidColorBrush(Color.Parse("#45FFFFFF")); // Glossy White Rim Border
             });
 
         public static readonly IValueConverter GenreToForeground =
@@ -142,11 +136,8 @@ namespace Yomic.ViewModels
                         return new SolidColorBrush(Color.Parse("#1F1F1F"));
                 }
                 
-                // Default background -> White in Dark Mode, Black in Light Mode
-                bool isLight = Avalonia.Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
-                return isLight 
-                    ? new SolidColorBrush(Color.Parse("#1F1F1F")) 
-                    : Brushes.White;
+                // Default background -> White text matching white glass border & back button
+                return Brushes.White;
             });
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
