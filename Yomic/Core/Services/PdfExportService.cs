@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using SkiaSharp;
+using Yomic.Core.Helpers;
 
 namespace Yomic.Core.Services
 {
@@ -38,8 +38,7 @@ namespace Yomic.Core.Services
                         if (bitmap == null) continue;
 
                         using var canvas = pdfDocument.BeginPage(bitmap.Width, bitmap.Height);
-                        using var paint = new SKPaint { IsAntialias = true, FilterQuality = SKFilterQuality.High };
-                        canvas.DrawBitmap(bitmap, 0, 0, paint);
+                        canvas.DrawBitmap(bitmap, 0, 0, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None));
                         pdfDocument.EndPage();
                     }
                     catch
@@ -83,42 +82,6 @@ namespace Yomic.Core.Services
             {
                 try { Directory.Delete(tempDir, true); } catch { }
             }
-        }
-    }
-
-    public class NaturalStringComparer : IComparer<string>
-    {
-        public int Compare(string? x, string? y)
-        {
-            if (x == null && y == null) return 0;
-            if (x == null) return -1;
-            if (y == null) return 1;
-
-            string nameX = Path.GetFileNameWithoutExtension(x);
-            string nameY = Path.GetFileNameWithoutExtension(y);
-
-            var regex = new Regex(@"\d+|\D+");
-            var tokensX = regex.Matches(nameX).Select(m => m.Value).ToArray();
-            var tokensY = regex.Matches(nameY).Select(m => m.Value).ToArray();
-
-            for (int i = 0; i < Math.Min(tokensX.Length, tokensY.Length); i++)
-            {
-                var tokenX = tokensX[i];
-                var tokenY = tokensY[i];
-
-                if (int.TryParse(tokenX, out int numX) && int.TryParse(tokenY, out int numY))
-                {
-                    int cmp = numX.CompareTo(numY);
-                    if (cmp != 0) return cmp;
-                }
-                else
-                {
-                    int cmp = string.Compare(tokenX, tokenY, StringComparison.OrdinalIgnoreCase);
-                    if (cmp != 0) return cmp;
-                }
-            }
-
-            return tokensX.Length.CompareTo(tokensY.Length);
         }
     }
 }

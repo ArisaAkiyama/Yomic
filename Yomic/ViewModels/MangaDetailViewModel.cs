@@ -1399,7 +1399,7 @@ namespace Yomic.ViewModels
                 var chapterFolder = Core.Services.DownloadPathService.FindCompletedChapterDirectory(_model, chapterModel)
                     ?? Core.Services.DownloadPathService.GetChapterDirectory(_model, chapterModel);
 
-                if (Directory.Exists(chapterFolder))
+                if (System.IO.Directory.Exists(chapterFolder))
                 {
                     try
                     {
