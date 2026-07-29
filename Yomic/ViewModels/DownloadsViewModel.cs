@@ -64,7 +64,6 @@ namespace Yomic.ViewModels
         
         // Commands
         public System.Windows.Input.ICommand CancelCommand { get; }
-        public ReactiveCommand<Unit, Unit> ExportCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenChapterCommand { get; }
 
         public DownloadItemViewModel(Core.Services.DownloadRequest request, Core.Services.DownloadService service, MainWindowViewModel mainVM)
@@ -84,21 +83,6 @@ namespace Yomic.ViewModels
                 };
 
                 mainVM.GoToReader(chapterItem, new System.Collections.Generic.List<ChapterItem> { chapterItem }, _request.Manga.Source, _request.Manga.Title ?? "", _request.Manga.Url ?? "", false, _request.Manga.ThumbnailUrl ?? "");
-            });
-            
-            ExportCommand = ReactiveCommand.CreateFromTask(async () => 
-            {
-                try
-                {
-                    var path = await service.ExportToCbz(request);
-                    mainVM.ShowNotification($"Saved to: {Path.GetFileName(path)}");
-                    
-                    // Optional: Open folder?
-                }
-                catch (Exception ex)
-                {
-                    mainVM.ShowNotification($"Export Failed: {ex.Message}");
-                }
             });
         }
         

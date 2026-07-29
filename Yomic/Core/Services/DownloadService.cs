@@ -797,36 +797,5 @@ namespace Yomic.Core.Services
                 SaveQueue();
             }
         }
-        public async Task<string> ExportToCbz(DownloadRequest request)
-        {
-            if (request.Status != "Completed") throw new InvalidOperationException("Download must be completed to export.");
-
-            // 1. Locate Source Directory
-            var chapterDir = DownloadPathService.FindCompletedChapterDirectory(request.Manga, request.Chapter)
-                ?? DownloadPathService.GetChapterDirectory(request.Manga, request.Chapter);
-
-            if (!Directory.Exists(chapterDir)) throw new FileNotFoundException("Chapter files not found.", chapterDir);
-
-            // 2. Prepare Destination
-            // Save to User's Downloads folder / Yomic_Exports
-            var userDownloads = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
-            var exportFolder = Path.Combine(userDownloads, "Yomic_Exports");
-            if (!Directory.Exists(exportFolder)) Directory.CreateDirectory(exportFolder);
-
-            var safeMangaTitle = DownloadPathService.SanitizePathSegment(request.Manga.Title ?? "Unknown");
-            var safeChapterName = DownloadPathService.SanitizePathSegment(request.Chapter.Name);
-            var fileName = $"{safeMangaTitle} - {safeChapterName}.cbz";
-            var destPath = Path.Combine(exportFolder, fileName);
-
-            // 3. Zip it (Create CBZ)
-            // Use Task.Run for blocking IO
-            await Task.Run(() =>
-            {
-                if (File.Exists(destPath)) File.Delete(destPath);
-                System.IO.Compression.ZipFile.CreateFromDirectory(chapterDir, destPath);
-            });
-
-            return destPath;
-        }
     }
 }

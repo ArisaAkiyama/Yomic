@@ -139,19 +139,6 @@
                 <DataTemplate>
                      <Border Classes="download-item" CornerRadius="12" Padding="15" Margin="0,0,0,10"
                              BoxShadow="0 2 6 0 #15000000">
-                        <Border.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Save as CBZ" Command="{Binding ExportCommand}">
-                                     <MenuItem.Icon>
-                                         <Viewbox Width="14" Height="14" VerticalAlignment="Center">
-                                             <Canvas Width="24" Height="24">
-                                                 <Path Data="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2 M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M14 4l0 4l-4 0l0 -4" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
-                                             </Canvas>
-                                         </Viewbox>
-                                     </MenuItem.Icon>
-                                </MenuItem>
-                            </ContextMenu>
-                        </Border.ContextMenu>
                         <Grid ColumnDefinitions="*, Auto">
                             <Button Grid.Column="0" Command="{Binding OpenChapterCommand}" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Cursor="Hand">
                                 <Button.Styles>

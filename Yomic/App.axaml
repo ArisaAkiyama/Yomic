@@ -4,7 +4,6 @@
              xmlns:vm="using:Yomic.ViewModels"
              xmlns:views="using:Yomic.Views"
              xmlns:components="using:Yomic.Views.Components"
-             xmlns:sty="using:FluentAvalonia.Styling"
              x:Class="Yomic.App">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -132,7 +131,7 @@
     </Application.Resources>
 
     <Application.Styles>
-        <sty:FluentAvaloniaTheme CustomAccentColor="#0078D4" />
+        <FluentTheme />
         
         <!-- Global Typography -->
         <!-- Global Typography -->
@@ -144,34 +143,7 @@
             <Setter Property="FontFamily" Value="avares://Yomic/Assets/Fonts#M PLUS Rounded 1c, Inter, Segoe UI, Sans-Serif"/>
         </Style>
 
-        <!-- Global ListBox and ListBoxItem Reset (Remove FluentAvalonia default item borders) -->
-        <Style Selector="ListBox">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-        </Style>
-        <Style Selector="ListBox /template/ Border#PART_BorderElement">
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-        </Style>
-        <Style Selector="ListBoxItem">
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Padding" Value="0"/>
-        </Style>
-        <Style Selector="ListBoxItem /template/ ContentPresenter">
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-        </Style>
-        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-        </Style>
-        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-        </Style>
+        <!-- Smooth transitions for common containers removed -->
 
         <!-- Fix Button Hover to preserve custom colors -->
         <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
