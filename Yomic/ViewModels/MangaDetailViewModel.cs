@@ -1388,20 +1388,14 @@ namespace Yomic.ViewModels
         {
             if (chapters == null || chapters.Count == 0) return;
 
-            _mainVM.ShowNotification("Preparing PDF (.zip) export...", NotificationType.Info);
-
             int exportedCount = 0;
-            string lastExportPath = string.Empty;
-            var source = _sourceManager.GetSource(_model.Source);
+            var chaptersToQueue = new List<ChapterItem>();
 
             foreach (var chapter in chapters)
             {
                 var chapterModel = new Core.Models.Chapter { Name = chapter.Title, Url = chapter.Url };
                 var chapterFolder = Core.Services.DownloadPathService.FindCompletedChapterDirectory(_model, chapterModel)
                     ?? Core.Services.DownloadPathService.GetChapterDirectory(_model, chapterModel);
-
-                string folderToUse = chapterFolder;
-                bool isTempFetch = false;
 
                 bool hasLocalImages = System.IO.Directory.Exists(chapterFolder) &&
                     System.IO.Directory.GetFiles(chapterFolder).Any(f =>
@@ -1414,96 +1408,63 @@ namespace Yomic.ViewModels
                                ext.Equals(".avif", StringComparison.OrdinalIgnoreCase);
                     });
 
-                if (!hasLocalImages)
-                {
-                    if (source == null)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"[MangaDetailVM] Source not found for {chapter.Title}");
-                        continue;
-                    }
-
-                    _mainVM.ShowNotification($"Fetching pages online for {chapter.Title}...", NotificationType.Info);
-
-                    try
-                    {
-                        var pageUrls = await source.GetPageListAsync(chapter.Url);
-                        if (pageUrls == null || pageUrls.Count == 0)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"[MangaDetailVM] No page URLs returned for {chapter.Title}");
-                            continue;
-                        }
-
-                        var tempDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Yomic_Pdf_Fetch_" + Guid.NewGuid().ToString("N"));
-                        System.IO.Directory.CreateDirectory(tempDir);
-                        folderToUse = tempDir;
-                        isTempFetch = true;
-
-                        using var httpClient = _networkService.CreateOptimizedHttpClient();
-                        string referer = source.BaseUrl;
-
-                        for (int pageIdx = 0; pageIdx < pageUrls.Count; pageIdx++)
-                        {
-                            var pageUrl = pageUrls[pageIdx];
-                            var ext = System.IO.Path.GetExtension(pageUrl);
-                            if (string.IsNullOrEmpty(ext) || ext.Length > 5) ext = ".jpg";
-
-                            var pageFileName = $"{pageIdx + 1:D3}{ext}";
-                            var pageFilePath = System.IO.Path.Combine(tempDir, pageFileName);
-
-                            try
-                            {
-                                using var req = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, pageUrl);
-                                req.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36");
-                                req.Headers.Referrer = new Uri(referer);
-
-                                var resp = await httpClient.SendAsync(req);
-                                if (resp.IsSuccessStatusCode)
-                                {
-                                    var bytes = await resp.Content.ReadAsByteArrayAsync();
-                                    await System.IO.File.WriteAllBytesAsync(pageFilePath, bytes);
-                                }
-                            }
-                            catch (Exception exPage)
-                            {
-                                System.Diagnostics.Debug.WriteLine($"[MangaDetailVM] Failed to download page {pageIdx + 1}: {exPage.Message}");
-                            }
-                        }
-                    }
-                    catch (Exception exFetch)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"[MangaDetailVM] Failed to fetch pages for {chapter.Title}: {exFetch.Message}");
-                        continue;
-                    }
-                }
-
-                if (System.IO.Directory.Exists(folderToUse))
+                if (hasLocalImages)
                 {
                     try
                     {
-                        lastExportPath = await Core.Services.PdfExportService.ExportChapterImagesToZipPdfAsync(Title, chapter.Title, folderToUse);
+                        await Core.Services.PdfExportService.ExportChapterImagesToZipPdfAsync(Title, chapter.Title, chapterFolder);
                         exportedCount++;
                     }
                     catch (Exception ex)
                     {
                         System.Diagnostics.Debug.WriteLine($"[MangaDetailVM] PDF export error for {chapter.Title}: {ex.Message}");
                     }
-                    finally
-                    {
-                        if (isTempFetch)
-                        {
-                            try { System.IO.Directory.Delete(folderToUse, true); } catch { }
-                        }
-                    }
+                }
+                else
+                {
+                    chaptersToQueue.Add(chapter);
                 }
             }
 
-            if (exportedCount > 0)
+            if (chaptersToQueue.Count > 0)
+            {
+                _mainVM.ShowNotification($"Downloading {chaptersToQueue.Count} chapter(s)... PDF (.zip) will be generated automatically upon completion.", NotificationType.Info);
+
+                foreach (var chapter in chaptersToQueue)
+                {
+                    var chapterModel = new Core.Models.Chapter { Name = chapter.Title, Url = chapter.Url };
+                    _downloadService.QueueDownload(_model, chapterModel);
+                    chapter.IsDownloading = true;
+
+                    EventHandler<Core.Services.DownloadRequest>? handler = null;
+                    handler = async (s, req) =>
+                    {
+                        if (req.Manga.Url == _model.Url && req.Chapter.Url == chapter.Url && req.Status == "Completed")
+                        {
+                            _downloadService.StatusChanged -= handler;
+                            var completedFolder = Core.Services.DownloadPathService.FindCompletedChapterDirectory(_model, req.Chapter)
+                                ?? Core.Services.DownloadPathService.GetChapterDirectory(_model, req.Chapter);
+
+                            if (System.IO.Directory.Exists(completedFolder))
+                            {
+                                try
+                                {
+                                    await Core.Services.PdfExportService.ExportChapterImagesToZipPdfAsync(Title, chapter.Title, completedFolder);
+                                    _mainVM.ShowNotification($"Exported {chapter.Title} as PDF (.zip) to Downloads/Yomic_Exports!", NotificationType.Success);
+                                }
+                                catch (Exception exExp)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"[MangaDetailVM] Auto PDF export failed: {exExp.Message}");
+                                }
+                            }
+                        }
+                    };
+                    _downloadService.StatusChanged += handler;
+                }
+            }
+            else if (exportedCount > 0)
             {
                 _mainVM.ShowNotification($"Successfully exported {exportedCount} chapter(s) as PDF (.zip) to Downloads/Yomic_Exports!", NotificationType.Success);
-            }
-            else
-            {
-                _mainVM.ShowNotification("Could not fetch or export chapter pages as PDF (.zip). Please check connection or source.", NotificationType.Error);
             }
         }
 
