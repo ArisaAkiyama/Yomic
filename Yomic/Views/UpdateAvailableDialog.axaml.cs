@@ -130,21 +130,65 @@ namespace Yomic.Views
             }
         }
 
-        private void OnUpdateClick(object? sender, RoutedEventArgs e)
+        private async void OnUpdateClick(object? sender, RoutedEventArgs e)
         {
-            if (!string.IsNullOrEmpty(_downloadUrl))
+            if (string.IsNullOrEmpty(_downloadUrl))
+            {
+                Close();
+                return;
+            }
+
+            // If GitHub release asset is a direct .exe installer
+            if (_downloadUrl.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
             {
                 try
                 {
-                    Process.Start(new ProcessStartInfo(_downloadUrl) { UseShellExecute = true });
+                    UpdateButton.IsEnabled = false;
+                    UpdateButton.Content = "Downloading...";
+
+                    var tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Yomic_Update.exe");
+                    if (System.IO.File.Exists(tempPath))
+                    {
+                        try { System.IO.File.Delete(tempPath); } catch { }
+                    }
+
+                    using var client = new System.Net.Http.HttpClient();
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd("Yomic-Desktop-App");
+
+                    using var response = await client.GetAsync(_downloadUrl, System.Net.Http.HttpCompletionOption.ResponseHeadersRead);
+                    response.EnsureSuccessStatusCode();
+
+                    using (var contentStream = await response.Content.ReadAsStreamAsync())
+                    using (var fileStream = new System.IO.FileStream(tempPath, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None))
+                    {
+                        await contentStream.CopyToAsync(fileStream);
+                    }
+
+                    // Launch installer directly
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = tempPath,
+                        UseShellExecute = true
+                    });
+
+                    // Exit application to allow installer to replace executable
+                    Environment.Exit(0);
+                    return;
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[UpdateDialog] Open URL failed: {ex.Message}");
+                    Debug.WriteLine($"[UpdateDialog] Direct download failed: {ex.Message}");
+                    // Fallback to browser if direct download fails
+                    try { Process.Start(new ProcessStartInfo(_downloadUrl) { UseShellExecute = true }); } catch { }
                 }
             }
+            else
+            {
+                // Fallback to browser for web release URLs
+                try { Process.Start(new ProcessStartInfo(_downloadUrl) { UseShellExecute = true }); } catch { }
+            }
 
-            Tag = true; // User clicked update
+            Tag = true;
             Close();
         }
 
