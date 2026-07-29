@@ -44,14 +44,16 @@
                     <!-- Back Button -->
                     <Button Click="OnBackClick" HotKey="Escape" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,30,0,0"
                             Width="40" Height="40" CornerRadius="20" Padding="0"
-                            Background="#30000000" BorderBrush="#20FFFFFF" BorderThickness="1"
-                            Foreground="{DynamicResource PrimaryText}">
+                            Background="#18FFFFFF" BorderBrush="#45FFFFFF" BorderThickness="1"
+                            Foreground="{DynamicResource PrimaryText}"
+                            ToolTip.Tip="Back (Esc)">
                         <Button.Styles>
                             <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                <Setter Property="Background" Value="#60000000"/>
+                                <Setter Property="Background" Value="#25FFFFFF"/>
+                                <Setter Property="BorderBrush" Value="#65FFFFFF"/>
                             </Style>
                         </Button.Styles>
-                        <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Canvas Width="24" Height="24">
                                 <Path Data="M5 12l14 0 M5 12l6 6 M5 12l6 -6" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
                             </Canvas>
@@ -821,14 +823,15 @@
             <!-- Back Button while loading -->
             <Button Click="OnBackClick" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,30,0,0"
                     Width="40" Height="40" CornerRadius="20" Padding="0"
-                    Background="#30000000" BorderBrush="#20FFFFFF" BorderThickness="1"
+                    Background="#18FFFFFF" BorderBrush="#45FFFFFF" BorderThickness="1"
                     Foreground="{DynamicResource PrimaryText}">
                 <Button.Styles>
                     <Style Selector="Button:pointerover /template/ ContentPresenter">
-                        <Setter Property="Background" Value="#60000000"/>
+                        <Setter Property="Background" Value="#25FFFFFF"/>
+                        <Setter Property="BorderBrush" Value="#65FFFFFF"/>
                     </Style>
                 </Button.Styles>
-                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Canvas Width="24" Height="24">
                         <Path Data="M5 12l14 0 M5 12l6 6 M5 12l6 -6" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
                     </Canvas>
