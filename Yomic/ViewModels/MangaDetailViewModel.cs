@@ -758,15 +758,12 @@ namespace Yomic.ViewModels
                     if (existing.Chapters != null && existing.Chapters.Count > 0)
                     {
                         var vmChapters = existing.Chapters.OrderByDescending(c => c.ChapterNumber).Select(ch => {
-                            // Fallback: check filesystem if DB says not downloaded
-                            bool isDownloaded = ch.IsDownloaded;
-                            if (!isDownloaded)
-                            {
-                                isDownloaded = DownloadPathService.IsChapterDownloaded(existing, ch);
-                            }
-                            
-                            // Create minimal chapter for download request
+                            // Create minimal chapter for download request & disk check
                             var chapterModel = new Core.Models.Chapter { Name = ch.Name, Url = ch.Url, ChapterNumber = ch.ChapterNumber };
+                            
+                            // Check filesystem to verify if files actually exist on disk
+                            bool isDownloaded = DownloadPathService.IsChapterDownloaded(existing, chapterModel);
+                            ch.IsDownloaded = isDownloaded; // Sync DB entity state
 
                             ChapterItem? item = null;
                             item = new ChapterItem(
@@ -975,20 +972,19 @@ namespace Yomic.ViewModels
                     {
                         // Check if existing to get download/read status
                         var dbChapter = existing?.Chapters?.FirstOrDefault(x => x.Url == ch.Url);
-                        var dbDownloaded = dbChapter?.IsDownloaded ?? false;
                         var dbRead = dbChapter?.Read ?? ch.Read; // Prefer DB read status
-                        
-                        // Fallback: check filesystem
-                        bool isDownloaded = dbDownloaded;
-                        if (!isDownloaded)
+
+                        // Always verify filesystem to check if files actually exist on disk
+                        var downloadedCheckChapter = new Core.Models.Chapter
                         {
-                            var downloadedCheckChapter = new Core.Models.Chapter
-                            {
-                                Name = ch.Name,
-                                Url = ch.Url,
-                                ChapterNumber = ch.ChapterNumber
-                            };
-                            isDownloaded = DownloadPathService.IsChapterDownloaded(_model, downloadedCheckChapter);
+                            Name = ch.Name,
+                            Url = ch.Url,
+                            ChapterNumber = ch.ChapterNumber
+                        };
+                        bool isDownloaded = DownloadPathService.IsChapterDownloaded(_model, downloadedCheckChapter);
+                        if (dbChapter != null)
+                        {
+                            dbChapter.IsDownloaded = isDownloaded;
                         }
 
                         // Create minimal chapter for download request
