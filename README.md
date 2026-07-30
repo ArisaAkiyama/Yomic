@@ -15,7 +15,7 @@
 **Yomic** is a free, open-source desktop application designed for reading manga, manhwa, manhua, and webtoons on Windows. Add sources through extensions, organize your personal library, and read online or offline with zero ads and maximum performance.
 
 <a href="https://github.com/ArisaAkiyama/yomic/releases/latest/download/Yomic-Setup.exe">
-  <img src="./yomic-website/src/Assets/win-download.png" alt="Download Yomic for Windows" height="50"/>
+  <img src="./Yomic/Assets/win-download.png" alt="Download Yomic for Windows" height="50"/>
 </a>
 
 <br/>
