@@ -125,22 +125,17 @@ namespace Yomic.ViewModels
         public static readonly IValueConverter GenreToForeground =
             new FuncValueConverter<string, IBrush>(g => 
             {
-                if (!string.IsNullOrEmpty(g))
+                bool isLight = Avalonia.Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
+                if (isLight)
                 {
-                    // Red background -> White text
-                    if (RedGenres.Any(rg => rg.Equals(g, StringComparison.OrdinalIgnoreCase)))
+                    // In Light Mode: Red background -> White text, others -> Crisp Black text
+                    if (!string.IsNullOrEmpty(g) && RedGenres.Any(rg => rg.Equals(g, StringComparison.OrdinalIgnoreCase)))
                         return Brushes.White;
-                    
-                    // Yellow background -> Black text
-                    if (YellowGenres.Any(yg => yg.Equals(g, StringComparison.OrdinalIgnoreCase)))
-                        return new SolidColorBrush(Color.Parse("#1F1F1F"));
+                    return new SolidColorBrush(Color.Parse("#1F1F1F"));
                 }
                 
-                // White glass background & border: Black text in Light Mode, White text in Dark Mode
-                bool isLight = Avalonia.Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
-                return isLight 
-                    ? new SolidColorBrush(Color.Parse("#1F1F1F")) 
-                    : Brushes.White;
+                // In Dark Mode: Always White text for all genre pills for uniform aesthetic
+                return Brushes.White;
             });
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
