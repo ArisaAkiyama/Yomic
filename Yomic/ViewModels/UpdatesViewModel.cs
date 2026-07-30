@@ -345,8 +345,8 @@ namespace Yomic.ViewModels
                      });
                  });
 
-                 // Trigger Library Update
-                 int newChapters = await _libraryService.UpdateAllLibraryMangaAsync(_sourceManager, progress);
+                 // Trigger Library Update with forceRefresh: true to check online sources for new chapters
+                 int newChapters = await _libraryService.UpdateAllLibraryMangaAsync(_sourceManager, forceRefresh: true, progress: progress);
                  
                  await LoadUpdatesAsync();
                  

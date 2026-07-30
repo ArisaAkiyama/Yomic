@@ -232,16 +232,16 @@
                    </StackPanel>
 
                   <!-- Case 2: Library Has Items but No Updates -->
-                  <StackPanel Spacing="10" IsVisible="{Binding !IsLibraryEmpty}">
-                       <Viewbox Width="64" Height="64" HorizontalAlignment="Center">
-                           <Canvas Width="24" Height="24">
-                               <Path Data="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M9 12l2 2l4 -4" Stroke="#45475A" StrokeThickness="1.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
-                           </Canvas>
-                       </Viewbox>
-                       <TextBlock Text="{DynamicResource String.Updates.NoRecent}" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
-                       <TextBlock Text="{DynamicResource String.Updates.NoRecentDesc}" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
-                       <Button Command="{Binding RefreshCommand}" Content="{DynamicResource String.Updates.CheckNow}" HorizontalAlignment="Center" Background="#0078D7" Foreground="#FFFFFF" Padding="20,10" CornerRadius="8" Margin="0,15,0,0"/>
-                  </StackPanel>
+                   <StackPanel Spacing="10" IsVisible="{Binding !IsLibraryEmpty}">
+                        <Viewbox Width="64" Height="64" HorizontalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" Stroke="{DynamicResource SecondaryText}" StrokeThickness="1.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round" Opacity="0.6"/>
+                            </Canvas>
+                        </Viewbox>
+                        <TextBlock Text="{DynamicResource String.Updates.NoRecent}" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{DynamicResource String.Updates.NoRecentDesc}" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                        <Button Command="{Binding RefreshCommand}" Content="{DynamicResource String.Updates.CheckNow}" HorizontalAlignment="Center" Background="{DynamicResource PrimaryAccent}" Foreground="#FFFFFF" Padding="24,10" CornerRadius="20" FontWeight="SemiBold" FontSize="13" Margin="0,15,0,0"/>
+                   </StackPanel>
             </StackPanel>
         </Panel>
 
