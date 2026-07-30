@@ -10,6 +10,7 @@
 [![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
 [![Avalonia](https://img.shields.io/badge/Avalonia-11.3.11-orange.svg)](https://avaloniaui.net/)
 [![Extensions](https://img.shields.io/badge/Extensions-Available-green.svg)](https://github.com/ArisaAkiyama/extension-yomic)
+[![GitHub Stars](https://img.shields.io/github/stars/ArisaAkiyama/Yomic?style=social)](https://github.com/ArisaAkiyama/Yomic/stargazers)
 
 <p align="center">
   <b>Yomic</b> is a free, open-source desktop application designed for reading manga, manhwa, manhua, and webtoons on Windows.<br/>Add sources through extensions, organize your personal library, and read online or offline with zero ads and maximum performance.
