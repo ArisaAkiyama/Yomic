@@ -695,6 +695,28 @@
                                     </Button.Styles>
                                 </Button>
 
+                                <Button Command="{Binding OpenTrakteerCommand}" 
+                                        ToolTip.Tip="Dukung pengembang melalui Trakteer"
+                                        CornerRadius="16" Padding="18,8" Cursor="Hand">
+                                    <Button.Styles>
+                                        <Style Selector="Button">
+                                            <Setter Property="Background" Value="#C1272D"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="FontSize" Value="13"/>
+                                        </Style>
+                                        <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                            <Setter Property="Background" Value="#E52D34"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Style>
+                                    </Button.Styles>
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <TextBlock Text="☕" FontSize="13" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Support on Trakteer" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
                                 <Button Command="{Binding CheckForUpdatesCommand}" IsEnabled="{Binding IsUpdateActionEnabled}"
                                         Classes.available="{Binding IsUpdateAvailableStyle}"
                                         CornerRadius="16" Padding="18,8" Cursor="Hand">

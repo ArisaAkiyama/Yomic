@@ -255,6 +255,7 @@ namespace Yomic.ViewModels
         public ReactiveCommand<Unit, Unit> RestoreDataCommand { get; }
         public ReactiveCommand<Unit, Unit> CheckForUpdatesCommand { get; }
         public ReactiveCommand<Unit, Unit> VisitWebsiteCommand { get; }
+        public ReactiveCommand<Unit, Unit> OpenTrakteerCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenTwitterCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenGitHubCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenFacebookCommand { get; }
@@ -421,6 +422,18 @@ namespace Yomic.ViewModels
             }
         }
 
+        private void OpenTrakteer()
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "https://trakteer.id/ArisaAkiyama", UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                 _mainViewModel.ShowNotification($"Could not open Trakteer: {ex.Message}");
+            }
+        }
+
         private void OpenTwitter()
         {
             try
@@ -534,6 +547,7 @@ namespace Yomic.ViewModels
             BackupDataCommand = ReactiveCommand.Create(RequestBackup);
             RestoreDataCommand = ReactiveCommand.Create(RequestRestore);
             VisitWebsiteCommand = ReactiveCommand.Create(VisitWebsite);
+            OpenTrakteerCommand = ReactiveCommand.Create(OpenTrakteer);
             OpenTwitterCommand = ReactiveCommand.Create(OpenTwitter);
             OpenGitHubCommand = ReactiveCommand.Create(OpenGitHub);
             OpenFacebookCommand = ReactiveCommand.Create(OpenFacebook);
