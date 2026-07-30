@@ -11,26 +11,7 @@
              Background="{DynamicResource PrimaryBackground}">
              
      <UserControl.Styles>
-         <Style Selector="Button.BackBtn">
-             <Setter Property="Background" Value="Transparent"/>
-             <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
-             <Setter Property="Padding" Value="10"/>
-             <Setter Property="CornerRadius" Value="20"/>
-             <Setter Property="Transitions">
-                 <Transitions>
-                     <BrushTransition Property="Background" Duration="0:0:0.2"/>
-                     <BrushTransition Property="Foreground" Duration="0:0:0.2"/>
-                     <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="CubicEaseOut"/>
-                 </Transitions>
-             </Setter>
-         </Style>
-         <Style Selector="Button.BackBtn:pointerover /template/ ContentPresenter">
-             <Setter Property="Background" Value="#0078D7"/>
-             <Setter Property="Foreground" Value="#1E1E2E"/>
-         </Style>
-         <Style Selector="Button.BackBtn:pointerover">
-             <Setter Property="RenderTransform" Value="scale(1.05)"/>
-         </Style>
+
          
          <!-- Card Style same as Library -->
          <Style Selector="Border.MangaCard">
@@ -118,10 +99,24 @@
           <StackPanel Grid.Row="0" Margin="30,25,30,15">
                   <!-- Title Row -->
                  <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,15">
-                      <Button Command="{Binding BackCommand}" HotKey="Escape" Classes="BackBtn">
-                          <Viewbox Width="20" Height="20" VerticalAlignment="Center">
+                      <Button Command="{Binding BackCommand}" HotKey="Escape"
+                              HorizontalAlignment="Left" VerticalAlignment="Center"
+                              Background="{DynamicResource HoverBackground}"
+                              BorderBrush="{DynamicResource SeparatorBrush}"
+                              BorderThickness="1"
+                              Width="36" Height="36"
+                              CornerRadius="18"
+                              Padding="0"
+                              ToolTip.Tip="Back (Esc)">
+                          <Button.Styles>
+                              <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                  <Setter Property="Background" Value="{DynamicResource PrimaryAccent}"/>
+                                  <Setter Property="BorderBrush" Value="{DynamicResource PrimaryAccent}"/>
+                              </Style>
+                          </Button.Styles>
+                          <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
                               <Canvas Width="24" Height="24">
-                                  <Path Data="M5 12l14 0 M5 12l6 6 M5 12l6 -6" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2.5" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                  <Path Data="M5 12l14 0 M5 12l6 6 M5 12l6 -6" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
                               </Canvas>
                           </Viewbox>
                       </Button>
