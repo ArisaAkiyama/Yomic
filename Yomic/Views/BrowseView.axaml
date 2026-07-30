@@ -215,20 +215,6 @@
                                 <!-- List Item Background -->
                                 <Border CornerRadius="8" Padding="15,10"
                                         Background="{DynamicResource SidebarBackground}" BorderThickness="0" BorderBrush="{DynamicResource SeparatorBrush}">
-                                    <Border.Styles>
-                                        <Style Selector="Border">
-                                            <Setter Property="Transitions">
-                                                <Transitions>
-                                                    <BrushTransition Property="Background" Duration="0:0:0.2"/>
-                                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="CubicEaseOut"/>
-                                                </Transitions>
-                                            </Setter>
-                                        </Style>
-                                        <Style Selector="Border:pointerover">
-                                            <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
-                                            <Setter Property="RenderTransform" Value="translateX(4px)"/>
-                                        </Style>
-                                    </Border.Styles>
 
                                     <Grid ColumnDefinitions="Auto, *, Auto, Auto">
                                         <!-- Col 1: Icon -->
