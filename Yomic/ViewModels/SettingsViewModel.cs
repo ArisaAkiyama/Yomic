@@ -426,7 +426,7 @@ namespace Yomic.ViewModels
         {
             try
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "https://trakteer.id/ArisaAkiyama", UseShellExecute = true });
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "https://trakteer.id/Arisa-Akiyama", UseShellExecute = true });
             }
             catch (Exception ex)
             {
