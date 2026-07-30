@@ -21,7 +21,7 @@
   <tr>
     <td align="center" width="280">
       <b>📥 Download Here</b><br/><br/>
-      <a href="https://github.com/ArisaAkiyama/yomic/releases/latest">
+      <a href="https://github.com/ArisaAkiyama/yomic/releases/download/v1.7.1/Yomic_Setup_v1.7.1.exe">
         <img src="./Yomic/Assets/win-download.png" alt="Download Yomic for Windows" height="42"/>
       </a>
     </td>
