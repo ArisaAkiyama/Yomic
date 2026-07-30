@@ -250,9 +250,6 @@ namespace Yomic.ViewModels
         public ReactiveCommand<ExtensionItem, Unit> DownloadExtensionCommand { get; }
         public ReactiveCommand<ExtensionItem, Unit> UpdateExtensionCommand { get; }
         public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
-        public ReactiveCommand<Unit, Unit> ManageReposCommand { get; }
-
-        public Func<System.Threading.Tasks.Task>? RequestManageReposDialogAsync { get; set; }
 
         public ExtensionsViewModel(MainWindowViewModel mainVM, SourceManager sourceManager)
         {
@@ -281,7 +278,6 @@ namespace Yomic.ViewModels
             DownloadExtensionCommand = ReactiveCommand.Create<ExtensionItem>(DownloadExtension);
             UpdateExtensionCommand = ReactiveCommand.Create<ExtensionItem>(UpdateExtension);
             RefreshCommand = ReactiveCommand.CreateFromTask(RefreshExtensionsAsync);
-            ManageReposCommand = ReactiveCommand.CreateFromTask(OpenManageReposDialogAsync);
             
             SetLanguageFilterCommand = ReactiveCommand.Create<string>(lang =>
             {
@@ -297,22 +293,6 @@ namespace Yomic.ViewModels
                 {
                     Avalonia.Threading.Dispatcher.UIThread.Post(() => FilterExtensions());
                 };
-
-                _mainVM.SettingsService.ExtensionReposChanged += () =>
-                {
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                    {
-                        _ = FetchRemoteExtensionsAsync(force: true);
-                    });
-                };
-            }
-        }
-
-        private async System.Threading.Tasks.Task OpenManageReposDialogAsync()
-        {
-            if (RequestManageReposDialogAsync != null)
-            {
-                await RequestManageReposDialogAsync();
             }
         }
 
@@ -527,70 +507,46 @@ namespace Yomic.ViewModels
                 // to prevent Avalonia UI SynchronizationContext deadlocks!
                 await System.Threading.Tasks.Task.Run(async () =>
                 {
-                    var repos = _mainVM.SettingsService?.GetAllExtensionRepos() ?? new System.Collections.Generic.List<string> { Core.Services.SettingsService.OfficialDefaultExtensionRepo };
-                    var mergedJsonArrays = new System.Collections.Generic.List<string>();
+                    string? responseText = null;
 
-                    foreach (var repoUrl in repos)
+                    var guid = Guid.NewGuid().ToString("N");
+                    var urlsToTry = new[]
                     {
-                        string? repoResponseText = null;
+                        $"https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/repo/index.min.json?t={DateTime.UtcNow.Ticks}_{guid}",
+                        $"https://raw.githack.com/ArisaAkiyama/extension-yomic/repo/index.min.json?t={DateTime.UtcNow.Ticks}_{guid}",
+                        $"https://cdn.jsdelivr.net/gh/ArisaAkiyama/extension-yomic@repo/index.min.json?t={DateTime.UtcNow.Ticks}_{guid}",
+                        $"https://fastly.jsdelivr.net/gh/ArisaAkiyama/extension-yomic@repo/index.min.json?t={DateTime.UtcNow.Ticks}_{guid}",
+                        $"https://ghproxy.net/https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/repo/index.min.json?t={DateTime.UtcNow.Ticks}_{guid}"
+                    };
 
-                        if (repoUrl.Equals(Core.Services.SettingsService.OfficialDefaultExtensionRepo, StringComparison.OrdinalIgnoreCase))
+                    foreach (var url in urlsToTry)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[ExtensionsVM] Trying index URL: {url}");
+                        responseText = await FetchStringNativeAsync(url, 8000).ConfigureAwait(false);
+                        if (!string.IsNullOrWhiteSpace(responseText) && responseText.TrimStart().StartsWith("["))
                         {
-                            var guid = Guid.NewGuid().ToString("N");
-                            var urlsToTry = new[]
-                            {
-                                $"https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/repo/index.min.json?t={DateTime.UtcNow.Ticks}_{guid}",
-                                $"https://raw.githack.com/ArisaAkiyama/extension-yomic/repo/index.min.json?t={DateTime.UtcNow.Ticks}_{guid}",
-                                $"https://cdn.jsdelivr.net/gh/ArisaAkiyama/extension-yomic@repo/index.min.json?t={DateTime.UtcNow.Ticks}_{guid}",
-                                $"https://fastly.jsdelivr.net/gh/ArisaAkiyama/extension-yomic@repo/index.min.json?t={DateTime.UtcNow.Ticks}_{guid}",
-                                $"https://ghproxy.net/https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/repo/index.min.json?t={DateTime.UtcNow.Ticks}_{guid}"
-                            };
-
-                            foreach (var url in urlsToTry)
-                            {
-                                System.Diagnostics.Debug.WriteLine($"[ExtensionsVM] Trying official index URL: {url}");
-                                repoResponseText = await FetchStringNativeAsync(url, 8000).ConfigureAwait(false);
-                                if (!string.IsNullOrWhiteSpace(repoResponseText) && repoResponseText.TrimStart().StartsWith("["))
-                                {
-                                    System.Diagnostics.Debug.WriteLine($"[ExtensionsVM] Official index fetched OK ({repoResponseText.Length} bytes)");
-                                    break;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // Custom Repository URL
-                            System.Diagnostics.Debug.WriteLine($"[ExtensionsVM] Fetching custom repo index: {repoUrl}");
-                            repoResponseText = await FetchStringNativeAsync(repoUrl, 10000).ConfigureAwait(false);
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(repoResponseText) && repoResponseText.TrimStart().StartsWith("["))
-                        {
-                            mergedJsonArrays.Add(repoResponseText);
+                            System.Diagnostics.Debug.WriteLine($"[ExtensionsVM] index.min.json fetched OK ({responseText.Length} bytes)");
+                            break;
                         }
                     }
 
-                    if (mergedJsonArrays.Count > 0)
-                    {
-                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                        {
-                            foreach (var json in mergedJsonArrays)
-                            {
-                                ParseAndAddIndexJson(json);
-                            }
-                            FilterExtensions();
-                        });
-
-                        try
-                        {
-                            System.IO.File.WriteAllText(GetLocalIndexCachePath(), mergedJsonArrays[0]);
-                        }
-                        catch { }
-                    }
-                    else
+                    if (string.IsNullOrEmpty(responseText))
                     {
                         System.Diagnostics.Debug.WriteLine("[ExtensionsVM] All index URLs failed, using embedded fallback.");
+                        return;
                     }
+
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        ParseAndAddIndexJson(responseText);
+                        FilterExtensions();
+                    });
+
+                    try
+                    {
+                        System.IO.File.WriteAllText(GetLocalIndexCachePath(), responseText);
+                    }
+                    catch { }
                 }).ConfigureAwait(false);
             }
             catch (Exception ex)
@@ -1249,7 +1205,7 @@ namespace Yomic.ViewModels
                 "ngamenkomik" => "ngamenkomik.com",
                 "ngomik" => "ngomik.net",
                 "noromax" => "noromax.com",
-                "okyykomik" => "okyykomik.com",
+                "okyykomik" => "okyykomik.my.id",
                 "omicaso" => "omicaso.com",
                 "otascans" => "otascans.com",
                 "pixhentai" => "pixhentai.com",

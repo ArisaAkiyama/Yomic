@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -65,63 +64,6 @@ namespace Yomic.Core.Services
         public int DefaultReaderMode { get; set; } = 0; // 0=Webtoon, 1=Single Page, 2=Dual Page
         public string AppLanguage { get; set; } = "en";
         public string LastFeedbackDate { get; set; } = "";
-        
-        public System.Collections.Generic.List<string> CustomExtensionRepos { get; set; } = new();
-        public event Action? ExtensionReposChanged;
-
-        public static string OfficialDefaultExtensionRepo => "https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/repo/index.min.json";
-
-        public System.Collections.Generic.List<string> GetAllExtensionRepos()
-        {
-            var repos = new System.Collections.Generic.List<string> { OfficialDefaultExtensionRepo };
-            if (CustomExtensionRepos != null)
-            {
-                foreach (var r in CustomExtensionRepos)
-                {
-                    if (!string.IsNullOrWhiteSpace(r) && !repos.Any(x => x.Equals(r.Trim(), StringComparison.OrdinalIgnoreCase)))
-                    {
-                        repos.Add(r.Trim());
-                    }
-                }
-            }
-            return repos;
-        }
-
-        public bool AddExtensionRepo(string url)
-        {
-            if (string.IsNullOrWhiteSpace(url)) return false;
-            url = url.Trim();
-            if (CustomExtensionRepos == null) CustomExtensionRepos = new();
-            if (url.Equals(OfficialDefaultExtensionRepo, StringComparison.OrdinalIgnoreCase)) return false;
-            if (CustomExtensionRepos.Any(x => x.Equals(url, StringComparison.OrdinalIgnoreCase))) return false;
-            
-            CustomExtensionRepos.Add(url);
-            Save();
-            ExtensionReposChanged?.Invoke();
-            return true;
-        }
-
-        public bool RemoveExtensionRepo(string url)
-        {
-            if (string.IsNullOrWhiteSpace(url) || CustomExtensionRepos == null) return false;
-            bool removed = CustomExtensionRepos.RemoveAll(r => r.Equals(url.Trim(), StringComparison.OrdinalIgnoreCase)) > 0;
-            if (removed)
-            {
-                Save();
-                ExtensionReposChanged?.Invoke();
-            }
-            return removed;
-        }
-
-        public void ResetExtensionRepos()
-        {
-            if (CustomExtensionRepos != null && CustomExtensionRepos.Count > 0)
-            {
-                CustomExtensionRepos.Clear();
-                Save();
-                ExtensionReposChanged?.Invoke();
-            }
-        }
 
         public SettingsService()
         {

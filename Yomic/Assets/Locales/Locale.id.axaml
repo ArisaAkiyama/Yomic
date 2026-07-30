@@ -365,12 +365,4 @@
     <sys:String x:Key="String.Welcome.ReadyDesc">Anda siap untuk mulai membaca.</sys:String>
     <sys:String x:Key="String.Change">Ubah</sys:String>
     <sys:String x:Key="String.Install">Pasang</sys:String>
-
-    <!-- Extension Repositories -->
-    <sys:String x:Key="String.ExtensionRepos.Title">Repositori Ekstensi</sys:String>
-    <sys:String x:Key="String.ExtensionRepos.Placeholder">Masukkan URL repositori (contoh: https://.../index.min.json)</sys:String>
-    <sys:String x:Key="String.ExtensionRepos.AddBtn">Tambah Repo</sys:String>
-    <sys:String x:Key="String.ExtensionRepos.ResetBtn">Reset ke Default</sys:String>
-    <sys:String x:Key="String.ExtensionRepos.OfficialTag">Resmi</sys:String>
-    <sys:String x:Key="String.ExtensionRepos.CustomTag">Kustom</sys:String>
 </ResourceDictionary>
