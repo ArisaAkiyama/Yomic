@@ -18,7 +18,7 @@
 
 <br/>
 
-[<img src="https://edge-cdn.trakteer.id/images/embed/trbtn-red.png" alt="Dukung Saya di Trakteer" height="40"/>](https://trakteer.id/Arisa-Akiyama)
+<a href="https://trakteer.id/Arisa-Akiyama" target="_blank"><img id="wse-buttons-preview" src="https://edge-cdn.trakteer.id/images/embed/trbtn-red-1.png?v=14-05-2025" height="40" style="border:0px;height:40px;" alt="Trakteer Saya"></a>
 
 </div>
 
