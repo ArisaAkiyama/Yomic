@@ -10,17 +10,29 @@
 [![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
 [![Avalonia](https://img.shields.io/badge/Avalonia-11.3.11-orange.svg)](https://avaloniaui.net/)
 [![Extensions](https://img.shields.io/badge/Extensions-Available-green.svg)](https://github.com/ArisaAkiyama/extension-yomic)
-[![Trakteer](https://img.shields.io/badge/Trakteer-Dukung%20Saya-be1e2d.svg?style=flat)](https://trakteer.id/Arisa-Akiyama)
 
-**Yomic** is a free, open-source desktop application designed for reading manga, manhwa, manhua, and webtoons on Windows. Add sources through extensions, organize your personal library, and read online or offline with zero ads and maximum performance.
-
-<a href="https://github.com/ArisaAkiyama/yomic/releases/latest/download/Yomic-Setup.exe">
-  <img src="./Yomic/Assets/win-download.png" alt="Download Yomic for Windows" height="50"/>
-</a>
+<p align="center">
+  <b>Yomic</b> is a free, open-source desktop application designed for reading manga, manhwa, manhua, and webtoons on Windows.<br/>Add sources through extensions, organize your personal library, and read online or offline with zero ads and maximum performance.
+</p>
 
 <br/>
 
-<a href="https://trakteer.id/Arisa-Akiyama" target="_blank"><img id="wse-buttons-preview" src="https://edge-cdn.trakteer.id/images/embed/trbtn-red-1.png?v=14-05-2025" height="40" style="border:0px;height:40px;" alt="Trakteer Saya"></a>
+<table>
+  <tr>
+    <td align="center" width="280">
+      <b>📥 Download Here</b><br/><br/>
+      <a href="https://github.com/ArisaAkiyama/yomic/releases/latest/download/Yomic-Setup.exe">
+        <img src="./Yomic/Assets/win-download.png" alt="Download Yomic for Windows" height="42"/>
+      </a>
+    </td>
+    <td align="center" width="280">
+      <b>☕ Support & Donation</b><br/><br/>
+      <a href="https://trakteer.id/Arisa-Akiyama" target="_blank">
+        <img src="https://edge-cdn.trakteer.id/images/embed/trbtn-red-1.png?v=14-05-2025" alt="Dukung Saya di Trakteer" height="42" style="border:0px;height:42px;"/>
+      </a>
+    </td>
+  </tr>
+</table>
 
 </div>
 
