@@ -10,10 +10,15 @@
 [![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
 [![Avalonia](https://img.shields.io/badge/Avalonia-11.3.11-orange.svg)](https://avaloniaui.net/)
 [![Extensions](https://img.shields.io/badge/Extensions-Available-green.svg)](https://github.com/ArisaAkiyama/extension-yomic)
+[![Trakteer](https://img.shields.io/badge/Trakteer-Dukung%20Saya-be1e2d.svg?style=flat)](https://trakteer.id/Arisa-Akiyama)
 
 **Yomic** is a free, open-source desktop application designed for reading manga, manhwa, manhua, and webtoons on Windows. Add sources through extensions, organize your personal library, and read online or offline with zero ads and maximum performance.
 
 [**Download Latest Release**](https://github.com/ArisaAkiyama/yomic/releases)
+
+<br/>
+
+[<img src="https://edge-cdn.trakteer.id/images/embed/trbtn-red.png" alt="Dukung Saya di Trakteer" height="40"/>](https://trakteer.id/Arisa-Akiyama)
 
 </div>
 
