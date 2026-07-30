@@ -415,6 +415,15 @@
                         </Viewbox>
                     </Button>
 
+                    <!-- Manage Extension Repositories Button -->
+                    <Button Classes="header-action" Command="{Binding ManageReposCommand}" ToolTip.Tip="{DynamicResource String.ExtensionRepos.Title}">
+                        <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71 M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                            </Canvas>
+                        </Viewbox>
+                    </Button>
+
                     <!-- Filter Button -->
                     <Button Classes="header-action" ToolTip.Tip="Filter Languages">
                         <Button.Flyout>
