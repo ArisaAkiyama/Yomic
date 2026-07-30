@@ -490,12 +490,21 @@
                                     <Setter Property="BorderBrush" Value="{DynamicResource PrimaryAccent}"/>
                                     <Setter Property="Opacity" Value="1.0"/>
                                 </Style>
+                                <Style Selector="ListBoxItem:selected:pointerover Border#TabBorder">
+                                    <Setter Property="Background" Value="{DynamicResource PrimaryAccent}"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource PrimaryAccent}"/>
+                                    <Setter Property="Opacity" Value="1.0"/>
+                                </Style>
                                 <Style Selector="ListBoxItem:selected TextBlock#TabText">
                                     <Setter Property="Foreground" Value="White"/>
                                     <Setter Property="FontWeight" Value="Bold"/>
                                 </Style>
-                                <!-- Pointer Over -->
-                                <Style Selector="ListBoxItem:pointerover Border#TabBorder">
+                                <Style Selector="ListBoxItem:selected:pointerover TextBlock#TabText">
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                </Style>
+                                <!-- Unselected Pointer Over -->
+                                <Style Selector="ListBoxItem:not(:selected):pointerover Border#TabBorder">
                                     <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
                                     <Setter Property="Opacity" Value="1.0"/>
                                 </Style>
