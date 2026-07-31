@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="100" d:DesignHeight="100"
              x:Class="Yomic.Views.Helpers.LoadingArcs"
-             Width="60" Height="60"
              HorizontalAlignment="Center" VerticalAlignment="Center">
     <UserControl.Styles>
         <Style Selector="Arc.outer">
@@ -45,38 +44,40 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid Width="60" Height="60">
-        <!-- Outer Arc -->
-        <Arc Classes="outer" Width="50" Height="50" 
-             Stroke="{DynamicResource PrimaryAccent}" StrokeThickness="3" 
-             StartAngle="0" SweepAngle="280" 
-             StrokeLineCap="Round" VerticalAlignment="Center" HorizontalAlignment="Center"
-             RenderTransformOrigin="50%,50%">
-            <Arc.RenderTransform>
-                <RotateTransform/>
-            </Arc.RenderTransform>
-        </Arc>
+    <Viewbox Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Grid Width="60" Height="60">
+            <!-- Outer Arc -->
+            <Arc Classes="outer" Width="50" Height="50" 
+                 Stroke="{DynamicResource PrimaryAccent}" StrokeThickness="3" 
+                 StartAngle="0" SweepAngle="280" 
+                 StrokeLineCap="Round" VerticalAlignment="Center" HorizontalAlignment="Center"
+                 RenderTransformOrigin="50%,50%">
+                <Arc.RenderTransform>
+                    <RotateTransform/>
+                </Arc.RenderTransform>
+            </Arc>
 
-        <!-- Middle Arc -->
-        <Arc Classes="middle" Width="34" Height="34" 
-             Stroke="{DynamicResource PrimaryAccent}" Opacity="0.7" StrokeThickness="3" 
-             StartAngle="120" SweepAngle="280" 
-             StrokeLineCap="Round" VerticalAlignment="Center" HorizontalAlignment="Center"
-             RenderTransformOrigin="50%,50%">
-            <Arc.RenderTransform>
-                <RotateTransform/>
-            </Arc.RenderTransform>
-        </Arc>
+            <!-- Middle Arc -->
+            <Arc Classes="middle" Width="34" Height="34" 
+                 Stroke="{DynamicResource PrimaryAccent}" Opacity="0.7" StrokeThickness="3" 
+                 StartAngle="120" SweepAngle="280" 
+                 StrokeLineCap="Round" VerticalAlignment="Center" HorizontalAlignment="Center"
+                 RenderTransformOrigin="50%,50%">
+                <Arc.RenderTransform>
+                    <RotateTransform/>
+                </Arc.RenderTransform>
+            </Arc>
 
-        <!-- Inner Arc -->
-        <Arc Classes="inner" Width="18" Height="18" 
-             Stroke="{DynamicResource PrimaryAccent}" Opacity="0.4" StrokeThickness="3" 
-             StartAngle="240" SweepAngle="280" 
-             StrokeLineCap="Round" VerticalAlignment="Center" HorizontalAlignment="Center"
-             RenderTransformOrigin="50%,50%">
-            <Arc.RenderTransform>
-                <RotateTransform/>
-            </Arc.RenderTransform>
-        </Arc>
-    </Grid>
+            <!-- Inner Arc -->
+            <Arc Classes="inner" Width="18" Height="18" 
+                 Stroke="{DynamicResource PrimaryAccent}" Opacity="0.4" StrokeThickness="3" 
+                 StartAngle="240" SweepAngle="280" 
+                 StrokeLineCap="Round" VerticalAlignment="Center" HorizontalAlignment="Center"
+                 RenderTransformOrigin="50%,50%">
+                <Arc.RenderTransform>
+                    <RotateTransform/>
+                </Arc.RenderTransform>
+            </Arc>
+        </Grid>
+    </Viewbox>
 </UserControl>
