@@ -160,6 +160,30 @@ namespace Yomic.ViewModels
             set => this.RaiseAndSetIfChanged(ref _dnsOverHttpsProvider, value);
         }
 
+        private static readonly int[] SourceStatusIntervalMap = { 1, 3, 5, 10, 30 };
+        public int SourceStatusRefreshIntervalIndex
+        {
+            get
+            {
+                int mins = _settingsService.SourceStatusRefreshIntervalMinutes;
+                int idx = Array.IndexOf(SourceStatusIntervalMap, mins);
+                return idx >= 0 ? idx : 2; // Default to index 2 (5 minutes)
+            }
+            set
+            {
+                if (value >= 0 && value < SourceStatusIntervalMap.Length)
+                {
+                    int selectedMins = SourceStatusIntervalMap[value];
+                    if (_settingsService.SourceStatusRefreshIntervalMinutes != selectedMins)
+                    {
+                        _settingsService.SourceStatusRefreshIntervalMinutes = selectedMins;
+                        _settingsService.Save();
+                        this.RaisePropertyChanged();
+                    }
+                }
+            }
+        }
+
         // Security
         private bool _secureScreen;
         public bool SecureScreen

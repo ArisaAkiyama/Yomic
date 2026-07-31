@@ -47,6 +47,34 @@ namespace Yomic.ViewModels
         // Multi-Language Support
         public ObservableCollection<Bitmap> LanguageFlags { get; } = new();
 
+        private Core.Services.SourceStatus _status = Core.Services.SourceStatus.Unknown;
+        public Core.Services.SourceStatus Status
+        {
+            get => _status;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _status, value);
+                this.RaisePropertyChanged(nameof(IsStatusOnline));
+                this.RaisePropertyChanged(nameof(IsStatusWarning));
+                this.RaisePropertyChanged(nameof(IsStatusOffline));
+                this.RaisePropertyChanged(nameof(IsStatusChecking));
+                this.RaisePropertyChanged(nameof(IsStatusUnknown));
+            }
+        }
+
+        private string _statusTooltip = "Status belum diperiksa";
+        public string StatusTooltip
+        {
+            get => _statusTooltip;
+            set => this.RaiseAndSetIfChanged(ref _statusTooltip, value);
+        }
+
+        public bool IsStatusOnline => Status == Core.Services.SourceStatus.Online;
+        public bool IsStatusWarning => Status == Core.Services.SourceStatus.Warning;
+        public bool IsStatusOffline => Status == Core.Services.SourceStatus.Offline;
+        public bool IsStatusChecking => Status == Core.Services.SourceStatus.Checking;
+        public bool IsStatusUnknown => Status == Core.Services.SourceStatus.Unknown;
+
         public void Dispose()
         {
              if (_iconBitmap != null)
@@ -67,6 +95,7 @@ namespace Yomic.ViewModels
         private readonly MainWindowViewModel _mainViewModel;
         private readonly Core.Services.SourceManager _sourceManager;
         private readonly Core.Services.NetworkService _networkService;
+        private readonly Core.Services.SourceStatusService? _sourceStatusService;
         private static readonly HttpClient _httpClient = new HttpClient();
 
         public ObservableCollection<SourceItem> Sources { get; set; } = new();
@@ -74,6 +103,7 @@ namespace Yomic.ViewModels
         public System.Windows.Input.ICommand OpenSourceCommand { get; }
         public ReactiveCommand<string, Unit> SetLanguageFilterCommand { get; }
         public System.Windows.Input.ICommand OpenWebViewCommand { get; }
+        public ReactiveCommand<Unit, Unit> RefreshStatusCommand { get; }
 
         private bool _isOffline;
         public bool IsOffline
@@ -96,14 +126,39 @@ namespace Yomic.ViewModels
             set => this.RaiseAndSetIfChanged(ref _bypassMessage, value);
         }
 
-        public BrowseViewModel(MainWindowViewModel mainViewModel, Core.Services.SourceManager sourceManager, Core.Services.NetworkService networkService, bool loadItems = true)
+        public BrowseViewModel(MainWindowViewModel mainViewModel, Core.Services.SourceManager sourceManager, Core.Services.NetworkService networkService, Core.Services.SourceStatusService? sourceStatusService = null, bool loadItems = true)
         {
             _mainViewModel = mainViewModel;
             _sourceManager = sourceManager;
             _networkService = networkService;
+            _sourceStatusService = sourceStatusService;
             
             // Initial State
             IsOffline = !_networkService.IsOnline;
+
+            RefreshStatusCommand = ReactiveCommand.CreateFromTask(async () =>
+            {
+                if (_sourceStatusService != null)
+                {
+                    await _sourceStatusService.CheckAllSourcesAsync();
+                }
+            });
+
+            if (_sourceStatusService != null)
+            {
+                _sourceStatusService.SourceStatusUpdated += (sourceId, status, tooltip) =>
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        var item = _allSources.FirstOrDefault(s => s.Id == sourceId);
+                        if (item != null)
+                        {
+                            item.Status = status;
+                            item.StatusTooltip = tooltip;
+                        }
+                    });
+                };
+            }
 
             // Subscribe to Network Changes
             _networkService.StatusChanged += (s, isOnline) =>
@@ -293,6 +348,8 @@ namespace Yomic.ViewModels
                 string iconFg = !string.IsNullOrEmpty(source.IconForeground) ? source.IconForeground : "Black";
                 string iconTxt = !string.IsNullOrEmpty(source.Name) ? source.Name.Substring(0, 1) : "?";
 
+                var statusRec = _sourceStatusService?.GetStatus(source.Id);
+
                 var item = new SourceItem 
                 { 
                     Id = source.Id,
@@ -303,7 +360,9 @@ namespace Yomic.ViewModels
                     IconForeground = iconFg,
                     IconText = iconTxt,
                     IsInstalled = true,
-                    IsPinned = true
+                    IsPinned = true,
+                    Status = statusRec?.Status ?? Core.Services.SourceStatus.Unknown,
+                    StatusTooltip = statusRec?.Tooltip ?? "Status belum diperiksa"
                 };
 
                 if (!string.IsNullOrEmpty(source.IconUrl))

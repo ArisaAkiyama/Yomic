@@ -29,6 +29,21 @@ namespace Yomic.Core.Services
         
         public event Action<bool>? OfflineModeChanged;
         public event Action<bool>? ShowNsfwSourcesChanged;
+        public event Action<int>? SourceStatusRefreshIntervalMinutesChanged;
+
+        private int _sourceStatusRefreshIntervalMinutes = 5; // Default 5 minutes
+        public int SourceStatusRefreshIntervalMinutes
+        {
+            get => _sourceStatusRefreshIntervalMinutes;
+            set
+            {
+                if (_sourceStatusRefreshIntervalMinutes != value)
+                {
+                    _sourceStatusRefreshIntervalMinutes = value;
+                    SourceStatusRefreshIntervalMinutesChanged?.Invoke(value);
+                }
+            }
+        }
 
         public bool SecureScreen { get; set; } = false;
         public bool UpdateOnStart { get; set; } = false;
@@ -111,6 +126,10 @@ namespace Yomic.Core.Services
                         DefaultReaderMode = settings.DefaultReaderMode;
                         AppLanguage = settings.AppLanguage ?? "en";
                         LastFeedbackDate = settings.LastFeedbackDate ?? "";
+                        if (settings.SourceStatusRefreshIntervalMinutes > 0)
+                        {
+                            SourceStatusRefreshIntervalMinutes = settings.SourceStatusRefreshIntervalMinutes;
+                        }
                     }
                 }
             }
@@ -162,7 +181,8 @@ namespace Yomic.Core.Services
                     MangaDexLanguage = MangaDexLanguage,
                     DefaultReaderMode = DefaultReaderMode,
                     AppLanguage = AppLanguage,
-                    LastFeedbackDate = LastFeedbackDate
+                    LastFeedbackDate = LastFeedbackDate,
+                    SourceStatusRefreshIntervalMinutes = SourceStatusRefreshIntervalMinutes
                 };
 
                 var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
@@ -205,6 +225,7 @@ namespace Yomic.Core.Services
                 DefaultReaderMode = 0;
                 AppLanguage = "en";
                 LastFeedbackDate = "";
+                SourceStatusRefreshIntervalMinutes = 5;
             }
             catch (Exception ex)
             {
@@ -237,6 +258,7 @@ namespace Yomic.Core.Services
             public int DefaultReaderMode { get; set; } = 0;
             public string AppLanguage { get; set; } = "en";
             public string LastFeedbackDate { get; set; } = "";
+            public int SourceStatusRefreshIntervalMinutes { get; set; } = 5;
         }
     }
 }

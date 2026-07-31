@@ -158,6 +158,7 @@ namespace Yomic
                 
                 var libraryService = new Core.Services.LibraryService();
                 var networkService = new Core.Services.NetworkService(settingsService);
+                var sourceStatusService = new Core.Services.SourceStatusService(sourceManager, settingsService, networkService);
                 var downloadService = new Core.Services.DownloadService(sourceManager, libraryService, networkService);
                 var imageCacheService = new Core.Services.ImageCacheService();
                 var secureImageService = new Core.Services.SecureImageService(networkService, imageCacheService);
@@ -227,7 +228,7 @@ namespace Yomic
 
                 desktop.MainWindow = new MainWindow
                 {
-                    DataContext = new MainWindowViewModel(sourceManager, libraryService, networkService, downloadService, settingsService, imageCacheService, secureImageService),
+                    DataContext = new MainWindowViewModel(sourceManager, libraryService, networkService, downloadService, settingsService, imageCacheService, secureImageService, sourceStatusService),
                 };
 
                 // Check for app updates asynchronously in background

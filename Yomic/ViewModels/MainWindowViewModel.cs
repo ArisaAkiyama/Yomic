@@ -282,6 +282,9 @@ namespace Yomic.ViewModels
         private readonly Core.Services.SecureImageService _secureImageService;
         public Core.Services.SecureImageService SecureImageService => _secureImageService;
 
+        private readonly Core.Services.SourceStatusService _sourceStatusService;
+        public Core.Services.SourceStatusService SourceStatusService => _sourceStatusService;
+
         private bool _isPaneOpen = false;
         public bool IsPaneOpen
         {
@@ -311,7 +314,8 @@ namespace Yomic.ViewModels
                                    Core.Services.DownloadService downloadService,
                                    Core.Services.SettingsService settingsService,
                                    Core.Services.ImageCacheService imageCacheService,
-                                   Core.Services.SecureImageService secureImageService)
+                                   Core.Services.SecureImageService secureImageService,
+                                   Core.Services.SourceStatusService sourceStatusService)
         {
             _sourceManager = sourceManager;
             _libraryService = libraryService;
@@ -320,6 +324,7 @@ namespace Yomic.ViewModels
             _settingsService = settingsService;
             _imageCacheService = imageCacheService;
             _secureImageService = secureImageService;
+            _sourceStatusService = sourceStatusService;
             
             // Subscribe to Network Status
             _networkService.StatusChanged += (s, isOnline) =>
@@ -343,9 +348,10 @@ namespace Yomic.ViewModels
         {
             _sourceManager = new Core.Services.SourceManager(); // Fallback for designer
             _libraryService = new Core.Services.LibraryService();
-            _networkService = new Core.Services.NetworkService();
-            _downloadService = new Core.Services.DownloadService(_sourceManager, _libraryService, _networkService);
             _settingsService = new Core.Services.SettingsService();
+            _networkService = new Core.Services.NetworkService(_settingsService);
+            _sourceStatusService = new Core.Services.SourceStatusService(_sourceManager, _settingsService, _networkService);
+            _downloadService = new Core.Services.DownloadService(_sourceManager, _libraryService, _networkService);
             _imageCacheService = new Core.Services.ImageCacheService();
             _secureImageService = new Core.Services.SecureImageService(_networkService, _imageCacheService);
             TogglePaneCommand = ReactiveCommand.Create(() => { IsPaneOpen = !IsPaneOpen; });
@@ -432,7 +438,7 @@ namespace Yomic.ViewModels
         private BrowseViewModel? _browseVM;
         public BrowseViewModel BrowseVM
         {
-            get => _browseVM ??= new BrowseViewModel(this, _sourceManager, _networkService);
+            get => _browseVM ??= new BrowseViewModel(this, _sourceManager, _networkService, _sourceStatusService);
         }
 
         public void GoToBrowse()
