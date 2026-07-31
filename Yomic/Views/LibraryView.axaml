@@ -1011,15 +1011,38 @@
             <TextBlock Text="{DynamicResource String.NoResultsFoundDesc}" FontSize="16" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
         </StackPanel>
 
-        <!-- Bottom Floating Lazy Loading Bar -->
+        <!-- Bottom Floating Lazy Loading Bar (Flat Modern Card) -->
         <Border VerticalAlignment="Bottom" HorizontalAlignment="Center"
-                Margin="0,0,0,24" Padding="16,10"
-                Background="#D511111B" CornerRadius="24"
-                BorderBrush="#25FFFFFF" BorderThickness="1"
-                BoxShadow="0 8 24 0 #60000000"
+                Margin="0,0,0,24" Padding="14,8"
+                Background="{DynamicResource SidebarBackground}"
+                BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1"
+                CornerRadius="8"
+                BoxShadow="0 4 16 0 #30000000"
                 IsVisible="{Binding IsLoadingMore}">
             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                <helpers:LoadingArcs Width="18" Height="18" VerticalAlignment="Center"/>
+                <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                    <Arc Width="20" Height="20" Stroke="{DynamicResource PrimaryAccent}" StrokeThickness="2.5"
+                         StartAngle="0" SweepAngle="270" StrokeLineCap="Round"
+                         RenderTransformOrigin="50%,50%">
+                        <Arc.RenderTransform>
+                            <RotateTransform/>
+                        </Arc.RenderTransform>
+                        <Arc.Styles>
+                            <Style Selector="Arc">
+                                <Style.Animations>
+                                    <Animation Duration="0:0:0.8" IterationCount="Infinite">
+                                        <KeyFrame KeyTime="0:0:0">
+                                            <Setter Property="RotateTransform.Angle" Value="0"/>
+                                        </KeyFrame>
+                                        <KeyFrame KeyTime="0:0:0.8">
+                                            <Setter Property="RotateTransform.Angle" Value="360"/>
+                                        </KeyFrame>
+                                    </Animation>
+                                </Style.Animations>
+                            </Style>
+                        </Arc.Styles>
+                    </Arc>
+                </Viewbox>
                 <TextBlock Text="{DynamicResource String.LoadingMore}" 
                            Foreground="{DynamicResource PrimaryText}" 
                            FontSize="13" FontWeight="Medium" 
