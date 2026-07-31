@@ -25,14 +25,10 @@
         <img src="./Yomic/Assets/win-download.png" alt="Download Yomic for Windows" height="42"/>
       </a>
     </td>
-    <td align="center" width="360">
+    <td align="center" width="280">
       <b>☕ Support & Donation</b><br/><br/>
       <a href="https://trakteer.id/Arisa-Akiyama" target="_blank">
         <img src="https://edge-cdn.trakteer.id/images/embed/trbtn-red-1.png?v=14-05-2025" alt="Dukung Saya di Trakteer" height="42" style="border:0px;height:42px;"/>
-      </a>
-      &nbsp;&nbsp;
-      <a href="https://saweria.co/arisaakiyama" target="_blank">
-        <img src="./Yomic/Assets/saweria-donation.png" alt="Dukung Saya di Saweria" height="42" style="border:0px;height:42px;"/>
       </a>
     </td>
   </tr>
