@@ -17,6 +17,7 @@
 [![Extensions](https://img.shields.io/badge/Extensions-Available-22C55E.svg?style=flat-square)](https://github.com/ArisaAkiyama/extension-yomic)
 [![Latest Release](https://img.shields.io/github/v/release/ArisaAkiyama/yomic?style=flat-square&color=0066FF&label=Latest)](https://github.com/ArisaAkiyama/yomic/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/ArisaAkiyama/yomic/total?style=flat-square&color=22C55E&label=Downloads)](https://github.com/ArisaAkiyama/yomic/releases)
+[![Visitors](https://api.visitorbadge.io/api/visitors?path=ArisaAkiyama%2Fyomic&label=Visitors&countColor=%230066FF&style=flat-square)](https://github.com/ArisaAkiyama/yomic)
 
 <br/>
 
