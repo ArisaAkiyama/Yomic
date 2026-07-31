@@ -18,17 +18,17 @@
 <br/>
 
 <table>
-  <tr valign="middle">
-    <td align="center" valign="middle" width="280">
+  <tr>
+    <td align="center" width="280">
       <b>📥 Download Here</b><br/><br/>
       <a href="https://github.com/ArisaAkiyama/yomic/releases/download/v1.7.1/Yomic_Setup_v1.7.1.exe">
-        <img src="./Yomic/Assets/win-download.png" alt="Download Yomic for Windows" height="52"/>
+        <img src="./Yomic/Assets/win-download.png" alt="Download Yomic for Windows" height="90"/>
       </a>
     </td>
-    <td align="center" valign="middle" width="280">
+    <td align="center" width="280">
       <b>💛 Support & Donation</b><br/><br/>
       <a href="https://saweria.co/arisaakiyama" target="_blank">
-        <img src="./Yomic/Assets/saweria-donation.png" alt="Dukung Saya di Saweria" height="100" style="border:0px;height:100px;"/>
+        <img src="./Yomic/Assets/saweria-donation.png" alt="Dukung Saya di Saweria" height="90" style="border:0px;height:90px;"/>
       </a>
     </td>
   </tr>
