@@ -65,32 +65,14 @@
         <StackPanel Grid.Row="0" Spacing="15" Margin="30,25,30,10" ZIndex="10">
             <!-- Header -->
             <StackPanel>
-                <Grid ColumnDefinitions="*, Auto">
-                    <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                        <Viewbox Width="28" Height="28" VerticalAlignment="Center">
-                            <Canvas Width="24" Height="24">
-                                <Path Data="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0 M3.6 9h16.8 M3.6 15h16.8 M11.5 3a17 17 0 0 0 0 18 M12.5 3a17 17 0 0 1 0 18" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
-                            </Canvas>
-                        </Viewbox>
-                        <TextBlock Text="{DynamicResource String.BrowseSources}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
-                    </StackPanel>
-
-                    <Button Grid.Column="1" Command="{Binding RefreshStatusCommand}" 
-                            Background="Transparent" BorderThickness="0" Padding="8"
-                            CornerRadius="20" Cursor="Hand" ToolTip.Tip="Cek Ulang Status Semua Source">
-                        <Button.Styles>
-                            <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
-                            </Style>
-                        </Button.Styles>
-                        <Viewbox Width="18" Height="18">
-                            <Canvas Width="24" Height="24">
-                                <Path Data="M20 11A8 8 0 0 0 4.5 9M4 5v4h4M4 13a8 8 0 0 0 15.5 2m.5 4v-4h-4" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
-                            </Canvas>
-                        </Viewbox>
-                    </Button>
-                </Grid>
-
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <Viewbox Width="28" Height="28" VerticalAlignment="Center">
+                        <Canvas Width="24" Height="24">
+                            <Path Data="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0 M3.6 9h16.8 M3.6 15h16.8 M11.5 3a17 17 0 0 0 0 18 M12.5 3a17 17 0 0 1 0 18" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                        </Canvas>
+                    </Viewbox>
+                    <TextBlock Text="{DynamicResource String.BrowseSources}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
+                </StackPanel>
             </StackPanel>
 
             <!-- Search Box & Filter Button -->
@@ -137,6 +119,17 @@
                 </TextBox>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="10,0,0,0" VerticalAlignment="Center">
+                    <!-- Refresh Status Button -->
+                    <Button Command="{Binding RefreshStatusCommand}" 
+                            Classes="header-action" Cursor="Hand"
+                            ToolTip.Tip="Cek Ulang Status Semua Source">
+                        <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M20 11A8 8 0 0 0 4.5 9M4 5v4h4M4 13a8 8 0 0 0 15.5 2m.5 4v-4h-4" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                            </Canvas>
+                        </Viewbox>
+                    </Button>
+
                     <!-- Filter Button -->
                     <Button Classes="header-action" ToolTip.Tip="Filter by Language">
                         <Button.Flyout>
