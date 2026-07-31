@@ -129,40 +129,21 @@ namespace Yomic.Core.Services
                 SourceStatus status;
                 string tooltip;
 
-                try
-                {
-                    // Use GET or HEAD request to verify connectivity
-                    var request = new HttpRequestMessage(HttpMethod.Get, source.BaseUrl);
-                    request.Headers.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                var baseResult = await PingUrlAsync(client, source.BaseUrl, ct);
+                status = baseResult.Status;
+                tooltip = baseResult.Tooltip;
 
-                    using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
-
-                    int statusCode = (int)response.StatusCode;
-
-                    if (response.IsSuccessStatusCode || statusCode == 301 || statusCode == 302 || statusCode == 307 || statusCode == 308)
-                    {
-                        status = SourceStatus.Online;
-                        tooltip = $"Online ({source.BaseUrl} terhubung)";
-                    }
-                    else if (statusCode == 403 || statusCode == 429)
-                    {
-                        status = SourceStatus.Warning;
-                        tooltip = $"Warning (HTTP {statusCode} / Cloudflare - butuh bypass)";
-                    }
-                    else
-                    {
-                        status = SourceStatus.Offline;
-                        tooltip = $"Offline (HTTP {statusCode})";
-                    }
-                }
-                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                // Fallback check ApiUrl if BaseUrl is Offline and ApiUrl is specified
+                if (status == SourceStatus.Offline && !string.IsNullOrWhiteSpace(source.ApiUrl) && !source.ApiUrl.Equals(source.BaseUrl, StringComparison.OrdinalIgnoreCase))
                 {
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    status = SourceStatus.Offline;
-                    tooltip = $"Offline ({ex.Message})";
+                    var apiResult = await PingUrlAsync(client, source.ApiUrl, ct);
+                    if (apiResult.Status != SourceStatus.Offline)
+                    {
+                        status = apiResult.Status;
+                        tooltip = apiResult.Status == SourceStatus.Online 
+                            ? $"Online (API {source.ApiUrl} terhubung)" 
+                            : apiResult.Tooltip;
+                    }
                 }
 
                 var record = new SourceStatusRecord
@@ -208,6 +189,39 @@ namespace Yomic.Core.Services
             catch (Exception ex)
             {
                 LogService.Error("SourceStatusService", "Failed to load status cache", ex);
+            }
+        }
+
+        private async Task<(SourceStatus Status, string Tooltip)> PingUrlAsync(System.Net.Http.HttpClient client, string targetUrl, CancellationToken ct)
+        {
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, targetUrl);
+                request.Headers.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+
+                using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+                int statusCode = (int)response.StatusCode;
+
+                if (response.IsSuccessStatusCode || statusCode == 301 || statusCode == 302 || statusCode == 307 || statusCode == 308)
+                {
+                    return (SourceStatus.Online, $"Online ({targetUrl} terhubung)");
+                }
+                else if (statusCode == 403 || statusCode == 429)
+                {
+                    return (SourceStatus.Warning, $"Warning (HTTP {statusCode} / Cloudflare - butuh bypass)");
+                }
+                else
+                {
+                    return (SourceStatus.Offline, $"Offline (HTTP {statusCode})");
+                }
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                return (SourceStatus.Offline, $"Offline ({ex.Message})");
             }
         }
 

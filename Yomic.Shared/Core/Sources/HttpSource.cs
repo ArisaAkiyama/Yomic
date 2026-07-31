@@ -28,6 +28,7 @@ namespace Yomic.Core.Sources
         
         public abstract string Name { get; }
         public abstract string BaseUrl { get; }
+        public virtual string ApiUrl => "";
         public virtual string Language => "EN"; // Default to EN
         public virtual bool IsHasMorePages => true;
         public virtual int RateLimitDelayMs => 1000;

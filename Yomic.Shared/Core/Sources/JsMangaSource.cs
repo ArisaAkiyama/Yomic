@@ -18,6 +18,7 @@ namespace Yomic.Core.Sources
         private readonly string _scriptPath;
         private string _name = "";
         private string _baseUrl = "";
+        private string _apiUrl = "";
         private string _language = "EN";
         private string _version = "1.0.0";
         private string _description = "JS Manga Source";
@@ -47,6 +48,7 @@ namespace Yomic.Core.Sources
 
         public override string Name => _name;
         public override string BaseUrl => _baseUrl;
+        public override string ApiUrl => _apiUrl;
         public override string Language => _language;
         public override string Version => _version;
         public override string Description => _description;
@@ -93,6 +95,7 @@ namespace Yomic.Core.Sources
                 
                 if (obj.HasProperty("name")) _name = obj.Get("name").AsString();
                 if (obj.HasProperty("baseUrl")) _baseUrl = obj.Get("baseUrl").AsString();
+                if (obj.HasProperty("apiUrl")) _apiUrl = obj.Get("apiUrl").AsString();
                 if (obj.HasProperty("language")) _language = obj.Get("language").AsString();
                 if (obj.HasProperty("version")) _version = obj.Get("version").AsString();
                 if (obj.HasProperty("description")) _description = obj.Get("description").AsString();

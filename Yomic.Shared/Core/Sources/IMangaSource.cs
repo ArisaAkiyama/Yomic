@@ -9,6 +9,7 @@ namespace Yomic.Core.Sources
         long Id { get; }
         string Name { get; }
         string BaseUrl { get; }
+        string ApiUrl => ""; // Optional API endpoint URL for health check fallback
         string Language { get; } // e.g. "EN", "ID"
         bool IsHasMorePages { get; } // For pagination check
         bool IsNsfw => false; // Default interface method so it doesn't break existing extensions
