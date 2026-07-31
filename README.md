@@ -28,7 +28,7 @@
     <td align="center" width="280">
       <b>💛 Support & Donation</b><br/><br/>
       <a href="https://saweria.co/arisaakiyama" target="_blank">
-        <img src="./Yomic/Assets/saweria-donation.png" alt="Dukung Saya di Saweria" height="48" style="border:0px;height:48px;"/>
+        <img src="./Yomic/Assets/saweria-donation.png" alt="Dukung Saya di Saweria" height="110" style="border:0px;height:110px;"/>
       </a>
     </td>
   </tr>
