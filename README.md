@@ -125,13 +125,21 @@ dotnet build Yomic.sln
 
 | Key | Action |
 |-----|--------|
-| `Right Arrow` / `Page Down` | Next Page / Scroll Down |
-| `Left Arrow` / `Page Up` | Previous Page / Scroll Up |
-| `F11` / `F` | Toggle Fullscreen |
+| `Right Arrow` | Next Page / Next Chapter (Webtoon) |
+| `Left Arrow` | Previous Page / Previous Chapter (Webtoon) |
+| `Down Arrow` | Scroll Down |
+| `Up Arrow` | Scroll Up |
+| `Space` | Scroll Down (Page / Webtoon) |
+| `F` / `F11` | Toggle Fullscreen |
 | `Esc` | Exit Fullscreen / Close Reader |
 | `R` | Rotate Page |
+| `H` | Toggle Menu |
 | `Ctrl+B` | Bookmark Chapter |
-| `Space` | Page Scroll |
+| `+` / `=` | Zoom In |
+| `-` | Zoom Out |
+| `1` | Switch to Webtoon Mode |
+| `2` | Switch to Single Page Mode |
+| `3` | Switch to Dual Page Mode |
 
 ---
 
