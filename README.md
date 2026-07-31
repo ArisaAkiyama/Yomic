@@ -74,6 +74,36 @@ Yomic is a centralized manga manager and high-performance reader. Instead of ope
 
 ---
 
+## Screenshots
+
+<div align="center">
+
+<img src="./Yomic/Assets/Readme-Screenshot/1.png" alt="Screenshot 1" width="800"/>
+<br/><br/>
+<img src="./Yomic/Assets/Readme-Screenshot/2.png" alt="Screenshot 2" width="800"/>
+<br/><br/>
+<img src="./Yomic/Assets/Readme-Screenshot/3.png" alt="Screenshot 3" width="800"/>
+<br/><br/>
+<img src="./Yomic/Assets/Readme-Screenshot/4.png" alt="Screenshot 4" width="800"/>
+<br/><br/>
+<img src="./Yomic/Assets/Readme-Screenshot/5.png" alt="Screenshot 5" width="800"/>
+<br/><br/>
+<img src="./Yomic/Assets/Readme-Screenshot/6.png" alt="Screenshot 6" width="800"/>
+<br/><br/>
+<img src="./Yomic/Assets/Readme-Screenshot/7.png" alt="Screenshot 7" width="800"/>
+<br/><br/>
+<img src="./Yomic/Assets/Readme-Screenshot/8.png" alt="Screenshot 8" width="800"/>
+<br/><br/>
+<img src="./Yomic/Assets/Readme-Screenshot/9.png" alt="Screenshot 9" width="800"/>
+<br/><br/>
+<img src="./Yomic/Assets/Readme-Screenshot/10.png" alt="Screenshot 10" width="800"/>
+<br/><br/>
+<img src="./Yomic/Assets/Readme-Screenshot/11.png" alt="Screenshot 11" width="800"/>
+
+</div>
+
+---
+
 ## Installation
 
 ### Requirements
