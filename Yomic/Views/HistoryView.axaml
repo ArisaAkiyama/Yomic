@@ -331,10 +331,19 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
 
-                        <StackPanel Margin="0,0,30,24" HorizontalAlignment="Center" Spacing="8" IsVisible="{Binding IsLoadingMore}">
-                            <helpers:LoadingArcs Width="34" Height="34"/>
-                            <TextBlock Text="{DynamicResource String.LoadingMore}" Foreground="{DynamicResource SecondaryText}" FontSize="12" HorizontalAlignment="Center"/>
-                        </StackPanel>
+                        <Border HorizontalAlignment="Center" Margin="0,15,30,24" Padding="16,10"
+                                Background="#D511111B" CornerRadius="24"
+                                BorderBrush="#25FFFFFF" BorderThickness="1"
+                                BoxShadow="0 8 24 0 #60000000"
+                                IsVisible="{Binding IsLoadingMore}">
+                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                <helpers:LoadingArcs Width="18" Height="18" VerticalAlignment="Center"/>
+                                <TextBlock Text="{DynamicResource String.LoadingMore}" 
+                                           Foreground="{DynamicResource PrimaryText}" 
+                                           FontSize="13" FontWeight="Medium" 
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
 

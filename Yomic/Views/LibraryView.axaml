@@ -1013,15 +1013,16 @@
 
         <!-- Bottom Floating Lazy Loading Bar -->
         <Border VerticalAlignment="Bottom" HorizontalAlignment="Center"
-                Margin="0,0,0,24" Padding="18,10"
-                Background="#E0181825" CornerRadius="20"
-                BoxShadow="0 4 16 0 #50000000"
+                Margin="0,0,0,24" Padding="16,10"
+                Background="#D511111B" CornerRadius="24"
+                BorderBrush="#25FFFFFF" BorderThickness="1"
+                BoxShadow="0 8 24 0 #60000000"
                 IsVisible="{Binding IsLoadingMore}">
             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                <helpers:LoadingArcs Width="22" Height="22"/>
+                <helpers:LoadingArcs Width="18" Height="18" VerticalAlignment="Center"/>
                 <TextBlock Text="{DynamicResource String.LoadingMore}" 
                            Foreground="{DynamicResource PrimaryText}" 
-                           FontSize="13" FontWeight="SemiBold" 
+                           FontSize="13" FontWeight="Medium" 
                            VerticalAlignment="Center"/>
             </StackPanel>
         </Border>
