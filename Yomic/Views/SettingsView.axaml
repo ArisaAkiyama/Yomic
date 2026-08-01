@@ -135,15 +135,15 @@
                     <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
                         <Grid ColumnDefinitions="*, Auto">
                             <StackPanel Spacing="3">
-                                <TextBlock Text="Interval Status Source" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
-                                <TextBlock Text="Frekuensi pemeriksaan status realtime source di background" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                                <TextBlock Text="{DynamicResource String.SourceStatusCheckInterval}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.SourceStatusCheckIntervalDesc}" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
                             </StackPanel>
                             <ComboBox Grid.Column="1" SelectedIndex="{Binding SourceStatusRefreshIntervalIndex}" Width="150" VerticalAlignment="Center" CornerRadius="8">
-                                <ComboBoxItem>1 Menit</ComboBoxItem>
-                                <ComboBoxItem>3 Menit</ComboBoxItem>
-                                <ComboBoxItem>5 Menit</ComboBoxItem>
-                                <ComboBoxItem>10 Menit</ComboBoxItem>
-                                <ComboBoxItem>30 Menit</ComboBoxItem>
+                                <ComboBoxItem Content="{DynamicResource String.Interval.1Min}"/>
+                                <ComboBoxItem Content="{DynamicResource String.Interval.3Min}"/>
+                                <ComboBoxItem Content="{DynamicResource String.Interval.5Min}"/>
+                                <ComboBoxItem Content="{DynamicResource String.Interval.10Min}"/>
+                                <ComboBoxItem Content="{DynamicResource String.Interval.30Min}"/>
                             </ComboBox>
                         </Grid>
                     </Border>

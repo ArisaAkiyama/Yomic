@@ -365,4 +365,14 @@
     <sys:String x:Key="String.Welcome.ReadyDesc">Anda siap untuk mulai membaca.</sys:String>
     <sys:String x:Key="String.Change">Ubah</sys:String>
     <sys:String x:Key="String.Install">Pasang</sys:String>
+
+    <!-- Source Status Check Interval -->
+    <sys:String x:Key="String.SourceStatusCheckInterval">Interval Status Source</sys:String>
+    <sys:String x:Key="String.SourceStatusCheckIntervalDesc">Frekuensi pemeriksaan status realtime source di background</sys:String>
+    <sys:String x:Key="String.RefreshSourceStatus">Cek Ulang Status Semua Source</sys:String>
+    <sys:String x:Key="String.Interval.1Min">1 Menit</sys:String>
+    <sys:String x:Key="String.Interval.3Min">3 Menit</sys:String>
+    <sys:String x:Key="String.Interval.5Min">5 Menit</sys:String>
+    <sys:String x:Key="String.Interval.10Min">10 Menit</sys:String>
+    <sys:String x:Key="String.Interval.30Min">30 Menit</sys:String>
 </ResourceDictionary>

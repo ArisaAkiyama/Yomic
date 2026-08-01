@@ -122,7 +122,7 @@
                     <!-- Refresh Status Button -->
                     <Button Command="{Binding RefreshStatusCommand}" 
                             Classes="header-action" Cursor="Hand"
-                            ToolTip.Tip="Cek Ulang Status Semua Source">
+                            ToolTip.Tip="{DynamicResource String.RefreshSourceStatus}">
                         <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Canvas Width="24" Height="24">
                                 <Path Data="M20 11A8 8 0 0 0 4.5 9M4 5v4h4M4 13a8 8 0 0 0 15.5 2m.5 4v-4h-4" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
