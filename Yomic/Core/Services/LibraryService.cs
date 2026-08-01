@@ -503,10 +503,12 @@ namespace Yomic.Core.Services
             if (newChapters.Count > 0)
             {
                 context.Chapters.AddRange(newChapters);
+                Console.Write("\r" + new string(' ', 79) + "\r");
                 LogService.Info("Library", $"SYNC: {newChapters.Count} new, {prunedCount} pruned (skipPrune={skipPrune}), {dbManga.Chapters.Count} in DB.");
             }
             else if (prunedCount > 0)
             {
+                Console.Write("\r" + new string(' ', 79) + "\r");
                 LogService.Info("Library", $"SYNC: {prunedCount} ghost chapters removed.");
             }
 
@@ -1111,17 +1113,23 @@ namespace Yomic.Core.Services
             return updatedCount;
         }
 
+        private static readonly object _consoleProgressLock = new();
         private void PrintConsoleProgress(int current, int total)
         {
-            int barWidth = 20;
-            int filled = total == 0 ? 0 : (int)((double)current / total * barWidth);
-            string bar = new string('█', filled) + new string('░', barWidth - filled);
-            int percent = total == 0 ? 0 : (int)((double)current / total * 100);
-            
-            Console.Write($"\r[LibraryService] Updating... [{bar}] {current}/{total} ({percent}%)");
-            if (current == total)
+            lock (_consoleProgressLock)
             {
-                Console.WriteLine();
+                int barWidth = 20;
+                int filled = total == 0 ? 0 : (int)((double)current / total * barWidth);
+                string bar = new string('█', filled) + new string('░', barWidth - filled);
+                int percent = total == 0 ? 0 : (int)((double)current / total * 100);
+                
+                string progressLine = $"\r[LibraryService] Updating... [{bar}] {current}/{total} ({percent}%)";
+                Console.Write(progressLine.PadRight(79));
+                
+                if (current == total)
+                {
+                    Console.WriteLine();
+                }
             }
         }
 
