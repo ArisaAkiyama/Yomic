@@ -48,12 +48,29 @@ namespace Yomic.ViewModels
             set => this.RaiseAndSetIfChanged(ref _isOffline, value);
         }
 
+        private bool _isLoading;
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _isLoading, value);
+                this.RaisePropertyChanged(nameof(IsBusy));
+            }
+        }
+
         private bool _isRefreshing;
         public bool IsRefreshing
         {
             get => _isRefreshing;
-            set => this.RaiseAndSetIfChanged(ref _isRefreshing, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _isRefreshing, value);
+                this.RaisePropertyChanged(nameof(IsBusy));
+            }
         }
+
+        public bool IsBusy => IsLoading || IsRefreshing;
 
         private double _syncProgressPercentage;
         public double SyncProgressPercentage
@@ -197,6 +214,7 @@ namespace Yomic.ViewModels
 
         public async Task LoadUpdatesAsync()
         {
+            IsLoading = true;
             try
             {
                 // Check if library is empty first
@@ -228,35 +246,36 @@ namespace Yomic.ViewModels
                     // To ensure the headers output in correct chronological order:
                     .OrderBy(g => 
                     {
-                        switch(g.Key) {
-                            case "Today": return 0;
-                            case "Yesterday": return 1;
-                            case "This Week": return 2;
-                            case "This Month": return 3;
-                            default: return 4;
-                        }
+                        var key = g.Key;
+                        if (key == "Today") return 0;
+                        if (key == "Yesterday") return 1;
+                        if (key == "This Week") return 2;
+                        if (key == "This Month") return 3;
+                        return 4;
                     })
                     .Select(g => new UpdatesGroupParams
                     {
                         Header = GetLocalizedTimeHeader(g.Key),
-                        // Within each timeframe group, deduplicate by Manga, preferring the most recently uploaded
+                        // Group chapters by Manga URL so multiple new chapters of the same manga are collapsed cleanly!
                         Items = new ObservableCollection<ChapterItem>(g
-                            .GroupBy(c => c.MangaId)
-                            .Select(mg => 
+                            .GroupBy(c => c.MangaUrl + "|" + c.SourceId)
+                            .Select(mangaGroup => 
                             {
-                                 var sorted = mg.OrderByDescending(c => c.DateUpload > 0 ? c.DateUpload : c.DateFetch).ToList();
-                                 var c = sorted[0];
-                                 var actualDate = c.DateUpload > 0 ? c.DateUpload : c.DateFetch;
-                                 var item = new ChapterItem(null, null, null, null, null) 
+                                 var sorted = mangaGroup.OrderByDescending(c => c.DateUpload > 0 ? c.DateUpload : c.DateFetch).ToList();
+                                 var c = sorted.First();
+                                 
+                                 var item = new ChapterItem
                                  {
-                                    Title = c.Name,
-                                    Url = c.Url,
-                                    MangaRef = c.Manga,
-                                    Date = GetTimeAgo(actualDate),
-                                    FullDateString = DateTimeOffset.FromUnixTimeMilliseconds(actualDate).ToLocalTime().ToString("dddd, d MMMM yyyy – hh:mm tt"),
-                                    DateUpload = actualDate,
+                                    MangaTitle = c.MangaTitle,
+                                    MangaUrl = c.MangaUrl,
+                                    SourceId = c.SourceId,
+                                    CoverUrl = c.ThumbnailUrl,
+                                    ChapterTitle = c.Name,
+                                    ChapterUrl = c.Url,
+                                    Date = GetTimeAgo(c.DateUpload > 0 ? c.DateUpload : c.DateFetch),
+                                    DateUpload = c.DateUpload > 0 ? c.DateUpload : c.DateFetch,
+                                    FullDateString = c.DateUpload > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(c.DateUpload).ToString("dd MMM yyyy, HH:mm") : "",
                                     IsRead = c.Read,
-                                    IsDownloaded = c.IsDownloaded,
                                     IsNewRelease = c.IsNew,
                                     AdditionalChaptersCount = sorted.Count - 1
                                  };
@@ -276,6 +295,10 @@ namespace Yomic.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[UpdatesVM] Error loading: {ex}");
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 

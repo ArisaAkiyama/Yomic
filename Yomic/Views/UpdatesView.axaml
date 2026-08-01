@@ -111,8 +111,8 @@
                     </Border>
                 </StackPanel>
 
-                <!-- Scrollable Content -->
-                <ScrollViewer Grid.Row="1">
+                <!-- Scrollable Content (Real Items) -->
+                <ScrollViewer Grid.Row="1" IsVisible="{Binding !IsBusy}">
                     <StackPanel Margin="30,0,30,30">
 
                     <!-- Updates List (Grouped) -->
@@ -215,10 +215,87 @@
                     </ItemsControl>
                 </StackPanel>
             </ScrollViewer>
+
+            <!-- Skeleton Loading View (Updates Rows) -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Disabled" IsVisible="{Binding IsBusy}">
+                <StackPanel Margin="30,0,30,30" Spacing="25">
+                    <!-- Group 1 Header Skeleton -->
+                    <StackPanel Spacing="12">
+                        <Border Classes="SkeletonText" Width="100" Height="16" HorizontalAlignment="Left"/>
+                        <!-- Row Skeletons -->
+                        <StackPanel Spacing="8">
+                            <Border Padding="12,10">
+                                <Grid ColumnDefinitions="56, *, Auto">
+                                    <Border Grid.Column="0" Classes="SkeletonCard" Width="56" Height="80" CornerRadius="6"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0" Spacing="10">
+                                        <Border Classes="SkeletonText" Width="220" Height="15" HorizontalAlignment="Left"/>
+                                        <Border Classes="SkeletonText" Width="120" Height="12" HorizontalAlignment="Left"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="2" Classes="SkeletonText" Width="55" Height="12" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                            <Border Padding="12,10">
+                                <Grid ColumnDefinitions="56, *, Auto">
+                                    <Border Grid.Column="0" Classes="SkeletonCard" Width="56" Height="80" CornerRadius="6"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0" Spacing="10">
+                                        <Border Classes="SkeletonText" Width="180" Height="15" HorizontalAlignment="Left"/>
+                                        <Border Classes="SkeletonText" Width="90" Height="12" HorizontalAlignment="Left"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="2" Classes="SkeletonText" Width="45" Height="12" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                            <Border Padding="12,10">
+                                <Grid ColumnDefinitions="56, *, Auto">
+                                    <Border Grid.Column="0" Classes="SkeletonCard" Width="56" Height="80" CornerRadius="6"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0" Spacing="10">
+                                        <Border Classes="SkeletonText" Width="250" Height="15" HorizontalAlignment="Left"/>
+                                        <Border Classes="SkeletonText" Width="130" Height="12" HorizontalAlignment="Left"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="2" Classes="SkeletonText" Width="60" Height="12" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Group 2 Header Skeleton -->
+                    <StackPanel Spacing="12">
+                        <Border Classes="SkeletonText" Width="120" Height="16" HorizontalAlignment="Left"/>
+                        <!-- Row Skeletons -->
+                        <StackPanel Spacing="8">
+                            <Border Padding="12,10">
+                                <Grid ColumnDefinitions="56, *, Auto">
+                                    <Border Grid.Column="0" Classes="SkeletonCard" Width="56" Height="80" CornerRadius="6"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0" Spacing="10">
+                                        <Border Classes="SkeletonText" Width="200" Height="15" HorizontalAlignment="Left"/>
+                                        <Border Classes="SkeletonText" Width="100" Height="12" HorizontalAlignment="Left"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="2" Classes="SkeletonText" Width="50" Height="12" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                            <Border Padding="12,10">
+                                <Grid ColumnDefinitions="56, *, Auto">
+                                    <Border Grid.Column="0" Classes="SkeletonCard" Width="56" Height="80" CornerRadius="6"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0" Spacing="10">
+                                        <Border Classes="SkeletonText" Width="230" Height="15" HorizontalAlignment="Left"/>
+                                        <Border Classes="SkeletonText" Width="110" Height="12" HorizontalAlignment="Left"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="2" Classes="SkeletonText" Width="55" Height="12" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
             </Grid>
 
              <!-- Empty State (Centered Overlay) -->
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20" IsVisible="{Binding IsEmpty}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
+                <StackPanel.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                        <Binding Path="IsEmpty"/>
+                        <Binding Path="!IsBusy"/>
+                    </MultiBinding>
+                </StackPanel.IsVisible>
                   <!-- Case 1: Library Is Empty -->
                    <StackPanel Spacing="10" IsVisible="{Binding IsLibraryEmpty}">
                        <Viewbox Width="64" Height="64" HorizontalAlignment="Center">
