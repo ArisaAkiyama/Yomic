@@ -817,32 +817,7 @@
 
             <!-- Single Unified Skeleton Loading View -->
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Disabled" IsVisible="{Binding IsBusy}" Margin="30,0,30,0">
-                <StackPanel Spacing="15">
-                    <!-- Progress Bar & Percentage Card (Shows during sync) -->
-                    <Border IsVisible="{Binding IsRefreshing}" Margin="0,15,0,5" 
-                            Background="{DynamicResource SidebarBackground}" 
-                            BorderBrush="{DynamicResource SeparatorBrush}" 
-                            BorderThickness="1" 
-                            CornerRadius="12" Padding="16,12"
-                            BoxShadow="0 4 16 0 #30000000">
-                        <StackPanel Spacing="8">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <helpers:LoadingArcs Width="16" Height="16" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{DynamicResource String.UpdatingLibrary}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="13" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <TextBlock Grid.Column="1" Text="{Binding SyncProgressText}" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" FontSize="13" VerticalAlignment="Center"/>
-                            </Grid>
-                            
-                            <!-- Smooth Animated Progress Bar -->
-                            <ProgressBar Value="{Binding SyncProgressPercent}" Maximum="100" Height="6" CornerRadius="3"
-                                         Foreground="{DynamicResource PrimaryAccent}" 
-                                         Background="{DynamicResource HoverBackground}"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- 14 Skeleton cards -->
-                    <WrapPanel Orientation="Horizontal" ItemWidth="175" ItemHeight="310" HorizontalAlignment="Center">
+                <WrapPanel Orientation="Horizontal" ItemWidth="175" ItemHeight="310" HorizontalAlignment="Center">
                     <!-- 14 Skeleton cards -->
                     <StackPanel Width="150" Margin="10,0,10,20" Spacing="8">
                         <Border Classes="SkeletonCard" Height="225" Width="150"/>
@@ -916,8 +891,7 @@
                         <Border Classes="SkeletonText" Width="70" Height="10" HorizontalAlignment="Left"/>
                     </StackPanel>
                 </WrapPanel>
-            </StackPanel>
-        </ScrollViewer>
+            </ScrollViewer>
         </Grid>
 
         <!-- Empty State (Only if NOT loading and IS empty) -->
@@ -976,6 +950,37 @@
                            Foreground="{DynamicResource PrimaryText}" 
                            FontSize="13" FontWeight="SemiBold" 
                            VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Real-Time Sync Progress Overlay Pill (Progress Bar & Percentage) -->
+        <Border VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                Margin="0,0,0,24" Padding="20,12" MinWidth="260"
+                Background="{DynamicResource SidebarBackground}"
+                BorderBrush="{DynamicResource SeparatorBrush}"
+                BorderThickness="1"
+                CornerRadius="20"
+                BoxShadow="0 8 24 0 #60000000"
+                IsVisible="{Binding IsSyncProgressVisible}">
+            <StackPanel Spacing="8" VerticalAlignment="Center">
+                <Grid ColumnDefinitions="*, Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <helpers:LoadingArcs Width="16" Height="16" VerticalAlignment="Center"/>
+                        <TextBlock Text="{DynamicResource String.UpdatingLibraryProgress}" 
+                                   Foreground="{DynamicResource PrimaryText}" 
+                                   FontSize="13" FontWeight="SemiBold" 
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="{Binding SyncProgressText}" 
+                               Foreground="{DynamicResource PrimaryAccent}" 
+                               FontSize="13" FontWeight="Bold" 
+                               VerticalAlignment="Center" Margin="12,0,0,0"/>
+                </Grid>
+                
+                <ProgressBar Value="{Binding SyncProgressPercentage}" Maximum="100" 
+                             Height="4" CornerRadius="2" 
+                             Foreground="{DynamicResource PrimaryAccent}" 
+                             Background="{DynamicResource HoverBackground}"/>
             </StackPanel>
         </Border>
 

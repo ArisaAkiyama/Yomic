@@ -230,25 +230,11 @@ namespace Yomic.ViewModels
         public bool ShowGridView => !IsListView && !IsBusy;
         public bool ShowListView => IsListView && !IsBusy;
 
-        private int _syncProgressCurrent;
-        public int SyncProgressCurrent
+        private double _syncProgressPercentage;
+        public double SyncProgressPercentage
         {
-            get => _syncProgressCurrent;
-            set => this.RaiseAndSetIfChanged(ref _syncProgressCurrent, value);
-        }
-
-        private int _syncProgressTotal;
-        public int SyncProgressTotal
-        {
-            get => _syncProgressTotal;
-            set => this.RaiseAndSetIfChanged(ref _syncProgressTotal, value);
-        }
-
-        private double _syncProgressPercent;
-        public double SyncProgressPercent
-        {
-            get => _syncProgressPercent;
-            set => this.RaiseAndSetIfChanged(ref _syncProgressPercent, value);
+            get => _syncProgressPercentage;
+            set => this.RaiseAndSetIfChanged(ref _syncProgressPercentage, value);
         }
 
         private string _syncProgressText = "";
@@ -256,6 +242,13 @@ namespace Yomic.ViewModels
         {
             get => _syncProgressText;
             set => this.RaiseAndSetIfChanged(ref _syncProgressText, value);
+        }
+
+        private bool _isSyncProgressVisible;
+        public bool IsSyncProgressVisible
+        {
+            get => _isSyncProgressVisible;
+            set => this.RaiseAndSetIfChanged(ref _isSyncProgressVisible, value);
         }
 
         // Commands
@@ -578,10 +571,9 @@ namespace Yomic.ViewModels
         public async Task ForceRefreshLibrary()
         {
             IsRefreshing = true;
-            SyncProgressCurrent = 0;
-            SyncProgressTotal = 0;
-            SyncProgressPercent = 0;
-            SyncProgressText = "0%";
+            IsSyncProgressVisible = false;
+            SyncProgressPercentage = 0;
+            SyncProgressText = "";
 
             try
             {
@@ -590,14 +582,13 @@ namespace Yomic.ViewModels
                     Yomic.Core.Services.LogService.Info("LibraryVM", "Checking for latest updates from sources...");
                     var progress = new Progress<(int current, int total)>(tuple =>
                     {
-                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        if (tuple.total > 0)
                         {
-                            SyncProgressCurrent = tuple.current;
-                            SyncProgressTotal = tuple.total;
-                            int pct = tuple.total > 0 ? (int)Math.Round((double)tuple.current / tuple.total * 100.0) : 0;
-                            SyncProgressPercent = pct;
-                            SyncProgressText = $"{tuple.current}/{tuple.total} ({pct}%)";
-                        });
+                            double pct = (double)tuple.current / tuple.total * 100;
+                            SyncProgressPercentage = Math.Min(100, Math.Max(0, pct));
+                            SyncProgressText = $"{tuple.current}/{tuple.total} ({(int)SyncProgressPercentage}%)";
+                            IsSyncProgressVisible = true;
+                        }
                     });
 
                     await _libraryService.UpdateAllLibraryMangaAsync(_mainVM.SourceManager, forceRefresh: true, progress: progress);
@@ -611,6 +602,7 @@ namespace Yomic.ViewModels
             finally
             {
                 IsRefreshing = false;
+                IsSyncProgressVisible = false;
             }
         }
 
