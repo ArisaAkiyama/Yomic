@@ -30,20 +30,30 @@
 
 <table>
   <tr>
-    <td align="center" width="260">
+    <td align="center" width="240">
       <b>📥 Download Here</b><br/><br/>
       <a href="https://github.com/ArisaAkiyama/yomic/releases/download/v1.7.1/Yomic_Setup_v1.7.1.exe">
         <img src="./Yomic/Assets/win-download.png" alt="Download Yomic for Windows" height="42"/>
       </a>
     </td>
-    <td align="center" width="280">
+    <td align="center" width="240">
       <b>☕ Support & Donation</b><br/><br/>
       <a href="https://trakteer.id/Arisa-Akiyama" target="_blank">
         <img src="https://edge-cdn.trakteer.id/images/embed/trbtn-red-1.png?v=14-05-2025" alt="Dukung Saya di Trakteer" height="42" style="border:0px;height:42px;"/>
       </a>
     </td>
+    <td align="center" width="240">
+      <b>⭐ Support Yomic</b><br/><br/>
+      <a href="https://github.com/ArisaAkiyama/yomic/stargazers">
+        <img src="https://img.shields.io/github/stars/ArisaAkiyama/yomic?style=for-the-badge&logo=github&color=EBCB8B&label=Star%20Yomic" alt="Please give the repo a star" height="42"/>
+      </a>
+    </td>
   </tr>
 </table>
+
+<p align="center">
+  <b>If you enjoy using Yomic, please give the repo a ⭐!</b>
+</p>
 
 </div>
 
