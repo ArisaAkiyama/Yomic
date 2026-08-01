@@ -571,9 +571,9 @@ namespace Yomic.ViewModels
         public async Task ForceRefreshLibrary()
         {
             IsRefreshing = true;
-            IsSyncProgressVisible = false;
             SyncProgressPercentage = 0;
-            SyncProgressText = "";
+            SyncProgressText = "0%";
+            IsSyncProgressVisible = true;
 
             try
             {
