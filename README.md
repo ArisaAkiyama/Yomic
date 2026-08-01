@@ -17,6 +17,7 @@
 [![Extensions](https://img.shields.io/badge/Extensions-Available-22C55E.svg?style=flat-square)](https://github.com/ArisaAkiyama/extension-yomic)
 [![Latest Release](https://img.shields.io/github/v/release/ArisaAkiyama/yomic?style=flat-square&color=0066FF&label=Latest)](https://github.com/ArisaAkiyama/yomic/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/ArisaAkiyama/yomic/total?style=flat-square&color=22C55E&label=Downloads)](https://github.com/ArisaAkiyama/yomic/releases)
+[![Stars](https://img.shields.io/github/stars/ArisaAkiyama/yomic?style=flat-square&color=EBCB8B&label=Stars&logo=github)](https://github.com/ArisaAkiyama/yomic/stargazers)
 [![Visitors](https://api.visitorbadge.io/api/visitors?path=ArisaAkiyama%2Fyomic&label=Visitors&countColor=%230066FF&style=flat-square)](https://github.com/ArisaAkiyama/yomic)
 
 <br/>
@@ -30,26 +31,22 @@
 
 <table>
   <tr>
-    <td align="center" width="240">
+    <td align="center" width="260">
       <b>📥 Download Here</b><br/><br/>
       <a href="https://github.com/ArisaAkiyama/yomic/releases/download/v1.7.1/Yomic_Setup_v1.7.1.exe">
         <img src="./Yomic/Assets/win-download.png" alt="Download Yomic for Windows" height="42"/>
       </a>
     </td>
-    <td align="center" width="240">
+    <td align="center" width="280">
       <b>☕ Support & Donation</b><br/><br/>
       <a href="https://trakteer.id/Arisa-Akiyama" target="_blank">
         <img src="https://edge-cdn.trakteer.id/images/embed/trbtn-red-1.png?v=14-05-2025" alt="Dukung Saya di Trakteer" height="42" style="border:0px;height:42px;"/>
       </a>
     </td>
-    <td align="center" width="240">
-      <b>⭐ Support Yomic</b><br/><br/>
-      <a href="https://github.com/ArisaAkiyama/yomic/stargazers">
-        <img src="https://img.shields.io/github/stars/ArisaAkiyama/yomic?style=for-the-badge&logo=github&color=EBCB8B&label=Star%20Yomic" alt="Please give the repo a star" height="42"/>
-      </a>
-    </td>
   </tr>
 </table>
+
+<br/>
 
 <p align="center">
   <b>If you enjoy using Yomic, please give the repo a ⭐!</b>
