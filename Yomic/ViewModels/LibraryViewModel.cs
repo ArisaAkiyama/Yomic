@@ -230,6 +230,34 @@ namespace Yomic.ViewModels
         public bool ShowGridView => !IsListView && !IsBusy;
         public bool ShowListView => IsListView && !IsBusy;
 
+        private int _syncProgressCurrent;
+        public int SyncProgressCurrent
+        {
+            get => _syncProgressCurrent;
+            set => this.RaiseAndSetIfChanged(ref _syncProgressCurrent, value);
+        }
+
+        private int _syncProgressTotal;
+        public int SyncProgressTotal
+        {
+            get => _syncProgressTotal;
+            set => this.RaiseAndSetIfChanged(ref _syncProgressTotal, value);
+        }
+
+        private double _syncProgressPercent;
+        public double SyncProgressPercent
+        {
+            get => _syncProgressPercent;
+            set => this.RaiseAndSetIfChanged(ref _syncProgressPercent, value);
+        }
+
+        private string _syncProgressText = "";
+        public string SyncProgressText
+        {
+            get => _syncProgressText;
+            set => this.RaiseAndSetIfChanged(ref _syncProgressText, value);
+        }
+
         // Commands
         public ReactiveCommand<MangaItem, Unit> OpenMangaCommand { get; }
         public ReactiveCommand<Unit, Unit> GoToBrowseCommand { get; }
@@ -550,12 +578,29 @@ namespace Yomic.ViewModels
         public async Task ForceRefreshLibrary()
         {
             IsRefreshing = true;
+            SyncProgressCurrent = 0;
+            SyncProgressTotal = 0;
+            SyncProgressPercent = 0;
+            SyncProgressText = "0%";
+
             try
             {
                 if (IsOnline)
                 {
                     Yomic.Core.Services.LogService.Info("LibraryVM", "Checking for latest updates from sources...");
-                    await _libraryService.UpdateAllLibraryMangaAsync(_mainVM.SourceManager, forceRefresh: true);
+                    var progress = new Progress<(int current, int total)>(tuple =>
+                    {
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        {
+                            SyncProgressCurrent = tuple.current;
+                            SyncProgressTotal = tuple.total;
+                            int pct = tuple.total > 0 ? (int)Math.Round((double)tuple.current / tuple.total * 100.0) : 0;
+                            SyncProgressPercent = pct;
+                            SyncProgressText = $"{tuple.current}/{tuple.total} ({pct}%)";
+                        });
+                    });
+
+                    await _libraryService.UpdateAllLibraryMangaAsync(_mainVM.SourceManager, forceRefresh: true, progress: progress);
                 }
 
                 Yomic.Core.Services.LogService.Info("LibraryVM", "Hard refresh (redownload covers)...");
