@@ -35,6 +35,7 @@ namespace Yomic.Core.Services
         private readonly string _cacheFilePath;
         private readonly SemaphoreSlim _semaphore = new(3, 3); // Max 3 concurrent pings
         private readonly ConcurrentDictionary<long, SourceStatusRecord> _cache = new();
+        private readonly object _fileLock = new();
         private System.Threading.Timer? _periodicTimer;
         private CancellationTokenSource? _cts;
         private bool _isDisposed;
@@ -171,24 +172,27 @@ namespace Yomic.Core.Services
 
         private void LoadCacheFromDisk()
         {
-            try
+            lock (_fileLock)
             {
-                if (File.Exists(_cacheFilePath))
+                try
                 {
-                    var json = File.ReadAllText(_cacheFilePath);
-                    var data = JsonSerializer.Deserialize<Dictionary<long, SourceStatusRecord>>(json);
-                    if (data != null)
+                    if (File.Exists(_cacheFilePath))
                     {
-                        foreach (var kvp in data)
+                        var json = File.ReadAllText(_cacheFilePath);
+                        var data = JsonSerializer.Deserialize<Dictionary<long, SourceStatusRecord>>(json);
+                        if (data != null)
                         {
-                            _cache[kvp.Key] = kvp.Value;
+                            foreach (var kvp in data)
+                            {
+                                _cache[kvp.Key] = kvp.Value;
+                            }
                         }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                LogService.Error("SourceStatusService", "Failed to load status cache", ex);
+                catch (Exception ex)
+                {
+                    LogService.Error("SourceStatusService", "Failed to load status cache", ex);
+                }
             }
         }
 
@@ -227,15 +231,20 @@ namespace Yomic.Core.Services
 
         private void SaveCacheToDisk()
         {
-            try
+            lock (_fileLock)
             {
-                var dict = _cache.ToDictionary(k => k.Key, v => v.Value);
-                var json = JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(_cacheFilePath, json);
-            }
-            catch (Exception ex)
-            {
-                LogService.Error("SourceStatusService", "Failed to save status cache", ex);
+                try
+                {
+                    var dict = _cache.ToDictionary(k => k.Key, v => v.Value);
+                    var json = JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true });
+                    string tempPath = _cacheFilePath + ".tmp";
+                    File.WriteAllText(tempPath, json);
+                    File.Move(tempPath, _cacheFilePath, overwrite: true);
+                }
+                catch (Exception ex)
+                {
+                    LogService.Error("SourceStatusService", "Failed to save status cache", ex);
+                }
             }
         }
 
