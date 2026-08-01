@@ -48,6 +48,34 @@ namespace Yomic.ViewModels
             set => this.RaiseAndSetIfChanged(ref _isOffline, value);
         }
 
+        private bool _isRefreshing;
+        public bool IsRefreshing
+        {
+            get => _isRefreshing;
+            set => this.RaiseAndSetIfChanged(ref _isRefreshing, value);
+        }
+
+        private double _syncProgressPercentage;
+        public double SyncProgressPercentage
+        {
+            get => _syncProgressPercentage;
+            set => this.RaiseAndSetIfChanged(ref _syncProgressPercentage, value);
+        }
+
+        private string _syncProgressText = "";
+        public string SyncProgressText
+        {
+            get => _syncProgressText;
+            set => this.RaiseAndSetIfChanged(ref _syncProgressText, value);
+        }
+
+        private bool _isSyncProgressVisible;
+        public bool IsSyncProgressVisible
+        {
+            get => _isSyncProgressVisible;
+            set => this.RaiseAndSetIfChanged(ref _isSyncProgressVisible, value);
+        }
+
         public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
         public ReactiveCommand<ChapterItem, Unit> OpenChapterCommand { get; }
         public ReactiveCommand<Unit, Unit> GoToLibraryCommand { get; }
@@ -333,16 +361,21 @@ namespace Yomic.ViewModels
         {
              if (IsRefreshing) return;
              IsRefreshing = true;
-             StatusMessage = "Checking for updates...";
+             SyncProgressPercentage = 0;
+             SyncProgressText = "0%";
+             IsSyncProgressVisible = true;
              
              try
              {
-                 var progress = new Progress<(int current, int total)>(p => 
+                 var progress = new Progress<(int current, int total)>(tuple => 
                  {
-                     Dispatcher.UIThread.Post(() => 
+                     if (tuple.total > 0 && IsRefreshing)
                      {
-                         StatusMessage = $"Updating {p.current} of {p.total}...";
-                     });
+                         double pct = (double)tuple.current / tuple.total * 100;
+                         SyncProgressPercentage = Math.Min(100, Math.Max(0, pct));
+                         SyncProgressText = $"{tuple.current}/{tuple.total} ({(int)SyncProgressPercentage}%)";
+                         IsSyncProgressVisible = true;
+                     }
                  });
 
                  // Trigger Library Update with forceRefresh: true to check online sources for new chapters
@@ -350,22 +383,19 @@ namespace Yomic.ViewModels
                  
                  await LoadUpdatesAsync();
                  
+                 // Show 100% completed state briefly before hiding
+                 await Task.Delay(600);
+                 IsSyncProgressVisible = false;
+
                  if (newChapters > 0)
                  {
-                     StatusMessage = $"Found {newChapters} new chapters!";
+                     _mainVM.NotificationVM?.Show($"Found {newChapters} new chapters!");
                  }
-                 else
-                 {
-                     StatusMessage = "Library is up to date.";
-                 }
-                 
-                 // Clear message after delay
-                 await Task.Delay(3000);
-                 if (!IsRefreshing) StatusMessage = ""; 
              }
              finally
              {
                  IsRefreshing = false;
+                 IsSyncProgressVisible = false;
              }
         }
 

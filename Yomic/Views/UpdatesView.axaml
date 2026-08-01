@@ -258,11 +258,34 @@
             </StackPanel>
         </StackPanel>
 
-        <!-- Sync Overlay -->
-        <Border Background="#80000000" IsVisible="{Binding IsRefreshing}">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="15">
-                 <helpers:LoadingArcs Margin="0,0,0,10"/>
-                 <TextBlock Text="{Binding StatusMessage}" Foreground="White" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
+        <!-- Real-Time Sync Progress Overlay Pill (Progress Bar & Percentage) -->
+        <Border VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                Margin="0,0,0,24" Padding="20,12" MinWidth="260"
+                Background="{DynamicResource SidebarBackground}"
+                BorderBrush="{DynamicResource SeparatorBrush}"
+                BorderThickness="1"
+                CornerRadius="20"
+                BoxShadow="0 8 24 0 #60000000"
+                IsVisible="{Binding IsSyncProgressVisible}">
+            <StackPanel Spacing="8" VerticalAlignment="Center">
+                <Grid ColumnDefinitions="*, Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <helpers:LoadingArcs Width="16" Height="16" VerticalAlignment="Center"/>
+                        <TextBlock Text="{DynamicResource String.UpdatingLibraryProgress}" 
+                                   Foreground="{DynamicResource PrimaryText}" 
+                                   FontSize="13" FontWeight="SemiBold" 
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="{Binding SyncProgressText}" 
+                               Foreground="{DynamicResource PrimaryAccent}" 
+                               FontSize="13" FontWeight="Bold" 
+                               VerticalAlignment="Center" Margin="12,0,0,0"/>
+                </Grid>
+                
+                <ProgressBar Value="{Binding SyncProgressPercentage}" Maximum="100" 
+                             Height="4" CornerRadius="2" 
+                             Foreground="{DynamicResource PrimaryAccent}" 
+                             Background="{DynamicResource HoverBackground}"/>
             </StackPanel>
         </Border>
     </Panel>
