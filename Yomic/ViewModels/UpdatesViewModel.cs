@@ -246,36 +246,35 @@ namespace Yomic.ViewModels
                     // To ensure the headers output in correct chronological order:
                     .OrderBy(g => 
                     {
-                        var key = g.Key;
-                        if (key == "Today") return 0;
-                        if (key == "Yesterday") return 1;
-                        if (key == "This Week") return 2;
-                        if (key == "This Month") return 3;
-                        return 4;
+                        switch(g.Key) {
+                            case "Today": return 0;
+                            case "Yesterday": return 1;
+                            case "This Week": return 2;
+                            case "This Month": return 3;
+                            default: return 4;
+                        }
                     })
                     .Select(g => new UpdatesGroupParams
                     {
                         Header = GetLocalizedTimeHeader(g.Key),
-                        // Group chapters by Manga URL so multiple new chapters of the same manga are collapsed cleanly!
+                        // Within each timeframe group, deduplicate by Manga, preferring the most recently uploaded
                         Items = new ObservableCollection<ChapterItem>(g
-                            .GroupBy(c => c.MangaUrl + "|" + c.SourceId)
-                            .Select(mangaGroup => 
+                            .GroupBy(c => c.MangaId)
+                            .Select(mg => 
                             {
-                                 var sorted = mangaGroup.OrderByDescending(c => c.DateUpload > 0 ? c.DateUpload : c.DateFetch).ToList();
-                                 var c = sorted.First();
-                                 
-                                 var item = new ChapterItem
+                                 var sorted = mg.OrderByDescending(c => c.DateUpload > 0 ? c.DateUpload : c.DateFetch).ToList();
+                                 var c = sorted[0];
+                                 var actualDate = c.DateUpload > 0 ? c.DateUpload : c.DateFetch;
+                                 var item = new ChapterItem(null, null, null, null, null) 
                                  {
-                                    MangaTitle = c.MangaTitle,
-                                    MangaUrl = c.MangaUrl,
-                                    SourceId = c.SourceId,
-                                    CoverUrl = c.ThumbnailUrl,
-                                    ChapterTitle = c.Name,
-                                    ChapterUrl = c.Url,
-                                    Date = GetTimeAgo(c.DateUpload > 0 ? c.DateUpload : c.DateFetch),
-                                    DateUpload = c.DateUpload > 0 ? c.DateUpload : c.DateFetch,
-                                    FullDateString = c.DateUpload > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(c.DateUpload).ToString("dd MMM yyyy, HH:mm") : "",
+                                    Title = c.Name,
+                                    Url = c.Url,
+                                    MangaRef = c.Manga,
+                                    Date = GetTimeAgo(actualDate),
+                                    FullDateString = DateTimeOffset.FromUnixTimeMilliseconds(actualDate).ToLocalTime().ToString("dddd, d MMMM yyyy – hh:mm tt"),
+                                    DateUpload = actualDate,
                                     IsRead = c.Read,
+                                    IsDownloaded = c.IsDownloaded,
                                     IsNewRelease = c.IsNew,
                                     AdditionalChaptersCount = sorted.Count - 1
                                  };
