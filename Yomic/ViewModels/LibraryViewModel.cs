@@ -220,13 +220,15 @@ namespace Yomic.ViewModels
              set
              {
                  this.RaiseAndSetIfChanged(ref _isRefreshing, value);
+                 this.RaisePropertyChanged(nameof(IsBusy));
                  this.RaisePropertyChanged(nameof(ShowGridView));
                  this.RaisePropertyChanged(nameof(ShowListView));
              }
         }
 
-        public bool ShowGridView => !IsListView && !IsLoading && !IsRefreshing;
-        public bool ShowListView => IsListView && !IsLoading && !IsRefreshing;
+        public bool IsBusy => IsLoading || IsRefreshing;
+        public bool ShowGridView => !IsListView && !IsBusy;
+        public bool ShowListView => IsListView && !IsBusy;
 
         // Commands
         public ReactiveCommand<MangaItem, Unit> OpenMangaCommand { get; }
@@ -515,6 +517,7 @@ namespace Yomic.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _isLoading, value);
+                this.RaisePropertyChanged(nameof(IsBusy));
                 this.RaisePropertyChanged(nameof(ShowGridView));
                 this.RaisePropertyChanged(nameof(ShowListView));
             }
