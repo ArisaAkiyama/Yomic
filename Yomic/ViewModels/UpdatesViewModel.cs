@@ -343,13 +343,6 @@ namespace Yomic.ViewModels
             }
         }
 
-        private bool _isRefreshing;
-        public bool IsRefreshing
-        {
-            get => _isRefreshing;
-            set => this.RaiseAndSetIfChanged(ref _isRefreshing, value);
-        }
-
         private string _statusMessage = "";
         public string StatusMessage
         {
