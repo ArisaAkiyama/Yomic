@@ -582,7 +582,7 @@ namespace Yomic.ViewModels
                     Yomic.Core.Services.LogService.Info("LibraryVM", "Checking for latest updates from sources...");
                     var progress = new Progress<(int current, int total)>(tuple =>
                     {
-                        if (tuple.total > 0)
+                        if (tuple.total > 0 && IsRefreshing)
                         {
                             double pct = (double)tuple.current / tuple.total * 100;
                             SyncProgressPercentage = Math.Min(100, Math.Max(0, pct));
@@ -592,6 +592,10 @@ namespace Yomic.ViewModels
                     });
 
                     await _libraryService.UpdateAllLibraryMangaAsync(_mainVM.SourceManager, forceRefresh: true, progress: progress);
+
+                    // Show 100% completed state briefly before hiding
+                    await Task.Delay(600);
+                    IsSyncProgressVisible = false;
                 }
 
                 Yomic.Core.Services.LogService.Info("LibraryVM", "Hard refresh (redownload covers)...");
