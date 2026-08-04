@@ -289,6 +289,7 @@ namespace Yomic.ViewModels
         public ReactiveCommand<Unit, Unit> RefreshLibraryCoversCommand { get; }
         public ReactiveCommand<Unit, Unit> OptimizeDatabaseCommand { get; }
         public ReactiveCommand<Unit, Unit> ExportLogsCommand { get; }
+        public ReactiveCommand<Unit, Unit> ClearLogsCommand { get; }
 
         private readonly Core.Services.UpdateService _updateService;
 
@@ -581,6 +582,7 @@ namespace Yomic.ViewModels
             RefreshLibraryCoversCommand = ReactiveCommand.CreateFromTask(RefreshLibraryCoversAsync);
             OptimizeDatabaseCommand = ReactiveCommand.CreateFromTask(OptimizeDatabaseAsync);
             ExportLogsCommand = ReactiveCommand.CreateFromTask(ExportLogsAsync);
+            ClearLogsCommand = ReactiveCommand.Create(ClearLogs);
 
             // Load DB stats on init
             System.Threading.Tasks.Task.Run(LoadDbStatsAsync);
@@ -815,6 +817,19 @@ namespace Yomic.ViewModels
             {
                 Core.Services.LogService.Error("SettingsViewModel", "ExportLogs failed", ex);
                 _mainViewModel.ShowNotification("Failed to export log.", NotificationType.Error);
+            }
+        }
+
+        private void ClearLogs()
+        {
+            bool success = Core.Services.LogService.ClearLogs();
+            if (success)
+            {
+                _mainViewModel.ShowNotification("Log cleared successfully!", NotificationType.Success);
+            }
+            else
+            {
+                _mainViewModel.ShowNotification("Failed to clear log.", NotificationType.Error);
             }
         }
 

@@ -231,8 +231,8 @@ namespace Yomic
                     DataContext = new MainWindowViewModel(sourceManager, libraryService, networkService, downloadService, settingsService, imageCacheService, secureImageService, sourceStatusService),
                 };
 
-                // Check for app updates asynchronously in background
-                if (System.OperatingSystem.IsWindows())
+                // Check for app updates asynchronously in background if enabled in Settings
+                if (System.OperatingSystem.IsWindows() && settingsService.CheckAppUpdateOnStart)
                 {
                     try
                     {

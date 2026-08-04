@@ -97,6 +97,7 @@
     <sys:String x:Key="String.ExportAppLogs">Ekspor Log Aplikasi</sys:String>
     <sys:String x:Key="String.ExportAppLogsDesc">Simpan file log aplikasi untuk pelaporan bug atau pemecahan masalah</sys:String>
     <sys:String x:Key="String.ExportLogs">Ekspor Log</sys:String>
+    <sys:String x:Key="String.ClearLogs">Reset / Hapus Log</sys:String>
 
     <!-- Danger Zone Section -->
     <sys:String x:Key="String.DangerZone">Zona Bahaya</sys:String>

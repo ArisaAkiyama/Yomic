@@ -65,11 +65,12 @@
                             
                         </StackPanel>
 
-                        <!-- Right Side: Actions -->
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" IsVisible="{Binding HasItems}">
+                        <!-- Right Side: Actions (Real Buttons when IsBusy is False) -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" IsVisible="{Binding !IsBusy}">
                             <!-- Clear Cache / Updates Button -->
                             <Button Command="{Binding ClearUpdatesCommand}"
                                     Classes="header-action"
+                                    IsVisible="{Binding HasItems}"
                                     ToolTip.Tip="{DynamicResource String.Updates.ClearAll}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <Viewbox Width="20" Height="20" VerticalAlignment="Center">
@@ -91,6 +92,12 @@
                                     </Canvas>
                                 </Viewbox>
                             </Button>
+                        </StackPanel>
+
+                        <!-- Right Side: Action Buttons Skeleton (when IsBusy is True) -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" IsVisible="{Binding IsBusy}">
+                            <Border Classes="SkeletonCard" Width="95" Height="36" CornerRadius="8"/>
+                            <Border Classes="SkeletonCard" Width="36" Height="36" CornerRadius="8"/>
                         </StackPanel>
                     </Grid>
                     <!-- Global Update Education Warning -->

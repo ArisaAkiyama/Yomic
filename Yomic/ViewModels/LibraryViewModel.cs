@@ -472,12 +472,31 @@ namespace Yomic.ViewModels
                 });
             });
 
-            // Manual Refresh Button - Force reload covers from network
+            // Manual Refresh Button - Force reload covers from network / local DB with Skeleton Loading
             RefreshCommand = ReactiveCommand.CreateFromTask(async () =>
             {
-                if (IsOnline)
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    await ForceRefreshLibrary();
+                    IsRefreshing = true;
+                });
+
+                try
+                {
+                    if (IsOnline)
+                    {
+                        await ForceRefreshLibrary();
+                    }
+                    else
+                    {
+                        await RefreshLibrary();
+                    }
+                }
+                finally
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        IsRefreshing = false;
+                    });
                 }
             });
 
@@ -546,7 +565,10 @@ namespace Yomic.ViewModels
 
         public async Task RefreshLibrary()
         {
-            IsLoading = true;
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                IsLoading = true;
+            });
             try
             {
                 await LoadCategoriesAsync();
@@ -564,16 +586,22 @@ namespace Yomic.ViewModels
             }
             finally
             {
-                IsLoading = false;
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    IsLoading = false;
+                });
             }
         }
 
         public async Task ForceRefreshLibrary()
         {
-            IsRefreshing = true;
-            SyncProgressPercentage = 0;
-            SyncProgressText = "0%";
-            IsSyncProgressVisible = true;
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                IsRefreshing = true;
+                SyncProgressPercentage = 0;
+                SyncProgressText = "0%";
+                IsSyncProgressVisible = true;
+            });
 
             try
             {
@@ -585,9 +613,12 @@ namespace Yomic.ViewModels
                         if (tuple.total > 0 && IsRefreshing)
                         {
                             double pct = (double)tuple.current / tuple.total * 100;
-                            SyncProgressPercentage = Math.Min(100, Math.Max(0, pct));
-                            SyncProgressText = $"{tuple.current}/{tuple.total} ({(int)SyncProgressPercentage}%)";
-                            IsSyncProgressVisible = true;
+                            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                            {
+                                SyncProgressPercentage = Math.Min(100, Math.Max(0, pct));
+                                SyncProgressText = $"{tuple.current}/{tuple.total} ({(int)SyncProgressPercentage}%)";
+                                IsSyncProgressVisible = true;
+                            });
                         }
                     });
 
@@ -595,7 +626,10 @@ namespace Yomic.ViewModels
 
                     // Show 100% completed state briefly before hiding
                     await Task.Delay(600);
-                    IsSyncProgressVisible = false;
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        IsSyncProgressVisible = false;
+                    });
                 }
 
                 Yomic.Core.Services.LogService.Info("LibraryVM", "Hard refresh (redownload covers)...");
@@ -605,8 +639,11 @@ namespace Yomic.ViewModels
             }
             finally
             {
-                IsRefreshing = false;
-                IsSyncProgressVisible = false;
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    IsRefreshing = false;
+                    IsSyncProgressVisible = false;
+                });
             }
         }
 

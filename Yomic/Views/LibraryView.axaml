@@ -193,7 +193,8 @@
 
 
                 <!-- Row 1: Search Toolbar (full width, unified) -->
-                <Grid ColumnDefinitions="*, Auto" Margin="0,14,0,0" VerticalAlignment="Center">
+                <!-- Real Search Toolbar (when IsBusy is False) -->
+                <Grid ColumnDefinitions="*, Auto" Margin="0,14,0,0" VerticalAlignment="Center" IsVisible="{Binding !IsBusy}">
                     <!-- Search Box - stretches to fill space -->
                     <TextBox HorizontalAlignment="Stretch"
                              Watermark="{DynamicResource String.SearchLibrary}" CornerRadius="20"
@@ -431,7 +432,6 @@
 
                         <!-- Refresh Button -->
                         <Button Command="{Binding RefreshCommand}"
-                                IsEnabled="{Binding IsOnline}"
                                 Classes="header-action"
                                 ToolTip.Tip="Sync Library">
                             <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -460,15 +460,32 @@
                         </Button>
                     </StackPanel>
                 </Grid>
+
+                <!-- Search Toolbar Skeleton (when IsBusy is True) -->
+                <Grid ColumnDefinitions="*, Auto" Margin="0,14,0,0" VerticalAlignment="Center" IsVisible="{Binding IsBusy}">
+                    <Border Classes="SkeletonCard" Height="36" CornerRadius="20" HorizontalAlignment="Stretch"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="8,0,0,0" VerticalAlignment="Center">
+                        <Border Classes="SkeletonCard" Width="36" Height="36" CornerRadius="8"/>
+                        <Border Classes="SkeletonCard" Width="36" Height="36" CornerRadius="8"/>
+                        <Border Classes="SkeletonCard" Width="36" Height="36" CornerRadius="8"/>
+                    </StackPanel>
+                </Grid>
                 
                 <!-- Category Tabs -->
-                <Grid ColumnDefinitions="*, Auto" Margin="0,16,0,0" IsVisible="{Binding HasCategories}">
+                <!-- Real Category Tabs (when HasCategories is True and IsBusy is False) -->
+                <Grid ColumnDefinitions="*, Auto" Margin="0,16,0,0">
+                    <Grid.IsVisible>
+                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                            <Binding Path="HasCategories"/>
+                            <Binding Path="!IsBusy"/>
+                        </MultiBinding>
+                    </Grid.IsVisible>
                     <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                         <ListBox x:Name="CategoryTabsListBox" 
-                                 ItemsSource="{Binding CategoryTabs}" 
-                                 SelectedItem="{Binding SelectedCategoryTab}"
-                                 Background="Transparent" BorderThickness="0"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                  ItemsSource="{Binding CategoryTabs}" 
+                                  SelectedItem="{Binding SelectedCategoryTab}"
+                                  Background="Transparent" BorderThickness="0"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <ListBox.Styles>
                                 <Style Selector="ListBoxItem">
                                     <Setter Property="Padding" Value="0"/>
@@ -540,6 +557,12 @@
                         </Viewbox>
                     </Button>
                 </Grid>
+
+                <!-- Category Tabs Skeleton (when IsBusy is True) -->
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,16,0,0" IsVisible="{Binding IsBusy}">
+                    <Border Classes="SkeletonCard" Width="50" Height="32" CornerRadius="16"/>
+                    <Border Classes="SkeletonCard" Width="85" Height="32" CornerRadius="16"/>
+                </StackPanel>
             </StackPanel>
 
             <!-- Virtualized ListBox -->

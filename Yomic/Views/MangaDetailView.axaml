@@ -500,6 +500,20 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:ChapterItem}">
                             <Panel Margin="40,0,40,0" ClipToBounds="True">
+                                <!-- NEW Ribbon (Top Left Diagonal) -->
+                                <Border HorizontalAlignment="Left" VerticalAlignment="Top" 
+                                        Width="80" Height="16" Margin="-26,6,0,0"
+                                        Background="#EF4444"
+                                        IsVisible="{Binding IsNewRelease}"
+                                        IsHitTestVisible="False" ZIndex="10">
+                                    <Border.RenderTransform>
+                                        <RotateTransform Angle="-45"/>
+                                    </Border.RenderTransform>
+                                    <TextBlock Text="{DynamicResource String.Badge.New}" 
+                                               FontSize="8" FontWeight="900" Foreground="White"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                                </Border>
+
                                 <!-- 1. Background (Shadow + Hover) -->
                                 <Border CornerRadius="8"
                                         BoxShadow="0 2 4 0 #10000000"
@@ -538,12 +552,6 @@
                                                    Opacity="{Binding IsRead, Converter={x:Static vm:StatusToColorConverter.BoolToOpacity}}"
                                                    VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" MaxWidth="260"/>
-                                        
-                                        <!-- NEW Badge -->
-                                        <Border Background="#D20F39" CornerRadius="4" Padding="5,1.5" VerticalAlignment="Center"
-                                                IsVisible="{Binding IsNewRelease}">
-                                            <TextBlock Text="{DynamicResource String.Badge.New}" Foreground="White" FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
-                                        </Border>
                                     </StackPanel>
 
                                     <!-- Bookmark Toggle -->

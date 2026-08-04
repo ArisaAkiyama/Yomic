@@ -214,7 +214,7 @@ namespace Yomic.ViewModels
 
         public async Task LoadUpdatesAsync()
         {
-            IsLoading = true;
+            Dispatcher.UIThread.Post(() => IsLoading = true);
             try
             {
                 // Check if library is empty first
@@ -226,12 +226,15 @@ namespace Yomic.ViewModels
                 
                 if (libraryCount == 0)
                 {
-                    IsLibraryEmpty = true;
-                    IsEmpty = true;
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        IsLibraryEmpty = true;
+                        IsEmpty = true;
+                    });
                     return;
                 }
                 
-                IsLibraryEmpty = false;
+                Dispatcher.UIThread.Post(() => IsLibraryEmpty = false);
                 var chapters = await _libraryService.GetRecentChaptersAsync(100); // Get last 100 updates
                 
                 if (chapters.Count == 0)
@@ -297,7 +300,7 @@ namespace Yomic.ViewModels
             }
             finally
             {
-                IsLoading = false;
+                Dispatcher.UIThread.Post(() => IsLoading = false);
             }
         }
 
@@ -375,42 +378,59 @@ namespace Yomic.ViewModels
         private async Task RefreshUpdatesAsync()
         {
              if (IsRefreshing) return;
-             IsRefreshing = true;
-             SyncProgressPercentage = 0;
-             SyncProgressText = "0%";
-             IsSyncProgressVisible = true;
+             
+             Dispatcher.UIThread.Post(() =>
+             {
+                 IsRefreshing = true;
+                 SyncProgressPercentage = 0;
+                 SyncProgressText = "0%";
+                 IsSyncProgressVisible = !IsOffline;
+             });
              
              try
              {
-                 var progress = new Progress<(int current, int total)>(tuple => 
+                 if (!IsOffline)
                  {
-                     if (tuple.total > 0 && IsRefreshing)
+                     var progress = new Progress<(int current, int total)>(tuple => 
                      {
-                         double pct = (double)tuple.current / tuple.total * 100;
-                         SyncProgressPercentage = Math.Min(100, Math.Max(0, pct));
-                         SyncProgressText = $"{tuple.current}/{tuple.total} ({(int)SyncProgressPercentage}%)";
-                         IsSyncProgressVisible = true;
+                         if (tuple.total > 0 && IsRefreshing)
+                         {
+                             double pct = (double)tuple.current / tuple.total * 100;
+                             Dispatcher.UIThread.Post(() =>
+                             {
+                                 SyncProgressPercentage = Math.Min(100, Math.Max(0, pct));
+                                 SyncProgressText = $"{tuple.current}/{tuple.total} ({(int)SyncProgressPercentage}%)";
+                                 IsSyncProgressVisible = true;
+                             });
+                         }
+                     });
+
+                     // Trigger Library Update with forceRefresh: true to check online sources for new chapters
+                     int newChapters = await _libraryService.UpdateAllLibraryMangaAsync(_sourceManager, forceRefresh: true, progress: progress);
+                     
+                     await LoadUpdatesAsync();
+                     
+                     // Show 100% completed state briefly before hiding
+                     await Task.Delay(600);
+                     Dispatcher.UIThread.Post(() => IsSyncProgressVisible = false);
+
+                     if (newChapters > 0)
+                     {
+                         _mainVM.NotificationVM?.Show($"Found {newChapters} new chapters!");
                      }
-                 });
-
-                 // Trigger Library Update with forceRefresh: true to check online sources for new chapters
-                 int newChapters = await _libraryService.UpdateAllLibraryMangaAsync(_sourceManager, forceRefresh: true, progress: progress);
-                 
-                 await LoadUpdatesAsync();
-                 
-                 // Show 100% completed state briefly before hiding
-                 await Task.Delay(600);
-                 IsSyncProgressVisible = false;
-
-                 if (newChapters > 0)
+                 }
+                 else
                  {
-                     _mainVM.NotificationVM?.Show($"Found {newChapters} new chapters!");
+                     await LoadUpdatesAsync();
                  }
              }
              finally
              {
-                 IsRefreshing = false;
-                 IsSyncProgressVisible = false;
+                 Dispatcher.UIThread.Post(() =>
+                 {
+                     IsRefreshing = false;
+                     IsSyncProgressVisible = false;
+                 });
              }
         }
 

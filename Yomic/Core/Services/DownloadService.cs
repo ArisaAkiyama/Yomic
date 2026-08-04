@@ -476,8 +476,8 @@ namespace Yomic.Core.Services
                             // Atomic Check: If final file exists, it's done. 
                             if (!File.Exists(filePath))
                             {
-                                // Per-page retry loop (max 3 attempts)
-                                const int maxPageRetries = 3;
+                                // Per-page retry loop (max 5 attempts with backoff)
+                                const int maxPageRetries = 5;
                                 int pageRetry = 0;
                                 bool pageSuccess = false;
                                 
@@ -540,7 +540,7 @@ namespace Yomic.Core.Services
                                             LogService.Debug("Download", $"Page {index} retry {pageRetry}/{maxPageRetries}: {retryEx.Message}");
                                             try
                                             {
-                                                await Task.Delay(1000 * pageRetry, request.CancellationTokenSource.Token); // Exponential backoff
+                                                await Task.Delay(1500 * pageRetry, request.CancellationTokenSource.Token); // Exponential backoff
                                             }
                                             catch (OperationCanceledException) when (request.CancellationTokenSource.IsCancellationRequested)
                                             {
@@ -594,28 +594,44 @@ namespace Yomic.Core.Services
                     return;
                 }
 
-                if (failedCount > 0)
+                var downloadedFiles = DownloadPathService.GetReadableFiles(tempChapterDir, includeTempDirectory: true);
+
+                if (failedCount > 0 && request.RetryCount < 3 && downloadedFiles.Count < (int)(total * 0.8))
                 {
                     // Throw to trigger retry in ExecuteDownloadAsync
                     throw new Exception($"{failedCount} pages failed to download. Retrying chapter..."); 
                 }
 
-                var downloadedFiles = DownloadPathService.GetReadableFiles(tempChapterDir, includeTempDirectory: true);
-                if (downloadedFiles.Count < total)
+                if (downloadedFiles.Count < total && downloadedFiles.Count < (int)(total * 0.8))
                 {
                     throw new Exception($"Only {downloadedFiles.Count}/{total} pages downloaded. Retrying chapter...");
                 }
 
-                // 4. Mark Complete
-                // Only if NOT Cancelled/Paused
+                // 4. Mark Complete (if all pages or >80% pages downloaded)
                 if (request.Status != "Cancelled" && request.Status != "Paused")
                 {
-                    if (Directory.Exists(chapterDir))
+                    if (downloadedFiles.Count < total)
                     {
-                        Directory.Delete(chapterDir, true);
+                        LogService.Warning("Download", $"Completed chapter with {downloadedFiles.Count}/{total} pages ({total - downloadedFiles.Count} pages skipped due to network glitch). Promoting directory.");
                     }
 
-                    Directory.Move(tempChapterDir, chapterDir);
+                    if (Directory.Exists(chapterDir))
+                    {
+                        try { Directory.Delete(chapterDir, true); } catch { }
+                    }
+
+                    try
+                    {
+                        Directory.Move(tempChapterDir, chapterDir);
+                    }
+                    catch
+                    {
+                        // Fallback move
+                        if (Directory.Exists(tempChapterDir))
+                        {
+                            Directory.Move(tempChapterDir, chapterDir);
+                        }
+                    }
 
                     request.Status = "Completed";
                     request.Chapter.IsDownloaded = true;

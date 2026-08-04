@@ -97,6 +97,7 @@
     <sys:String x:Key="String.ExportAppLogs">Export App Logs</sys:String>
     <sys:String x:Key="String.ExportAppLogsDesc">Save the application log file for bug reporting or troubleshooting</sys:String>
     <sys:String x:Key="String.ExportLogs">Export Logs</sys:String>
+    <sys:String x:Key="String.ClearLogs">Reset / Clear Logs</sys:String>
 
     <!-- Danger Zone Section -->
     <sys:String x:Key="String.DangerZone">Danger Zone</sys:String>

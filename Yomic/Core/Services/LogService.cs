@@ -16,12 +16,15 @@ namespace Yomic.Core.Services
 
         static LogService()
         {
-            // Ensure log directory exists
+            ReinitializeLogger();
+        }
+
+        private static void ReinitializeLogger()
+        {
             var dir = Path.GetDirectoryName(LogFilePath);
             if (dir != null && !Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
 
-            // Configure Serilog with Async Sinks for non-blocking file & console I/O
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Async(a => a.Console(outputTemplate: "[{Timestamp:HH:mm:ss.fff}] [{Level:u3}] [{Tag}] {Message:lj}{NewLine}{Exception}"))
@@ -32,6 +35,34 @@ namespace Yomic.Core.Services
                     rollOnFileSizeLimit: true,
                     retainedFileCountLimit: 3))
                 .CreateLogger();
+        }
+
+        public static bool ClearLogs()
+        {
+            try
+            {
+                Log.CloseAndFlush();
+
+                var dir = Path.GetDirectoryName(LogFilePath);
+                if (dir != null && Directory.Exists(dir))
+                {
+                    var files = Directory.GetFiles(dir, "yomic*.log");
+                    foreach (var file in files)
+                    {
+                        try { File.Delete(file); } catch { }
+                    }
+                }
+
+                ReinitializeLogger();
+                Info("LogService", "Logs reset / cleared successfully.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to clear log: {ex.Message}");
+                ReinitializeLogger();
+                return false;
+            }
         }
 
         public static void Debug(string tag, string message)

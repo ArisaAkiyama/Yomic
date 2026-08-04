@@ -57,6 +57,7 @@ namespace Yomic.Core.Services
                 // Update database
                 using (var db = new MangaDbContext())
                 {
+                    db.Database.Migrate();
                     int updatedCount = 0;
                     var mangas = db.Mangas.ToList();
                     

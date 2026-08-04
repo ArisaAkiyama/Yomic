@@ -55,6 +55,25 @@ namespace Yomic.Core.Services
                 {
                     return chapterDir;
                 }
+
+                var tempDir = chapterDir + TempSuffix;
+                if (Directory.Exists(tempDir) && GetReadableFiles(tempDir, includeTempDirectory: true).Count > 0)
+                {
+                    try
+                    {
+                        if (!Directory.Exists(chapterDir))
+                        {
+                            Directory.Move(tempDir, chapterDir);
+                            if (IsCompletedChapterDirectory(chapterDir))
+                            {
+                                return chapterDir;
+                            }
+                        }
+                    }
+                    catch { }
+
+                    return tempDir;
+                }
             }
 
             var fallbackMangaDir = Path.Combine(GetSourceDirectory(manga.Source), "Unknown");
@@ -63,6 +82,25 @@ namespace Yomic.Core.Services
                 if (IsCompletedChapterDirectory(chapterDir))
                 {
                     return chapterDir;
+                }
+
+                var tempDir = chapterDir + TempSuffix;
+                if (Directory.Exists(tempDir) && GetReadableFiles(tempDir, includeTempDirectory: true).Count > 0)
+                {
+                    try
+                    {
+                        if (!Directory.Exists(chapterDir))
+                        {
+                            Directory.Move(tempDir, chapterDir);
+                            if (IsCompletedChapterDirectory(chapterDir))
+                            {
+                                return chapterDir;
+                            }
+                        }
+                    }
+                    catch { }
+
+                    return tempDir;
                 }
             }
 
@@ -121,6 +159,11 @@ namespace Yomic.Core.Services
 
             if (!includeTempDirectory && chapterDir.EndsWith(TempSuffix, StringComparison.OrdinalIgnoreCase))
             {
+                var tempFiles = Directory.GetFiles(chapterDir)
+                    .Where(IsReadablePageFile)
+                    .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                if (tempFiles.Count > 0) return tempFiles;
                 return Array.Empty<string>();
             }
 
