@@ -1734,7 +1734,25 @@ namespace Yomic.ViewModels
             try
             {
                 var remoteStatus = await _mainVM.MyAnimeListService.FetchMangaStatusAsync(result.Id, _model.Id);
-                
+                int lastChapterRead = remoteStatus?.LastChapterRead ?? 0;
+                string status = remoteStatus?.Status ?? "reading";
+                int score = remoteStatus?.Score ?? 0;
+                int totalChapters = remoteStatus?.TotalChapters ?? 0;
+
+                // Sync local progress to MAL if local is higher
+                double localMax = Chapters?.Where(c => c.IsRead).Select(c => c.ChapterNumber).DefaultIfEmpty(0).Max() ?? 0;
+                int localMaxInt = (int)Math.Floor(localMax);
+                if (localMaxInt > lastChapterRead)
+                {
+                    lastChapterRead = localMaxInt;
+                    if (totalChapters > 0 && lastChapterRead >= totalChapters)
+                    {
+                        status = "completed";
+                    }
+
+                    await _mainVM.MyAnimeListService.UpdateMangaStatusAsync(result.Id, status, lastChapterRead, score);
+                }
+
                 using var db = new Core.Data.MangaDbContext();
                 var track = new MangaTrack
                 {
@@ -1742,10 +1760,10 @@ namespace Yomic.ViewModels
                     RemoteId = result.Id,
                     Title = result.Title,
                     TrackerName = "MyAnimeList",
-                    LastChapterRead = remoteStatus?.LastChapterRead ?? 0,
-                    TotalChapters = remoteStatus?.TotalChapters ?? 0,
-                    Status = remoteStatus?.Status ?? "reading",
-                    Score = remoteStatus?.Score ?? 0
+                    LastChapterRead = lastChapterRead,
+                    TotalChapters = totalChapters,
+                    Status = status,
+                    Score = score
                 };
 
                 db.Tracks.Add(track);

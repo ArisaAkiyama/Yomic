@@ -905,7 +905,7 @@ namespace Yomic.ViewModels
                     _sourceId, 
                     _mangaUrl, 
                     _currentChapter.Title, 
-                    -1 // Chapter number parsing is complex, skipping for now
+                    (float)_currentChapter.ChapterNumber
                 );
 
                 // Auto-sync progress to MyAnimeList
