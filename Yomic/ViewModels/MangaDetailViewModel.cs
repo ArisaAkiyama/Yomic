@@ -506,6 +506,29 @@ namespace Yomic.ViewModels
         /// <summary>
         /// Whether Resume button should be visible/enabled (only if user has read history)
         /// </summary>
+        private TrackerIds? _trackerIds;
+        public TrackerIds? TrackerIds
+        {
+            get => _trackerIds;
+            set => this.RaiseAndSetIfChanged(ref _trackerIds, value);
+        }
+
+        private bool _isResolvingTrackers;
+        public bool IsResolvingTrackers
+        {
+            get => _isResolvingTrackers;
+            set => this.RaiseAndSetIfChanged(ref _isResolvingTrackers, value);
+        }
+
+        private bool _hasTrackerIds;
+        public bool HasTrackerIds
+        {
+            get => _hasTrackerIds;
+            set => this.RaiseAndSetIfChanged(ref _hasTrackerIds, value);
+        }
+
+        public ReactiveCommand<string, Unit> OpenTrackerLinkCommand { get; }
+
         public bool CanResume => HasStartedReading;
 
         private readonly Core.Services.ImageCacheService _imageCacheService;
@@ -608,6 +631,23 @@ namespace Yomic.ViewModels
                 });
             };
 
+            OpenTrackerLinkCommand = ReactiveCommand.Create<string>(url =>
+            {
+                if (string.IsNullOrEmpty(url)) return;
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = url,
+                        UseShellExecute = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[MangaDetailVM] Error opening tracker: {ex.Message}");
+                }
+            });
+
             ToggleSortCommand = ReactiveCommand.Create(() => { SortAscending = !SortAscending; });
             ToggleSynopsisCommand = ReactiveCommand.Create(() => { IsSynopsisExpanded = !IsSynopsisExpanded; });
 
@@ -616,8 +656,31 @@ namespace Yomic.ViewModels
             // Subscribe to Download Status Changes
             _downloadService.StatusChanged += OnDownloadStatusChanged;
 
-            // Fire and forget load
+            // Fire and forget load & tracker resolution
             System.Threading.Tasks.Task.Run(async () => await LoadDetails(item, sourceManager));
+            System.Threading.Tasks.Task.Run(async () => await ResolveTrackersAsync(item.Title));
+        }
+
+        private async System.Threading.Tasks.Task ResolveTrackersAsync(string title)
+        {
+            Dispatcher.UIThread.Post(() => IsResolvingTrackers = true);
+            try
+            {
+                var ids = await MangaDexResolverService.ResolveTrackerIdsAsync(title);
+                Dispatcher.UIThread.Post(() =>
+                {
+                    TrackerIds = ids;
+                    HasTrackerIds = ids != null && (!string.IsNullOrEmpty(ids.MyAnimeListId) || !string.IsNullOrEmpty(ids.AniListId) || !string.IsNullOrEmpty(ids.MangaUpdatesId));
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MangaDetailVM] ResolveTrackers failed: {ex.Message}");
+            }
+            finally
+            {
+                Dispatcher.UIThread.Post(() => IsResolvingTrackers = false);
+            }
         }
 
         public ReactiveCommand<Unit, Unit> RefreshCommand { get; }

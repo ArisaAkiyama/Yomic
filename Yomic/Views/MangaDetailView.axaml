@@ -293,6 +293,55 @@
                                 </UniformGrid>
                             </StackPanel>
 
+                            <!-- TRACKER / EXTERNAL LINKS -->
+                            <StackPanel Spacing="8" Margin="0,5,0,25" IsVisible="{Binding HasTrackerIds}">
+                                <TextBlock Text="Track / External Links" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" FontSize="16" Margin="0,0,0,4"/>
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <!-- MyAnimeList Button -->
+                                    <Button Command="{Binding OpenTrackerLinkCommand}" 
+                                            CommandParameter="{Binding TrackerIds.MyAnimeListId, StringFormat='https://myanimelist.net/manga/{0}'}"
+                                            IsVisible="{Binding TrackerIds.MyAnimeListId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                            Background="#2E51A2" Foreground="White" CornerRadius="8" Padding="12,8">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="MAL" FontWeight="Bold" FontSize="11"/>
+                                            <TextBlock Text="MyAnimeList" FontSize="11" Opacity="0.8"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <!-- AniList Button -->
+                                    <Button Command="{Binding OpenTrackerLinkCommand}" 
+                                            CommandParameter="{Binding TrackerIds.AniListId, StringFormat='https://anilist.co/manga/{0}'}"
+                                            IsVisible="{Binding TrackerIds.AniListId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                            Background="#02A9FF" Foreground="White" CornerRadius="8" Padding="12,8">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="AL" FontWeight="Bold" FontSize="11"/>
+                                            <TextBlock Text="AniList" FontSize="11" Opacity="0.8"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <!-- MangaUpdates Button -->
+                                    <Button Command="{Binding OpenTrackerLinkCommand}" 
+                                            CommandParameter="{Binding TrackerIds.MangaUpdatesId, StringFormat='https://www.mangaupdates.com/series.html?id={0}'}"
+                                            IsVisible="{Binding TrackerIds.MangaUpdatesId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                            Background="#E28C2C" Foreground="White" CornerRadius="8" Padding="12,8">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="MU" FontWeight="Bold" FontSize="11"/>
+                                            <TextBlock Text="MangaUpdates" FontSize="11" Opacity="0.8"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Tracker Resolving Placeholder -->
+                            <StackPanel Spacing="8" Margin="0,5,0,25" IsVisible="{Binding IsResolvingTrackers}">
+                                <TextBlock Text="Track / External Links" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" FontSize="16" Margin="0,0,0,4"/>
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Classes="SkeletonCard" Width="100" Height="32" CornerRadius="8"/>
+                                    <Border Classes="SkeletonCard" Width="90" Height="32" CornerRadius="8"/>
+                                    <Border Classes="SkeletonCard" Width="110" Height="32" CornerRadius="8"/>
+                                </StackPanel>
+                            </StackPanel>
+
                             <!-- Description / Synopsis -->
                             <TextBlock Text="Synopsis" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,8" FontSize="16"/>
 
