@@ -68,6 +68,21 @@ namespace Yomic.ViewModels
                 };
             });
 
+        public static readonly IValueConverter MalStatusToString = 
+            new FuncValueConverter<string, string>(s => 
+            {
+                if (string.IsNullOrEmpty(s)) return string.Empty;
+                return s switch
+                {
+                    "reading" => "Reading",
+                    "completed" => "Completed",
+                    "on_hold" => "On Hold",
+                    "dropped" => "Dropped",
+                    "plan_to_read" => "Plan to Read",
+                    _ => s
+                };
+            });
+
         public static readonly IMultiValueConverter BoolToExpandText = 
             new FuncMultiValueConverter<object, string>(values => 
             {

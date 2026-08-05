@@ -898,7 +898,7 @@
                                       Height="36">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding, Converter={x:Static vm:StatusToColorConverter.MalStatusToString}}" VerticalAlignment="Center"/>
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
