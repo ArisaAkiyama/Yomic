@@ -1018,7 +1018,7 @@
                             <ItemsControl ItemsSource="{Binding MalSearchResults}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,0,0,1" Padding="0,10" Margin="0,0,0,5">
+                                        <Border BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,0,0,1" Padding="0,10" Margin="0,0,16,5">
                                             <Grid ColumnDefinitions="50, *, Auto">
                                                 <!-- Cover Image -->
                                                 <Border Grid.Column="0" CornerRadius="4" ClipToBounds="True" Height="65" Width="45" Background="#10FFFFFF">
