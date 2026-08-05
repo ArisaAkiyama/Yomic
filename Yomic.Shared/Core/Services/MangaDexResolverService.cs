@@ -63,13 +63,28 @@ namespace Yomic.Core.Services
         {
             if (string.IsNullOrWhiteSpace(localTitle)) return null;
 
+            // 1. Try resolving via MangaDex first
+            var ids = await ResolveTrackerIdsFromMangaDexAsync(localTitle);
+
+            // 2. Fallback to AniList GraphQL if MangaDex is blocked or returns no results
+            if (ids == null || (string.IsNullOrEmpty(ids.MyAnimeListId) && string.IsNullOrEmpty(ids.AniListId)))
+            {
+                System.Diagnostics.Debug.WriteLine($"[TrackerResolver] MangaDex failed or was blocked. Falling back to AniList resolver for '{localTitle}'...");
+                ids = await ResolveTrackerIdsFromAniListAsync(localTitle);
+            }
+
+            return ids;
+        }
+
+        private static async Task<TrackerIds?> ResolveTrackerIdsFromMangaDexAsync(string localTitle)
+        {
             try
             {
-                // 1. Normalize local title (remove translation flags, chapter info, etc.)
+                // Normalize local title
                 string cleanedTitle = NormalizeTitle(localTitle);
                 if (string.IsNullOrWhiteSpace(cleanedTitle)) return null;
                 
-                // 2. Query MangaDex search API
+                // Query MangaDex search API
                 string url = $"https://api.mangadex.org/manga?title={Uri.EscapeDataString(cleanedTitle)}&limit=5";
                 var response = await _client.GetAsync(url);
                 if (!response.IsSuccessStatusCode) return null;
@@ -79,11 +94,11 @@ namespace Yomic.Core.Services
                 var data = root["data"];
                 if (data == null || !data.HasValues) return null;
 
-                // 3. Select the best match using string similarity
+                // Select the best match using string similarity
                 var bestMatch = FindBestMatch(data, cleanedTitle);
                 if (bestMatch == null) return null;
 
-                // 4. Extract external tracker IDs from the links attribute
+                // Extract external tracker IDs
                 var attributes = bestMatch["attributes"];
                 var links = attributes?["links"];
                 if (links == null) return null;
@@ -97,7 +112,55 @@ namespace Yomic.Core.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[MangaDexResolver] Error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[MangaDexResolver] Error during search: {ex.Message}");
+                return null;
+            }
+        }
+
+        private static async Task<TrackerIds?> ResolveTrackerIdsFromAniListAsync(string localTitle)
+        {
+            try
+            {
+                string cleanedTitle = NormalizeTitle(localTitle);
+                if (string.IsNullOrWhiteSpace(cleanedTitle)) return null;
+
+                var query = @"
+                query ($search: String) {
+                  Page(page: 1, perPage: 1) {
+                    media(search: $search, type: MANGA) {
+                      id
+                      idMal
+                    }
+                  }
+                }";
+
+                var requestObj = new
+                {
+                    query = query,
+                    variables = new { search = cleanedTitle }
+                };
+
+                string jsonBody = Newtonsoft.Json.JsonConvert.SerializeObject(requestObj);
+                var content = new StringContent(jsonBody, System.Text.Encoding.UTF8, "application/json");
+
+                var response = await _client.PostAsync("https://graphql.anilist.co", content);
+                if (!response.IsSuccessStatusCode) return null;
+
+                var responseJson = await response.Content.ReadAsStringAsync();
+                var root = Newtonsoft.Json.Linq.JObject.Parse(responseJson);
+                var media = root["data"]?["Page"]?["media"]?[0];
+                if (media == null) return null;
+
+                return new TrackerIds
+                {
+                    MyAnimeListId = media["idMal"]?.ToString(),
+                    AniListId = media["id"]?.ToString(),
+                    MangaUpdatesId = null // AniList does not store MangaUpdates IDs
+                };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AniListResolver] Fallback lookup failed: {ex.Message}");
                 return null;
             }
         }
