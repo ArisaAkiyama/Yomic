@@ -63,17 +63,28 @@ namespace Yomic.Core.Services
         {
             if (string.IsNullOrWhiteSpace(localTitle)) return null;
 
-            // 1. Try resolving via MangaDex first
-            var ids = await ResolveTrackerIdsFromMangaDexAsync(localTitle);
+            // 1. Start both tasks in parallel
+            var aniListTask = ResolveTrackerIdsFromAniListAsync(localTitle);
+            var mangaDexTask = ResolveTrackerIdsFromMangaDexAsync(localTitle);
 
-            // 2. Fallback to AniList GraphQL if MangaDex is blocked or returns no results
-            if (ids == null || (string.IsNullOrEmpty(ids.MyAnimeListId) && string.IsNullOrEmpty(ids.AniListId)))
+            try
             {
-                System.Diagnostics.Debug.WriteLine($"[TrackerResolver] MangaDex failed or was blocked. Falling back to AniList resolver for '{localTitle}'...");
-                ids = await ResolveTrackerIdsFromAniListAsync(localTitle);
+                // 2. Await AniList first (fast, unblocked)
+                var aniListIds = await aniListTask;
+                if (aniListIds != null && (!string.IsNullOrEmpty(aniListIds.MyAnimeListId) || !string.IsNullOrEmpty(aniListIds.AniListId)))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[TrackerResolver] AniList resolved instantly for '{localTitle}'. Bypassing MangaDex wait.");
+                    return aniListIds;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[TrackerResolver] AniList resolution threw: {ex.Message}");
             }
 
-            return ids;
+            // 3. Fallback: Await MangaDex if AniList didn't return matches
+            System.Diagnostics.Debug.WriteLine($"[TrackerResolver] AniList returned empty or failed. Waiting for MangaDex fallback...");
+            return await mangaDexTask;
         }
 
         private static async Task<TrackerIds?> ResolveTrackerIdsFromMangaDexAsync(string localTitle)
