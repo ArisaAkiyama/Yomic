@@ -1114,12 +1114,9 @@ namespace Yomic.ViewModels
             item.IsRead = true; // Visual Feedback
             await _libraryService.SetChapterReadStatusAsync(item.Url, true, _model.Source, _model.Url, item.Title, item.ChapterNumber);
             
-            // Update Stats
             if (InLibrary && _model.Id > 0)
             {
-                // Optionally update LastRead of manga
-                // We let LibraryService handle history update if needed, but simple read mark usually implies history update
-                // Re-trigger history update just in case
+                _ = System.Threading.Tasks.Task.Run(async () => await SyncMALProgressIfNeededAsync(item.ChapterNumber));
             }
         }
 
@@ -1178,6 +1175,15 @@ namespace Yomic.ViewModels
                    await _libraryService.SetChapterReadStatusAsync(ch.Url, true, _model.Source, _model.Url, ch.Title, ch.ChapterNumber);
                 }
             });
+
+            if (toUpdate.Any())
+            {
+                var maxChNum = toUpdate.Max(c => c.ChapterNumber);
+                if (InLibrary && _model.Id > 0)
+                {
+                    _ = System.Threading.Tasks.Task.Run(async () => await SyncMALProgressIfNeededAsync(maxChNum));
+                }
+            }
         }
 
         private async System.Threading.Tasks.Task ToggleChapterBookmark(ChapterItem item)
@@ -1822,6 +1828,48 @@ namespace Yomic.ViewModels
             catch (Exception ex)
             {
                 _mainVM.ShowNotification($"Sync failed: {ex.Message}", NotificationType.Error);
+            }
+        }
+
+        private async System.Threading.Tasks.Task SyncMALProgressIfNeededAsync(double maxChapterNum)
+        {
+            if (!_mainVM.MyAnimeListService.IsConnected || MalTrack == null || _model.Id == 0) return;
+
+            try
+            {
+                int chapterNumInt = (int)Math.Floor(maxChapterNum);
+                if (chapterNumInt > MalTrack.LastChapterRead)
+                {
+                    string status = MalTrack.Status;
+                    if (MalTrack.TotalChapters > 0 && chapterNumInt >= MalTrack.TotalChapters)
+                    {
+                        status = "completed";
+                    }
+
+                    bool ok = await _mainVM.MyAnimeListService.UpdateMangaStatusAsync(
+                        MalTrack.RemoteId, status, chapterNumInt, MalTrack.Score);
+
+                    if (ok)
+                    {
+                        using var db = new Core.Data.MangaDbContext();
+                        var dbTrack = await db.Tracks.FirstOrDefaultAsync(t => t.Id == MalTrack.Id);
+                        if (dbTrack != null)
+                        {
+                            dbTrack.LastChapterRead = chapterNumInt;
+                            dbTrack.Status = status;
+                            await db.SaveChangesAsync();
+
+                            Dispatcher.UIThread.Post(() =>
+                            {
+                                MalTrack = dbTrack;
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MangaDetailVM] Error syncing progress to MAL: {ex.Message}");
             }
         }
 
