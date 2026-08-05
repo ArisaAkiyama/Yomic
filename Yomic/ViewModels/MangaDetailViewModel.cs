@@ -1114,10 +1114,16 @@ namespace Yomic.ViewModels
             item.IsRead = true; // Visual Feedback
             await _libraryService.SetChapterReadStatusAsync(item.Url, true, _model.Source, _model.Url, item.Title, item.ChapterNumber);
             
+            // Update Stats
             if (InLibrary && _model.Id > 0)
             {
-                _ = System.Threading.Tasks.Task.Run(async () => await SyncMALProgressIfNeededAsync(item.ChapterNumber));
+                // Optionally update LastRead of manga
+                // We let LibraryService handle history update if needed, but simple read mark usually implies history update
+                // Re-trigger history update just in case
             }
+
+            // Auto-sync MAL tracking
+            _ = SyncTrackingProgressAfterReadChangeAsync();
         }
 
         private async System.Threading.Tasks.Task MarkChapterAsUnread(ChapterItem item)
@@ -1176,14 +1182,8 @@ namespace Yomic.ViewModels
                 }
             });
 
-            if (toUpdate.Any())
-            {
-                var maxChNum = toUpdate.Max(c => c.ChapterNumber);
-                if (InLibrary && _model.Id > 0)
-                {
-                    _ = System.Threading.Tasks.Task.Run(async () => await SyncMALProgressIfNeededAsync(maxChNum));
-                }
-            }
+            // Auto-sync MAL tracking
+            _ = SyncTrackingProgressAfterReadChangeAsync();
         }
 
         private async System.Threading.Tasks.Task ToggleChapterBookmark(ChapterItem item)
@@ -1402,6 +1402,9 @@ namespace Yomic.ViewModels
                         
                         this.RaisePropertyChanged(nameof(ResumeButtonText));
                         this.RaisePropertyChanged(nameof(CanResume));
+                        
+                        // Load newest tracking status from database to refresh UI after reading
+                        _ = LoadTrackingStatusAsync();
                     });
                 }
                 catch (Exception ex)
@@ -1734,25 +1737,7 @@ namespace Yomic.ViewModels
             try
             {
                 var remoteStatus = await _mainVM.MyAnimeListService.FetchMangaStatusAsync(result.Id, _model.Id);
-                int lastChapterRead = remoteStatus?.LastChapterRead ?? 0;
-                string status = remoteStatus?.Status ?? "reading";
-                int score = remoteStatus?.Score ?? 0;
-                int totalChapters = remoteStatus?.TotalChapters ?? 0;
-
-                // Sync local progress to MAL if local is higher
-                double localMax = Chapters?.Where(c => c.IsRead).Select(c => c.ChapterNumber).DefaultIfEmpty(0).Max() ?? 0;
-                int localMaxInt = (int)Math.Floor(localMax);
-                if (localMaxInt > lastChapterRead)
-                {
-                    lastChapterRead = localMaxInt;
-                    if (totalChapters > 0 && lastChapterRead >= totalChapters)
-                    {
-                        status = "completed";
-                    }
-
-                    await _mainVM.MyAnimeListService.UpdateMangaStatusAsync(result.Id, status, lastChapterRead, score);
-                }
-
+                
                 using var db = new Core.Data.MangaDbContext();
                 var track = new MangaTrack
                 {
@@ -1760,10 +1745,10 @@ namespace Yomic.ViewModels
                     RemoteId = result.Id,
                     Title = result.Title,
                     TrackerName = "MyAnimeList",
-                    LastChapterRead = lastChapterRead,
-                    TotalChapters = totalChapters,
-                    Status = status,
-                    Score = score
+                    LastChapterRead = remoteStatus?.LastChapterRead ?? 0,
+                    TotalChapters = remoteStatus?.TotalChapters ?? 0,
+                    Status = remoteStatus?.Status ?? "reading",
+                    Score = remoteStatus?.Score ?? 0
                 };
 
                 db.Tracks.Add(track);
@@ -1849,60 +1834,6 @@ namespace Yomic.ViewModels
             }
         }
 
-        private async System.Threading.Tasks.Task SyncMALProgressIfNeededAsync(double maxChapterNum)
-        {
-            if (!_mainVM.MyAnimeListService.IsConnected || MalTrack == null || _model.Id == 0) return;
-
-            try
-            {
-                int chapterNumInt = (int)Math.Floor(maxChapterNum);
-                LogService.Debug("MyAnimeList", $"Manual mark sync check: maxChapterNum={maxChapterNum}, parsed={chapterNumInt}, MAL LastRead={MalTrack.LastChapterRead}");
-                
-                if (chapterNumInt > MalTrack.LastChapterRead)
-                {
-                    string status = MalTrack.Status;
-                    if (MalTrack.TotalChapters > 0 && chapterNumInt >= MalTrack.TotalChapters)
-                    {
-                        status = "completed";
-                    }
-
-                    LogService.Info("MyAnimeList", $"Manual mark sync: Pushing chapter {chapterNumInt} (status='{status}') to MAL (Remote ID {MalTrack.RemoteId})");
-                    bool ok = await _mainVM.MyAnimeListService.UpdateMangaStatusAsync(
-                        MalTrack.RemoteId, status, chapterNumInt, MalTrack.Score);
-
-                    if (ok)
-                    {
-                        using var db = new Core.Data.MangaDbContext();
-                        var dbTrack = await db.Tracks.FirstOrDefaultAsync(t => t.Id == MalTrack.Id);
-                        if (dbTrack != null)
-                        {
-                            dbTrack.LastChapterRead = chapterNumInt;
-                            dbTrack.Status = status;
-                            await db.SaveChangesAsync();
-
-                            Dispatcher.UIThread.Post(() =>
-                            {
-                                MalTrack = dbTrack;
-                            });
-                            LogService.Success("MyAnimeList", $"Manual mark sync: Successfully updated MAL to chapter {chapterNumInt}");
-                        }
-                    }
-                    else
-                    {
-                        LogService.Error("MyAnimeList", "Manual mark sync: MyAnimeList API status update failed");
-                    }
-                }
-                else
-                {
-                    LogService.Info("MyAnimeList", $"Manual mark sync: Skipped because chapter {chapterNumInt} <= MAL last read {MalTrack.LastChapterRead}");
-                }
-            }
-            catch (Exception ex)
-            {
-                LogService.Error("MyAnimeList", "Manual mark sync exception", ex);
-            }
-        }
-
         public async Task UpdateMalProgressAsync(string status, int chaptersRead, int score)
         {
             if (MalTrack == null) return;
@@ -1984,6 +1915,54 @@ namespace Yomic.ViewModels
             catch (Exception ex)
             {
                 Console.WriteLine($"[MangaDetailVM] Error loading tracking status: {ex.Message}");
+            }
+        }
+
+        private int GetChapterNumber(ChapterItem item)
+        {
+            if (item == null) return 0;
+            if (item.ChapterNumber > 0)
+                return (int)Math.Floor(item.ChapterNumber);
+                
+            var match = System.Text.RegularExpressions.Regex.Match(item.Title, @"(?:Chapter|Ch|Bab|Ch\.)\s*(\d+(?:\.\d+)?)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (match.Success && double.TryParse(match.Groups[1].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double num))
+            {
+                return (int)Math.Floor(num);
+            }
+            
+            var matchFallback = System.Text.RegularExpressions.Regex.Match(item.Title, @"(\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (matchFallback.Success && int.TryParse(matchFallback.Groups[1].Value, out int fallbackNum))
+            {
+                return fallbackNum;
+            }
+            
+            return 0;
+        }
+
+        private async Task SyncTrackingProgressAfterReadChangeAsync()
+        {
+            if (!IsMalConnected || !IsMalTrackingActive || MalTrack == null || Chapters == null) return;
+
+            try
+            {
+                var readChapters = Chapters.Where(c => c.IsRead).ToList();
+                if (readChapters.Count == 0) return;
+
+                int highestRead = readChapters.Max(c => GetChapterNumber(c));
+                if (highestRead > MalTrack.LastChapterRead)
+                {
+                    string status = MalTrack.Status;
+                    if (MalTrack.TotalChapters > 0 && highestRead >= MalTrack.TotalChapters)
+                    {
+                        status = "completed";
+                    }
+
+                    await UpdateMalProgressAsync(status, highestRead, MalTrack.Score);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MangaDetailVM] Auto-sync error: {ex.Message}");
             }
         }
 
