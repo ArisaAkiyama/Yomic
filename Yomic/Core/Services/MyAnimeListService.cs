@@ -177,7 +177,7 @@ namespace Yomic.Core.Services
 
             try
             {
-                var url = $"https://api.myanimelist.net/v2/manga?q={Uri.EscapeDataString(query)}&limit=10";
+                var url = $"https://api.myanimelist.net/v2/manga?q={Uri.EscapeDataString(query)}&limit=10&fields=main_picture";
                 var request = await CreateAuthenticatedRequestAsync(HttpMethod.Get, url);
                 var response = await _httpClient.SendAsync(request);
 
