@@ -655,13 +655,7 @@
                                 <Button Command="{Binding ConnectMalCommand}" Content="Connect" 
                                         Background="{DynamicResource PrimaryAccent}" Foreground="#FFFFFF"
                                         CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
-                                        Cursor="Hand" IsVisible="{Binding !IsMalConnected}">
-                                    <Button.Styles>
-                                        <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                            <Setter Property="Background" Value="{DynamicResource PrimaryAccentHover}"/>
-                                        </Style>
-                                    </Button.Styles>
-                                </Button>
+                                        Cursor="Hand" IsVisible="{Binding !IsMalConnected}"/>
                                 <Button Command="{Binding DisconnectMalCommand}" Content="Disconnect" 
                                         Background="#15ef4444" BorderBrush="Transparent" BorderThickness="0" 
                                         Foreground="#ef4444" CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
