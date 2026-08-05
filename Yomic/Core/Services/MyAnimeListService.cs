@@ -13,7 +13,7 @@ namespace Yomic.Core.Services
 {
     public class MyAnimeListService
     {
-        private const string ClientId = "3c2c5c9a75ff8a8168be40118817a02b"; // Public client ID for Yomic desktop client
+        private const string ClientId = "2178a6ea66e6d2c4356ab0fd4d298ce4"; // Public client ID for Yomic desktop client
         private const string RedirectUri = "http://127.0.0.1:49152/";
         private const string TokenUrl = "https://myanimelist.net/v1/oauth2/token";
         
