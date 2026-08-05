@@ -629,6 +629,12 @@ namespace Yomic.ViewModels
             SyncMalMangaCommand = ReactiveCommand.CreateFromTask(SyncMalMangaAsync);
             OpenMalSearchCommand = ReactiveCommand.Create(OpenMalSearch);
             CloseMalSearchCommand = ReactiveCommand.Create(CloseMalSearch);
+            
+            OpenTrackerPopupCommand = ReactiveCommand.Create(OpenTrackerPopup);
+            CloseTrackerPopupCommand = ReactiveCommand.Create(CloseTrackerPopup);
+            SaveTrackerChangesCommand = ReactiveCommand.CreateFromTask(SaveTrackerChangesAsync);
+            IncrementChapterCommand = ReactiveCommand.Create(IncrementChapter);
+            DecrementChapterCommand = ReactiveCommand.Create(DecrementChapter);
 
             UpdateDisplayItems(); // Init header
 
@@ -1673,6 +1679,12 @@ namespace Yomic.ViewModels
         public ReactiveCommand<Unit, Unit> SearchMalCommand { get; }
         public ReactiveCommand<Core.Services.MalSearchResult, Unit> BindMalMangaCommand { get; }
         public ReactiveCommand<Unit, Unit> UnbindMalMangaCommand { get; }
+        
+        public ReactiveCommand<Unit, Unit> OpenTrackerPopupCommand { get; }
+        public ReactiveCommand<Unit, Unit> CloseTrackerPopupCommand { get; }
+        public ReactiveCommand<Unit, Unit> SaveTrackerChangesCommand { get; }
+        public ReactiveCommand<Unit, Unit> IncrementChapterCommand { get; }
+        public ReactiveCommand<Unit, Unit> DecrementChapterCommand { get; }
         public ReactiveCommand<Unit, Unit> SyncMalMangaCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenMalSearchCommand { get; }
         public ReactiveCommand<Unit, Unit> CloseMalSearchCommand { get; }
@@ -1890,6 +1902,82 @@ namespace Yomic.ViewModels
             {
                 Console.WriteLine($"[MangaDetailVM] Error loading tracking status: {ex.Message}");
             }
+        }
+
+        // Tracker Popup Modal State & Logic
+        private bool _isTrackerPopupOpen;
+        public bool IsTrackerPopupOpen
+        {
+            get => _isTrackerPopupOpen;
+            set => this.RaiseAndSetIfChanged(ref _isTrackerPopupOpen, value);
+        }
+
+        private string _selectedMalStatus = "reading";
+        public string SelectedMalStatus
+        {
+            get => _selectedMalStatus;
+            set => this.RaiseAndSetIfChanged(ref _selectedMalStatus, value);
+        }
+
+        private int _selectedMalChaptersRead;
+        public int SelectedMalChaptersRead
+        {
+            get => _selectedMalChaptersRead;
+            set => this.RaiseAndSetIfChanged(ref _selectedMalChaptersRead, value);
+        }
+
+        private int _selectedMalScore;
+        public int SelectedMalScore
+        {
+            get => _selectedMalScore;
+            set => this.RaiseAndSetIfChanged(ref _selectedMalScore, value);
+        }
+
+        public List<string> MalStatuses { get; } = new() { "reading", "completed", "on_hold", "dropped", "plan_to_read" };
+        public List<int> MalScores { get; } = Enumerable.Range(0, 11).ToList();
+
+        private void OpenTrackerPopup()
+        {
+            if (MalTrack != null)
+            {
+                SelectedMalStatus = MalTrack.Status;
+                SelectedMalChaptersRead = MalTrack.LastChapterRead;
+                SelectedMalScore = MalTrack.Score;
+            }
+            else
+            {
+                SelectedMalStatus = "reading";
+                SelectedMalChaptersRead = 0;
+                SelectedMalScore = 0;
+            }
+            IsTrackerPopupOpen = true;
+        }
+
+        private void CloseTrackerPopup()
+        {
+            IsTrackerPopupOpen = false;
+        }
+
+        private async Task SaveTrackerChangesAsync()
+        {
+            if (MalTrack == null) return;
+            _mainVM.ShowNotification("Saving tracking changes...", NotificationType.Info);
+            await UpdateMalProgressAsync(SelectedMalStatus, SelectedMalChaptersRead, SelectedMalScore);
+            IsTrackerPopupOpen = false;
+            _mainVM.ShowNotification("Tracking progress updated successfully!", NotificationType.Success);
+        }
+
+        private void IncrementChapter()
+        {
+            if (MalTrack != null && MalTrack.TotalChapters > 0 && SelectedMalChaptersRead >= MalTrack.TotalChapters)
+                return;
+            SelectedMalChaptersRead++;
+        }
+
+        private void DecrementChapter()
+        {
+            if (SelectedMalChaptersRead > 0)
+                SelectedMalChaptersRead--;
         }
 
         public void Dispose()

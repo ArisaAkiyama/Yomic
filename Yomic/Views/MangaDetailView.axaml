@@ -62,91 +62,18 @@
 
                     <!-- HEADER CONTENT -->
                     <Grid RowDefinitions="*, Auto" ColumnDefinitions="Auto, *" Margin="40,100,40,20">
-                        <!-- Left Column: Sharp Cover Image & MAL Tracker Card -->
-                        <StackPanel Grid.Column="0" Width="230" Margin="0,0,40,0" Spacing="15" VerticalAlignment="Top">
-                            <!-- Sharp Cover Image -->
-                            <Border Width="230" Height="345"
-                                    CornerRadius="12"
-                                    ClipToBounds="True"
-                                    BoxShadow="0 15 30 0 #60000000">
-                                <Image helpers:SecureImageLoader.Url="{Binding ThumbnailUrl}"
-                                       helpers:SecureImageLoader.DecodeWidth="300"
-                                       Stretch="UniformToFill"/>
-                            </Border>
-
-                            <!-- MAL Tracker Card -->
-                            <Border Background="{DynamicResource SidebarBackground}" 
-                                    BorderBrush="{DynamicResource SeparatorBrush}" 
-                                    BorderThickness="1" 
-                                    CornerRadius="8" 
-                                    Padding="12"
-                                    IsVisible="{Binding IsTrackerVisible}">
-                                <StackPanel Spacing="10">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="MyAnimeList Track" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource SecondaryText}"/>
-                                        <!-- Active Dot -->
-                                        <Ellipse Width="6" Height="6" Fill="#00C853" VerticalAlignment="Center" IsVisible="{Binding IsMalTrackingActive}"/>
-                                    </StackPanel>
-
-                                    <!-- Tracking Info -->
-                                    <StackPanel Spacing="8" IsVisible="{Binding IsMalTrackingActive}">
-                                        <TextBlock Text="{Binding MalTrackTitle}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource PrimaryText}"/>
-                                        
-                                        <!-- Progress Row -->
-                                        <Grid ColumnDefinitions="*, Auto">
-                                            <TextBlock Text="Progress" FontSize="11" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center"/>
-                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
-                                                <TextBlock Text="{Binding MalTrackChaptersRead}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}"/>
-                                                <TextBlock Text="/" FontSize="12" Foreground="{DynamicResource SecondaryText}"/>
-                                                <TextBlock Text="{Binding MalTrackTotalChapters}" FontSize="12" Foreground="{DynamicResource SecondaryText}"/>
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <!-- Status Row -->
-                                        <Grid ColumnDefinitions="*, Auto">
-                                            <TextBlock Text="Status" FontSize="11" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding MalTrackStatus}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryAccent}"/>
-                                        </Grid>
-
-                                        <!-- Score Row -->
-                                        <Grid ColumnDefinitions="*, Auto">
-                                            <TextBlock Text="Score" FontSize="11" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center"/>
-                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
-                                                <TextBlock Text="{Binding MalTrackScore}" FontSize="12" FontWeight="Bold" Foreground="#F59E0B"/>
-                                                <TextBlock Text="/10" FontSize="10" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Bottom"/>
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <!-- Actions -->
-                                        <Grid ColumnDefinitions="*, *" Margin="0,5,0,0">
-                                            <Button Grid.Column="0" Command="{Binding SyncMalMangaCommand}" Content="Sync"
-                                                    Background="Transparent" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1"
-                                                    Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                                                    Padding="0,6" CornerRadius="4" FontSize="11" Cursor="Hand"/>
-                                            <Button Grid.Column="1" Command="{Binding UnbindMalMangaCommand}" Content="Unbind"
-                                                    Background="Transparent" BorderThickness="0" Margin="4,0,0,0"
-                                                    Foreground="#ef4444" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                                                    Padding="0,6" CornerRadius="4" FontSize="11" Cursor="Hand"/>
-                                        </Grid>
-                                    </StackPanel>
-
-                                    <!-- Not Tracking State -->
-                                    <StackPanel Spacing="6" IsVisible="{Binding !IsMalTrackingActive}">
-                                        <TextBlock Text="Not tracked yet." FontSize="12" Foreground="{DynamicResource SecondaryText}"/>
-                                        <Button Command="{Binding OpenMalSearchCommand}" Content="Link to MAL"
-                                                Background="{DynamicResource PrimaryAccent}" Foreground="White"
-                                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                                                Padding="0,8" CornerRadius="6" FontSize="12" FontWeight="SemiBold" Cursor="Hand">
-                                            <Button.Styles>
-                                                <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                                    <Setter Property="Background" Value="{DynamicResource PrimaryAccentHover}"/>
-                                                </Style>
-                                            </Button.Styles>
-                                        </Button>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
+                        <!-- Left Column: Sharp Cover Image -->
+                        <Border Grid.Column="0"
+                                Width="230" Height="345"
+                                CornerRadius="12"
+                                ClipToBounds="True"
+                                Margin="0,0,40,0"
+                                VerticalAlignment="Top"
+                                BoxShadow="0 15 30 0 #60000000">
+                            <Image helpers:SecureImageLoader.Url="{Binding ThumbnailUrl}"
+                                   helpers:SecureImageLoader.DecodeWidth="300"
+                                   Stretch="UniformToFill"/>
+                        </Border>
 
                         <!-- Right Column: Info & Actions -->
                         <StackPanel Grid.Column="1" Spacing="0">
@@ -267,7 +194,7 @@
 
                             <!-- Action Buttons -->
                             <StackPanel Spacing="20" Margin="0,5,0,30">
-                                <UniformGrid Rows="1" Columns="5">
+                                <UniformGrid Rows="1" Columns="6">
                                     <UniformGrid.Styles>
                                         <Style Selector="Button">
                                             <Setter Property="Background" Value="Transparent"/>
@@ -325,6 +252,20 @@
                                             <TextBlock Text="{Binding InLibrary, Converter={x:Static vm:StatusToColorConverter.BoolToLibraryText}}"
                                                        FontSize="11" HorizontalAlignment="Center"
                                                        TextWrapping="Wrap" TextAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <!-- Track Button -->
+                                    <Button Command="{Binding OpenTrackerPopupCommand}" IsVisible="{Binding IsTrackerVisible}">
+                                        <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                            <Viewbox Width="26" Height="26" HorizontalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="M9 6h11 M9 12h11 M9 18h11 M5 6v.01 M5 12v.01 M5 18v.01" 
+                                                          Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" 
+                                                          Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                            <TextBlock Text="Track" FontSize="11" HorizontalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
 
@@ -919,6 +860,123 @@
                 </Viewbox>
             </Button>
         </Grid>
+
+        <!-- MyAnimeList Tracker Edit Dialog -->
+        <Border Background="#A0000000" IsVisible="{Binding IsTrackerPopupOpen}" ZIndex="95">
+            <Border Background="{DynamicResource PrimaryBackground}" 
+                    BorderBrush="{DynamicResource SeparatorBrush}" 
+                    BorderThickness="1" 
+                    CornerRadius="12" 
+                    Width="400" 
+                    VerticalAlignment="Center" 
+                    HorizontalAlignment="Center"
+                    BoxShadow="0 10 30 0 #80000000">
+                <StackPanel Margin="20" Spacing="15">
+                    <!-- Title & Close -->
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Text="Edit Tracking Status" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}"/>
+                        <Button Grid.Column="1" Command="{Binding CloseTrackerPopupCommand}" Content="✕" 
+                                Background="Transparent" Foreground="{DynamicResource SecondaryText}" 
+                                BorderThickness="0" CornerRadius="4" Cursor="Hand" Padding="8,4"/>
+                    </Grid>
+
+                    <!-- Form Content -->
+                    <StackPanel Spacing="15" IsVisible="{Binding IsMalTrackingActive}">
+                        <!-- Manga Title on MAL -->
+                        <TextBlock Text="{Binding MalTrackTitle}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource PrimaryText}"/>
+
+                        <!-- Status Selection -->
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="Status" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource SecondaryText}"/>
+                            <ComboBox ItemsSource="{Binding MalStatuses}" 
+                                      SelectedItem="{Binding SelectedMalStatus, Mode=TwoWay}"
+                                      HorizontalAlignment="Stretch"
+                                      Background="{DynamicResource SidebarBackground}"
+                                      BorderBrush="{DynamicResource SeparatorBrush}"
+                                      BorderThickness="1"
+                                      CornerRadius="8"
+                                      Height="36">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Progress input with +/- buttons -->
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="Progress" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource SecondaryText}"/>
+                            <Grid ColumnDefinitions="Auto, *, Auto, Auto">
+                                <!-- Decrement Button -->
+                                <Button Grid.Column="0" Command="{Binding DecrementChapterCommand}" Content="-" 
+                                        Width="36" Height="36" Background="{DynamicResource SidebarBackground}" 
+                                        BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1"
+                                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" CornerRadius="8,0,0,8" Cursor="Hand"/>
+                                
+                                <!-- Numeric display/input -->
+                                <TextBox Grid.Column="1" Text="{Binding SelectedMalChaptersRead, Mode=TwoWay}"
+                                         Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}"
+                                         BorderThickness="0,1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                         Height="36"/>
+
+                                <!-- Increment Button -->
+                                <Button Grid.Column="2" Command="{Binding IncrementChapterCommand}" Content="+" 
+                                        Width="36" Height="36" Background="{DynamicResource SidebarBackground}" 
+                                        BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1"
+                                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" CornerRadius="0,8,8,0" Cursor="Hand"/>
+
+                                <!-- Total chapters -->
+                                <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="10,0,0,0" VerticalAlignment="Center" Spacing="4">
+                                    <TextBlock Text="/" FontSize="14" Foreground="{DynamicResource SecondaryText}"/>
+                                    <TextBlock Text="{Binding MalTrackTotalChapters}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Score Selection -->
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="Score" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource SecondaryText}"/>
+                            <ComboBox ItemsSource="{Binding MalScores}" 
+                                      SelectedItem="{Binding SelectedMalScore, Mode=TwoWay}"
+                                      HorizontalAlignment="Stretch"
+                                      Background="{DynamicResource SidebarBackground}"
+                                      BorderBrush="{DynamicResource SeparatorBrush}"
+                                      BorderThickness="1"
+                                      CornerRadius="8"
+                                      Height="36"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- If not tracking yet inside popup -->
+                    <StackPanel Spacing="15" IsVisible="{Binding !IsMalTrackingActive}">
+                        <TextBlock Text="Not tracked on MyAnimeList yet." FontSize="13" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                        <Button Command="{Binding OpenMalSearchCommand}" Content="Link to MyAnimeList" 
+                                Background="{DynamicResource PrimaryAccent}" Foreground="White" 
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" 
+                                Padding="0,10" CornerRadius="8" FontSize="13" FontWeight="SemiBold" Cursor="Hand"/>
+                    </StackPanel>
+
+                    <!-- Save / Sync / Unbind Buttons -->
+                    <Grid ColumnDefinitions="*, Auto, Auto">
+                        <Button Grid.Column="0" Command="{Binding SaveTrackerChangesCommand}" Content="Save" 
+                                Background="{DynamicResource PrimaryAccent}" Foreground="White" 
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" 
+                                Padding="0,10" CornerRadius="8" FontSize="13" FontWeight="SemiBold" Cursor="Hand"
+                                IsVisible="{Binding IsMalTrackingActive}"/>
+                        <Button Grid.Column="1" Command="{Binding SyncMalMangaCommand}" Content="Sync" 
+                                Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1"
+                                Foreground="{DynamicResource PrimaryText}" Margin="8,0,0,0"
+                                Padding="15,10" CornerRadius="8" FontSize="13" Cursor="Hand"
+                                IsVisible="{Binding IsMalTrackingActive}"/>
+                        <Button Grid.Column="2" Command="{Binding UnbindMalMangaCommand}" Content="Unbind" 
+                                Background="#15ef4444" Foreground="#ef4444" Margin="8,0,0,0"
+                                Padding="15,10" CornerRadius="8" FontSize="13" Cursor="Hand"
+                                IsVisible="{Binding IsMalTrackingActive}"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Border>
 
         <!-- MyAnimeList Search Modal Dialog -->
         <Border Background="#A0000000" IsVisible="{Binding IsMalSearchActive}" ZIndex="90">
