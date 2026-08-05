@@ -80,7 +80,7 @@
                                     BorderThickness="1" 
                                     CornerRadius="8" 
                                     Padding="12"
-                                    IsVisible="{Binding IsMalConnected}">
+                                    IsVisible="{Binding IsTrackerVisible}">
                                 <StackPanel Spacing="10">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <TextBlock Text="MyAnimeList Track" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource SecondaryText}"/>

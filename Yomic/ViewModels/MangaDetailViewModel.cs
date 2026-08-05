@@ -268,7 +268,17 @@ namespace Yomic.ViewModels
         }
 
         private bool _inLibrary;
-        public bool InLibrary { get => _inLibrary; set => this.RaiseAndSetIfChanged(ref _inLibrary, value); }
+        public bool InLibrary 
+        { 
+            get => _inLibrary; 
+            set 
+            {
+                this.RaiseAndSetIfChanged(ref _inLibrary, value);
+                this.RaisePropertyChanged(nameof(IsTrackerVisible));
+            }
+        }
+
+        public bool IsTrackerVisible => IsMalConnected && InLibrary;
         
         public List<string> Tags { get; set; } = new();
         
