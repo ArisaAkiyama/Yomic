@@ -1691,6 +1691,7 @@ namespace Yomic.ViewModels
 
         private void OpenMalSearch()
         {
+            IsTrackerPopupOpen = false;
             MalSearchQuery = Title;
             MalSearchResults.Clear();
             IsMalSearchActive = true;
@@ -1749,6 +1750,10 @@ namespace Yomic.ViewModels
                     MalTrack = track;
                     IsMalTrackingActive = true;
                     IsMalSearchActive = false;
+                    SelectedMalStatus = track.Status;
+                    SelectedMalChaptersRead = track.LastChapterRead;
+                    SelectedMalScore = track.Score;
+                    IsTrackerPopupOpen = true;
                 });
                 
                 _mainVM.ShowNotification($"Successfully bound to MAL: {result.Title}", NotificationType.Success);
