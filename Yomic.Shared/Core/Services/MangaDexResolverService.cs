@@ -18,7 +18,7 @@ namespace Yomic.Core.Services
         static MangaDexResolverService()
         {
             _client = new HttpClient();
-            _client.Timeout = TimeSpan.FromSeconds(5); // 5-second timeout to prevent loading forever on blocked/slow networks
+            _client.Timeout = TimeSpan.FromSeconds(10); // Fail fast (10s) if request hangs/stalls
             _client.DefaultRequestHeaders.Add("User-Agent", "Yomic-Desktop/1.0.0 (https://github.com/ArisaAkiyama/yomic)");
         }
 

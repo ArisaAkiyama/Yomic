@@ -299,8 +299,8 @@
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <!-- MyAnimeList Button -->
                                     <Button Command="{Binding OpenTrackerLinkCommand}" 
-                                            CommandParameter="{Binding TrackerIds.MyAnimeListId, StringFormat='https://myanimelist.net/manga/{0}'}"
-                                            IsVisible="{Binding TrackerIds.MyAnimeListId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                            CommandParameter="{Binding MyAnimeListUrl}"
+                                            IsVisible="{Binding IsMyAnimeListVisible}"
                                             Background="#2E51A2" Foreground="White" CornerRadius="8" Padding="12,8">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <TextBlock Text="MAL" FontWeight="Bold" FontSize="11"/>
@@ -310,8 +310,8 @@
 
                                     <!-- AniList Button -->
                                     <Button Command="{Binding OpenTrackerLinkCommand}" 
-                                            CommandParameter="{Binding TrackerIds.AniListId, StringFormat='https://anilist.co/manga/{0}'}"
-                                            IsVisible="{Binding TrackerIds.AniListId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                            CommandParameter="{Binding AniListUrl}"
+                                            IsVisible="{Binding IsAniListVisible}"
                                             Background="#02A9FF" Foreground="White" CornerRadius="8" Padding="12,8">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <TextBlock Text="AL" FontWeight="Bold" FontSize="11"/>
@@ -321,8 +321,8 @@
 
                                     <!-- MangaUpdates Button -->
                                     <Button Command="{Binding OpenTrackerLinkCommand}" 
-                                            CommandParameter="{Binding TrackerIds.MangaUpdatesId, StringFormat='https://www.mangaupdates.com/series.html?id={0}'}"
-                                            IsVisible="{Binding TrackerIds.MangaUpdatesId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                            CommandParameter="{Binding MangaUpdatesUrl}"
+                                            IsVisible="{Binding IsMangaUpdatesVisible}"
                                             Background="#E28C2C" Foreground="White" CornerRadius="8" Padding="12,8">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <TextBlock Text="MU" FontWeight="Bold" FontSize="11"/>

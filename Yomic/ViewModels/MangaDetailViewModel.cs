@@ -506,8 +506,8 @@ namespace Yomic.ViewModels
         /// <summary>
         /// Whether Resume button should be visible/enabled (only if user has read history)
         /// </summary>
-        private TrackerIds _trackerIds = new TrackerIds();
-        public TrackerIds TrackerIds
+        private TrackerIds? _trackerIds;
+        public TrackerIds? TrackerIds
         {
             get => _trackerIds;
             set => this.RaiseAndSetIfChanged(ref _trackerIds, value);
@@ -526,6 +526,14 @@ namespace Yomic.ViewModels
             get => _hasTrackerIds;
             set => this.RaiseAndSetIfChanged(ref _hasTrackerIds, value);
         }
+
+        public bool IsMyAnimeListVisible => TrackerIds?.MyAnimeListId != null && !string.IsNullOrEmpty(TrackerIds.MyAnimeListId);
+        public bool IsAniListVisible => TrackerIds?.AniListId != null && !string.IsNullOrEmpty(TrackerIds.AniListId);
+        public bool IsMangaUpdatesVisible => TrackerIds?.MangaUpdatesId != null && !string.IsNullOrEmpty(TrackerIds.MangaUpdatesId);
+
+        public string MyAnimeListUrl => TrackerIds?.MyAnimeListId != null ? $"https://myanimelist.net/manga/{TrackerIds.MyAnimeListId}" : string.Empty;
+        public string AniListUrl => TrackerIds?.AniListId != null ? $"https://anilist.co/manga/{TrackerIds.AniListId}" : string.Empty;
+        public string MangaUpdatesUrl => TrackerIds?.MangaUpdatesId != null ? $"https://www.mangaupdates.com/series.html?id={TrackerIds.MangaUpdatesId}" : string.Empty;
 
         public ReactiveCommand<string, Unit> OpenTrackerLinkCommand { get; }
 
@@ -669,8 +677,14 @@ namespace Yomic.ViewModels
                 var ids = await MangaDexResolverService.ResolveTrackerIdsAsync(title);
                 Dispatcher.UIThread.Post(() =>
                 {
-                    TrackerIds = ids ?? new TrackerIds();
+                    TrackerIds = ids;
                     HasTrackerIds = ids != null && (!string.IsNullOrEmpty(ids.MyAnimeListId) || !string.IsNullOrEmpty(ids.AniListId) || !string.IsNullOrEmpty(ids.MangaUpdatesId));
+                    this.RaisePropertyChanged(nameof(IsMyAnimeListVisible));
+                    this.RaisePropertyChanged(nameof(IsAniListVisible));
+                    this.RaisePropertyChanged(nameof(IsMangaUpdatesVisible));
+                    this.RaisePropertyChanged(nameof(MyAnimeListUrl));
+                    this.RaisePropertyChanged(nameof(AniListUrl));
+                    this.RaisePropertyChanged(nameof(MangaUpdatesUrl));
                 });
             }
             catch (Exception ex)
