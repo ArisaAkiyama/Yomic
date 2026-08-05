@@ -506,8 +506,8 @@ namespace Yomic.ViewModels
         /// <summary>
         /// Whether Resume button should be visible/enabled (only if user has read history)
         /// </summary>
-        private TrackerIds? _trackerIds;
-        public TrackerIds? TrackerIds
+        private TrackerIds _trackerIds = new TrackerIds();
+        public TrackerIds TrackerIds
         {
             get => _trackerIds;
             set => this.RaiseAndSetIfChanged(ref _trackerIds, value);
@@ -669,7 +669,7 @@ namespace Yomic.ViewModels
                 var ids = await MangaDexResolverService.ResolveTrackerIdsAsync(title);
                 Dispatcher.UIThread.Post(() =>
                 {
-                    TrackerIds = ids;
+                    TrackerIds = ids ?? new TrackerIds();
                     HasTrackerIds = ids != null && (!string.IsNullOrEmpty(ids.MyAnimeListId) || !string.IsNullOrEmpty(ids.AniListId) || !string.IsNullOrEmpty(ids.MangaUpdatesId));
                 });
             }
