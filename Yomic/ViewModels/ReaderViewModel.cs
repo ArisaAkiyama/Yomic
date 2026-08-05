@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Yomic.Core.Services;
 
 namespace Yomic.ViewModels
 {
@@ -915,45 +916,64 @@ namespace Yomic.ViewModels
                     {
                         try
                         {
+                            LogService.Info("MyAnimeList", $"Reader auto-sync triggered for '{_mangaUrl}' (source {_sourceId}), chapter {_currentChapter.ChapterNumber}");
                             var manga = await _libraryService.GetMangaByUrlAsync(_mangaUrl, _sourceId);
-                            if (manga != null)
+                            if (manga == null)
                             {
-                                using var db = new Core.Data.MangaDbContext();
-                                var track = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
-                                    db.Tracks, t => t.MangaId == manga.Id && t.TrackerName == "MyAnimeList");
-                                    
-                                if (track != null)
+                                LogService.Warning("MyAnimeList", $"Reader auto-sync: Manga not found in library for url='{_mangaUrl}'");
+                                return;
+                            }
+                            
+                            using var db = new Core.Data.MangaDbContext();
+                            var track = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
+                                db.Tracks, t => t.MangaId == manga.Id && t.TrackerName == "MyAnimeList");
+                                
+                            if (track == null)
+                            {
+                                LogService.Info("MyAnimeList", $"Reader auto-sync: Manga not tracked on MAL (local id={manga.Id})");
+                                return;
+                            }
+                            
+                            int currentChapterNum = (int)Math.Floor(_currentChapter.ChapterNumber);
+                            LogService.Debug("MyAnimeList", $"Reader auto-sync check: currentChapterNum={currentChapterNum}, MAL LastRead={track.LastChapterRead}");
+                            
+                            if (currentChapterNum > track.LastChapterRead)
+                            {
+                                string status = track.Status;
+                                if (track.TotalChapters > 0 && currentChapterNum >= track.TotalChapters)
                                 {
-                                    int currentChapterNum = (int)Math.Floor(_currentChapter.ChapterNumber);
-                                    if (currentChapterNum > track.LastChapterRead)
-                                    {
-                                        string status = track.Status;
-                                        if (track.TotalChapters > 0 && currentChapterNum >= track.TotalChapters)
-                                        {
-                                            status = "completed";
-                                        }
+                                    status = "completed";
+                                }
 
-                                        bool ok = await _mainViewModel.MyAnimeListService.UpdateMangaStatusAsync(
-                                            track.RemoteId, status, currentChapterNum, track.Score);
-                                            
-                                        if (ok)
-                                        {
-                                            var dbTrack = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
-                                                db.Tracks, t => t.Id == track.Id);
-                                            if (dbTrack != null)
-                                            {
-                                                dbTrack.LastChapterRead = currentChapterNum;
-                                                dbTrack.Status = status;
-                                                await db.SaveChangesAsync();
-                                            }
-                                        }
+                                LogService.Info("MyAnimeList", $"Reader auto-sync: Pushing chapter {currentChapterNum} (status='{status}') to MAL (Remote ID {track.RemoteId})");
+                                bool ok = await _mainViewModel.MyAnimeListService.UpdateMangaStatusAsync(
+                                    track.RemoteId, status, currentChapterNum, track.Score);
+                                    
+                                if (ok)
+                                {
+                                    var dbTrack = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
+                                        db.Tracks, t => t.Id == track.Id);
+                                    if (dbTrack != null)
+                                    {
+                                        dbTrack.LastChapterRead = currentChapterNum;
+                                        dbTrack.Status = status;
+                                        await db.SaveChangesAsync();
+                                        LogService.Success("MyAnimeList", $"Reader auto-sync: Successfully updated MAL to chapter {currentChapterNum}");
                                     }
                                 }
+                                else
+                                {
+                                    LogService.Error("MyAnimeList", "Reader auto-sync: MyAnimeList API status update failed");
+                                }
+                            }
+                            else
+                            {
+                                LogService.Info("MyAnimeList", $"Reader auto-sync: Skipped because current chapter {currentChapterNum} <= MAL last read {track.LastChapterRead}");
                             }
                         }
                         catch (Exception ex)
                         {
-                            System.Diagnostics.Debug.WriteLine($"[ReaderVM] MAL auto-sync error: {ex.Message}");
+                            LogService.Error("MyAnimeList", "Reader auto-sync exception", ex);
                         }
                     });
                 }

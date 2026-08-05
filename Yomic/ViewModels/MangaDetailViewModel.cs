@@ -1856,6 +1856,8 @@ namespace Yomic.ViewModels
             try
             {
                 int chapterNumInt = (int)Math.Floor(maxChapterNum);
+                LogService.Debug("MyAnimeList", $"Manual mark sync check: maxChapterNum={maxChapterNum}, parsed={chapterNumInt}, MAL LastRead={MalTrack.LastChapterRead}");
+                
                 if (chapterNumInt > MalTrack.LastChapterRead)
                 {
                     string status = MalTrack.Status;
@@ -1864,6 +1866,7 @@ namespace Yomic.ViewModels
                         status = "completed";
                     }
 
+                    LogService.Info("MyAnimeList", $"Manual mark sync: Pushing chapter {chapterNumInt} (status='{status}') to MAL (Remote ID {MalTrack.RemoteId})");
                     bool ok = await _mainVM.MyAnimeListService.UpdateMangaStatusAsync(
                         MalTrack.RemoteId, status, chapterNumInt, MalTrack.Score);
 
@@ -1881,13 +1884,22 @@ namespace Yomic.ViewModels
                             {
                                 MalTrack = dbTrack;
                             });
+                            LogService.Success("MyAnimeList", $"Manual mark sync: Successfully updated MAL to chapter {chapterNumInt}");
                         }
                     }
+                    else
+                    {
+                        LogService.Error("MyAnimeList", "Manual mark sync: MyAnimeList API status update failed");
+                    }
+                }
+                else
+                {
+                    LogService.Info("MyAnimeList", $"Manual mark sync: Skipped because chapter {chapterNumInt} <= MAL last read {MalTrack.LastChapterRead}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[MangaDetailVM] Error syncing progress to MAL: {ex.Message}");
+                LogService.Error("MyAnimeList", "Manual mark sync exception", ex);
             }
         }
 
