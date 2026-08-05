@@ -907,6 +907,56 @@ namespace Yomic.ViewModels
                     _currentChapter.Title, 
                     -1 // Chapter number parsing is complex, skipping for now
                 );
+
+                // Auto-sync progress to MyAnimeList
+                if (_mainViewModel.MyAnimeListService.IsConnected)
+                {
+                    _ = System.Threading.Tasks.Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var manga = await _libraryService.GetMangaByUrlAsync(_mangaUrl, _sourceId);
+                            if (manga != null)
+                            {
+                                using var db = new Core.Data.MangaDbContext();
+                                var track = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
+                                    db.Tracks, t => t.MangaId == manga.Id && t.TrackerName == "MyAnimeList");
+                                    
+                                if (track != null)
+                                {
+                                    int currentChapterNum = (int)Math.Floor(_currentChapter.ChapterNumber);
+                                    if (currentChapterNum > track.LastChapterRead)
+                                    {
+                                        string status = track.Status;
+                                        if (track.TotalChapters > 0 && currentChapterNum >= track.TotalChapters)
+                                        {
+                                            status = "completed";
+                                        }
+
+                                        bool ok = await _mainViewModel.MyAnimeListService.UpdateMangaStatusAsync(
+                                            track.RemoteId, status, currentChapterNum, track.Score);
+                                            
+                                        if (ok)
+                                        {
+                                            var dbTrack = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
+                                                db.Tracks, t => t.Id == track.Id);
+                                            if (dbTrack != null)
+                                            {
+                                                dbTrack.LastChapterRead = currentChapterNum;
+                                                dbTrack.Status = status;
+                                                await db.SaveChangesAsync();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[ReaderVM] MAL auto-sync error: {ex.Message}");
+                        }
+                    });
+                }
             }
             catch (System.Exception ex)
             {

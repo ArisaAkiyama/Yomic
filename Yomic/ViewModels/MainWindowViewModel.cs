@@ -285,6 +285,9 @@ namespace Yomic.ViewModels
         private readonly Core.Services.SourceStatusService _sourceStatusService;
         public Core.Services.SourceStatusService SourceStatusService => _sourceStatusService;
 
+        private Core.Services.MyAnimeListService? _myAnimeListService;
+        public Core.Services.MyAnimeListService MyAnimeListService => _myAnimeListService ??= new Core.Services.MyAnimeListService(_settingsService);
+
         private bool _isPaneOpen = false;
         public bool IsPaneOpen
         {

@@ -290,6 +290,20 @@ namespace Yomic.ViewModels
         public ReactiveCommand<Unit, Unit> OptimizeDatabaseCommand { get; }
         public ReactiveCommand<Unit, Unit> ExportLogsCommand { get; }
         public ReactiveCommand<Unit, Unit> ClearLogsCommand { get; }
+        
+        public ReactiveCommand<Unit, Unit> ConnectMalCommand { get; }
+        public ReactiveCommand<Unit, Unit> DisconnectMalCommand { get; }
+
+        public bool IsMalConnected
+        {
+            get => _mainViewModel.MyAnimeListService.IsConnected;
+            set
+            {
+                this.RaisePropertyChanged();
+            }
+        }
+
+        public string MalConnectionStatus => IsMalConnected ? "Connected" : "Not Connected";
 
         private readonly Core.Services.UpdateService _updateService;
 
@@ -583,6 +597,9 @@ namespace Yomic.ViewModels
             OptimizeDatabaseCommand = ReactiveCommand.CreateFromTask(OptimizeDatabaseAsync);
             ExportLogsCommand = ReactiveCommand.CreateFromTask(ExportLogsAsync);
             ClearLogsCommand = ReactiveCommand.Create(ClearLogs);
+            
+            ConnectMalCommand = ReactiveCommand.CreateFromTask(ConnectMalAsync);
+            DisconnectMalCommand = ReactiveCommand.Create(DisconnectMal);
 
             // Load DB stats on init
             System.Threading.Tasks.Task.Run(LoadDbStatsAsync);
@@ -1119,6 +1136,81 @@ namespace Yomic.ViewModels
             {
                 IsRefreshingCovers = false;
             }
+        }
+
+        private async Task ConnectMalAsync()
+        {
+            try
+            {
+                var verifier = Core.Services.MyAnimeListService.GenerateCodeVerifier();
+                var authUrl = _mainViewModel.MyAnimeListService.GetAuthorizationUrl(verifier);
+                
+                _mainViewModel.ShowNotification("Opening browser for MyAnimeList login...", NotificationType.Info);
+                
+                // We use HTTP Listener on port 49152
+                var redirectUri = "http://127.0.0.1:49152/";
+                using var listener = new System.Net.HttpListener();
+                listener.Prefixes.Add(redirectUri);
+                listener.Start();
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(authUrl) { UseShellExecute = true });
+
+                // Wait with a timeout of 2 minutes so we don't block indefinitely
+                var listenTask = listener.GetContextAsync();
+                var timeoutTask = Task.Delay(120000);
+                
+                var completedTask = await Task.WhenAny(listenTask, timeoutTask);
+                if (completedTask == timeoutTask)
+                {
+                    listener.Stop();
+                    _mainViewModel.ShowNotification("MyAnimeList login timed out.", NotificationType.Error);
+                    return;
+                }
+
+                var context = await listenTask;
+                var request = context.Request;
+                var response = context.Response;
+
+                string? code = request.QueryString["code"];
+
+                byte[] buffer = System.Text.Encoding.UTF8.GetBytes("<html><head><meta charset=\"utf-8\"><title>Yomic Auth</title><style>body { font-family: sans-serif; text-align: center; padding: 50px; background: #11111b; color: #cdd6f4; } h2 { color: #a6e3a1; }</style></head><body><h2>Login Sukses!</h2><p>Otorisasi MyAnimeList berhasil. Anda dapat menutup jendela browser ini sekarang dan kembali ke aplikasi Yomic.</p></body></html>");
+                response.ContentLength64 = buffer.Length;
+                await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+                response.OutputStream.Close();
+                listener.Stop();
+
+                if (string.IsNullOrEmpty(code))
+                {
+                    _mainViewModel.ShowNotification("Authorization code not found.", NotificationType.Error);
+                    return;
+                }
+
+                bool success = await _mainViewModel.MyAnimeListService.AuthenticateAsync(code, verifier);
+                if (success)
+                {
+                    IsMalConnected = true;
+                    this.RaisePropertyChanged(nameof(IsMalConnected));
+                    this.RaisePropertyChanged(nameof(MalConnectionStatus));
+                    _mainViewModel.ShowNotification("Successfully connected to MyAnimeList!", NotificationType.Success);
+                }
+                else
+                {
+                    _mainViewModel.ShowNotification("Failed to connect to MyAnimeList.", NotificationType.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                _mainViewModel.ShowNotification($"Connection error: {ex.Message}", NotificationType.Error);
+            }
+        }
+
+        private void DisconnectMal()
+        {
+            _mainViewModel.MyAnimeListService.Disconnect();
+            IsMalConnected = false;
+            this.RaisePropertyChanged(nameof(IsMalConnected));
+            this.RaisePropertyChanged(nameof(MalConnectionStatus));
+            _mainViewModel.ShowNotification("Disconnected MyAnimeList account.", NotificationType.Success);
         }
     }
 }

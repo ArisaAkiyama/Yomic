@@ -79,6 +79,11 @@ namespace Yomic.Core.Services
         public int DefaultReaderMode { get; set; } = 0; // 0=Webtoon, 1=Single Page, 2=Dual Page
         public string AppLanguage { get; set; } = "en";
         public string LastFeedbackDate { get; set; } = "";
+        
+        // MyAnimeList Tokens
+        public string MalAccessToken { get; set; } = "";
+        public string MalRefreshToken { get; set; } = "";
+        public long MalTokenExpiresAt { get; set; } = 0;
 
         public SettingsService()
         {
@@ -126,6 +131,9 @@ namespace Yomic.Core.Services
                         DefaultReaderMode = settings.DefaultReaderMode;
                         AppLanguage = settings.AppLanguage ?? "en";
                         LastFeedbackDate = settings.LastFeedbackDate ?? "";
+                        MalAccessToken = settings.MalAccessToken ?? "";
+                        MalRefreshToken = settings.MalRefreshToken ?? "";
+                        MalTokenExpiresAt = settings.MalTokenExpiresAt;
                         if (settings.SourceStatusRefreshIntervalMinutes > 0)
                         {
                             SourceStatusRefreshIntervalMinutes = settings.SourceStatusRefreshIntervalMinutes;
@@ -182,6 +190,9 @@ namespace Yomic.Core.Services
                     DefaultReaderMode = DefaultReaderMode,
                     AppLanguage = AppLanguage,
                     LastFeedbackDate = LastFeedbackDate,
+                    MalAccessToken = MalAccessToken,
+                    MalRefreshToken = MalRefreshToken,
+                    MalTokenExpiresAt = MalTokenExpiresAt,
                     SourceStatusRefreshIntervalMinutes = SourceStatusRefreshIntervalMinutes
                 };
 
@@ -226,6 +237,9 @@ namespace Yomic.Core.Services
                 AppLanguage = "en";
                 LastFeedbackDate = "";
                 SourceStatusRefreshIntervalMinutes = 5;
+                MalAccessToken = "";
+                MalRefreshToken = "";
+                MalTokenExpiresAt = 0;
             }
             catch (Exception ex)
             {
@@ -259,6 +273,11 @@ namespace Yomic.Core.Services
             public string AppLanguage { get; set; } = "en";
             public string LastFeedbackDate { get; set; } = "";
             public int SourceStatusRefreshIntervalMinutes { get; set; } = 5;
+            
+            // MyAnimeList Tokens
+            public string MalAccessToken { get; set; } = "";
+            public string MalRefreshToken { get; set; } = "";
+            public long MalTokenExpiresAt { get; set; } = 0;
         }
     }
 }

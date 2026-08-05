@@ -15,7 +15,7 @@ namespace Yomic.Core.Data
         public DbSet<Chapter> Chapters { get; set; } = null!;
         public DbSet<History> History { get; set; } = null!;
         public DbSet<Category> Categories { get; set; } = null!;
-        public DbSet<MangaTracker> MangaTrackers { get; set; } = null!;
+        public DbSet<MangaTrack> Tracks { get; set; } = null!;
 
         private static bool _hasLoggedPath = false;
 
@@ -81,16 +81,13 @@ namespace Yomic.Core.Data
                     {
                         je.HasKey("MangaId", "CategoryId");
                     });
-
-            // MangaTracker -> Manga Relationship
-            modelBuilder.Entity<MangaTracker>(entity =>
-            {
-                entity.HasKey(t => t.Id);
-                entity.HasOne(t => t.Manga)
-                    .WithMany()
-                    .HasForeignKey(t => t.MangaId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
+                
+            // MangaTrack -> Manga (One-to-Many)
+            modelBuilder.Entity<MangaTrack>()
+                .HasOne(t => t.Manga)
+                .WithMany(m => m.Tracks)
+                .HasForeignKey(t => t.MangaId)
+                .OnDelete(DeleteBehavior.Cascade);
                 
             base.OnModelCreating(modelBuilder);
         }

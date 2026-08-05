@@ -33,6 +33,7 @@ namespace Yomic.Core.Models
         public virtual ICollection<Chapter> Chapters { get; set; } = new List<Chapter>();
         public virtual ICollection<History> History { get; set; } = new List<History>();
         public virtual ICollection<Category> Categories { get; set; } = new List<Category>();
+        public virtual ICollection<MangaTrack> Tracks { get; set; } = new List<MangaTrack>();
 
         // Constants (from Mihon)
         public const int UNKNOWN = 0;

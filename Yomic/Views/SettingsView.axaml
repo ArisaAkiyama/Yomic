@@ -620,6 +620,65 @@
                 </StackPanel>
             </StackPanel>
 
+            <!-- Tracking Section -->
+            <StackPanel Spacing="15">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Viewbox Width="20" Height="20" VerticalAlignment="Center">
+                        <Canvas Width="24" Height="24">
+                            <Path Data="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5 M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                        </Canvas>
+                    </Viewbox>
+                    <TextBlock Text="Tracking" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryText}"/>
+                </StackPanel>
+                
+                <StackPanel Spacing="6">
+                    <!-- MyAnimeList Connection -->
+                    <Border Background="{DynamicResource SidebarBackground}" Padding="20,15" CornerRadius="8" BoxShadow="0 2 10 0 #05000000">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Spacing="3" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Text="MyAnimeList" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" FontSize="16"/>
+                                    <!-- Status Badge -->
+                                    <Panel VerticalAlignment="Center">
+                                        <Border Background="#2000C853" CornerRadius="8" Padding="8,2" IsVisible="{Binding IsMalConnected}">
+                                            <TextBlock Text="CONNECTED" Foreground="#00C853" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <Border Background="#20888888" CornerRadius="8" Padding="8,2" IsVisible="{Binding !IsMalConnected}">
+                                            <TextBlock Text="DISCONNECTED" Foreground="{DynamicResource SecondaryText}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </Panel>
+                                </StackPanel>
+                                <TextBlock Text="Sync your reading progress automatically to your MyAnimeList account." FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                            </StackPanel>
+                            
+                            <Panel Grid.Column="1" VerticalAlignment="Center">
+                                <Button Command="{Binding ConnectMalCommand}" Content="Connect" 
+                                        Background="{DynamicResource PrimaryAccent}" Foreground="#FFFFFF"
+                                        CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
+                                        Cursor="Hand" IsVisible="{Binding !IsMalConnected}">
+                                    <Button.Styles>
+                                        <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                            <Setter Property="Background" Value="{DynamicResource PrimaryAccentHover}"/>
+                                        </Style>
+                                    </Button.Styles>
+                                </Button>
+                                <Button Command="{Binding DisconnectMalCommand}" Content="Disconnect" 
+                                        Background="#15ef4444" BorderBrush="Transparent" BorderThickness="0" 
+                                        Foreground="#ef4444" CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
+                                        Cursor="Hand" IsVisible="{Binding IsMalConnected}">
+                                    <Button.Styles>
+                                        <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                            <Setter Property="Background" Value="#ef4444"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Style>
+                                    </Button.Styles>
+                                </Button>
+                            </Panel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+
             <!-- Danger Zone Section -->
             <StackPanel Spacing="15">
                 <StackPanel Orientation="Horizontal" Spacing="10">

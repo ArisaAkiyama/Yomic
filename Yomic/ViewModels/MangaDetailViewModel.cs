@@ -1,5 +1,7 @@
 using ReactiveUI;
 using System;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Yomic.Core.Models;
 using System.Linq;
 using System.Reactive;
@@ -506,37 +508,6 @@ namespace Yomic.ViewModels
         /// <summary>
         /// Whether Resume button should be visible/enabled (only if user has read history)
         /// </summary>
-        private TrackerIds? _trackerIds;
-        public TrackerIds? TrackerIds
-        {
-            get => _trackerIds;
-            set => this.RaiseAndSetIfChanged(ref _trackerIds, value);
-        }
-
-        private bool _isResolvingTrackers;
-        public bool IsResolvingTrackers
-        {
-            get => _isResolvingTrackers;
-            set => this.RaiseAndSetIfChanged(ref _isResolvingTrackers, value);
-        }
-
-        private bool _hasTrackerIds;
-        public bool HasTrackerIds
-        {
-            get => _hasTrackerIds;
-            set => this.RaiseAndSetIfChanged(ref _hasTrackerIds, value);
-        }
-
-        public bool IsMyAnimeListVisible => TrackerIds?.MyAnimeListId != null && !string.IsNullOrEmpty(TrackerIds.MyAnimeListId);
-        public bool IsAniListVisible => TrackerIds?.AniListId != null && !string.IsNullOrEmpty(TrackerIds.AniListId);
-        public bool IsMangaUpdatesVisible => TrackerIds?.MangaUpdatesId != null && !string.IsNullOrEmpty(TrackerIds.MangaUpdatesId);
-
-        public string MyAnimeListUrl => TrackerIds?.MyAnimeListId != null ? $"https://myanimelist.net/manga/{TrackerIds.MyAnimeListId}" : string.Empty;
-        public string AniListUrl => TrackerIds?.AniListId != null ? $"https://anilist.co/manga/{TrackerIds.AniListId}" : string.Empty;
-        public string MangaUpdatesUrl => TrackerIds?.MangaUpdatesId != null ? $"https://www.mangaupdates.com/series.html?id={TrackerIds.MangaUpdatesId}" : string.Empty;
-
-        public ReactiveCommand<string, Unit> OpenTrackerLinkCommand { get; }
-
         public bool CanResume => HasStartedReading;
 
         private readonly Core.Services.ImageCacheService _imageCacheService;
@@ -639,79 +610,23 @@ namespace Yomic.ViewModels
                 });
             };
 
-            OpenTrackerLinkCommand = ReactiveCommand.Create<string>(url =>
-            {
-                if (string.IsNullOrEmpty(url)) return;
-                try
-                {
-                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                    {
-                        FileName = url,
-                        UseShellExecute = true
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[MangaDetailVM] Error opening tracker: {ex.Message}");
-                }
-            });
-
             ToggleSortCommand = ReactiveCommand.Create(() => { SortAscending = !SortAscending; });
             ToggleSynopsisCommand = ReactiveCommand.Create(() => { IsSynopsisExpanded = !IsSynopsisExpanded; });
+
+            SearchMalCommand = ReactiveCommand.CreateFromTask(SearchMalAsync);
+            BindMalMangaCommand = ReactiveCommand.CreateFromTask<Core.Services.MalSearchResult>(BindMalMangaAsync);
+            UnbindMalMangaCommand = ReactiveCommand.CreateFromTask(UnbindMalMangaAsync);
+            SyncMalMangaCommand = ReactiveCommand.CreateFromTask(SyncMalMangaAsync);
+            OpenMalSearchCommand = ReactiveCommand.Create(OpenMalSearch);
+            CloseMalSearchCommand = ReactiveCommand.Create(CloseMalSearch);
 
             UpdateDisplayItems(); // Init header
 
             // Subscribe to Download Status Changes
             _downloadService.StatusChanged += OnDownloadStatusChanged;
 
-            // Fire and forget load & tracker resolution
-            string localTitle = item.Title;
-            string localUrl = item.MangaUrl;
-            string sourceName = sourceManager.GetSource(item.SourceId)?.Name ?? "Unknown";
+            // Fire and forget load
             System.Threading.Tasks.Task.Run(async () => await LoadDetails(item, sourceManager));
-            System.Threading.Tasks.Task.Run(async () => await ResolveTrackersAsync(localTitle, localUrl, sourceName));
-        }
-
-        private async System.Threading.Tasks.Task ResolveTrackersAsync(string title, string url, string sourceName)
-        {
-            Dispatcher.UIThread.Post(() => IsResolvingTrackers = true);
-            try
-            {
-                TrackerIds? ids = null;
-
-                // 1. Try direct UUID lookup if the source is MangaDex
-                if ((!string.IsNullOrEmpty(sourceName) && sourceName.Equals("MangaDex", StringComparison.OrdinalIgnoreCase)) || 
-                    (!string.IsNullOrEmpty(url) && url.Contains("mangadex.org", StringComparison.OrdinalIgnoreCase)))
-                {
-                    ids = await MangaDexResolverService.ResolveTrackerIdsFromUrlAsync(url);
-                }
-
-                // 2. Fallback to fuzzy search if not from MangaDex or direct lookup failed
-                if (ids == null)
-                {
-                    ids = await MangaDexResolverService.ResolveTrackerIdsAsync(title);
-                }
-
-                Dispatcher.UIThread.Post(() =>
-                {
-                    TrackerIds = ids;
-                    HasTrackerIds = ids != null && (!string.IsNullOrEmpty(ids.MyAnimeListId) || !string.IsNullOrEmpty(ids.AniListId) || !string.IsNullOrEmpty(ids.MangaUpdatesId));
-                    this.RaisePropertyChanged(nameof(IsMyAnimeListVisible));
-                    this.RaisePropertyChanged(nameof(IsAniListVisible));
-                    this.RaisePropertyChanged(nameof(IsMangaUpdatesVisible));
-                    this.RaisePropertyChanged(nameof(MyAnimeListUrl));
-                    this.RaisePropertyChanged(nameof(AniListUrl));
-                    this.RaisePropertyChanged(nameof(MangaUpdatesUrl));
-                });
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[MangaDetailVM] ResolveTrackers failed: {ex.Message}");
-            }
-            finally
-            {
-                Dispatcher.UIThread.Post(() => IsResolvingTrackers = false);
-            }
         }
 
         public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
@@ -840,6 +755,7 @@ namespace Yomic.ViewModels
                     {
                         InLibrary = existing.Favorite;
                         _model.Id = existing.Id; // Sync ID
+                        _ = LoadTrackingStatusAsync();
                         
                         // Load data from DB immediately (Cached)
                         if (!string.IsNullOrEmpty(existing.Description)) Description = existing.Description!;
@@ -1681,6 +1597,288 @@ namespace Yomic.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Failed to load source icon: {ex.Message}");
+            }
+        }
+
+        // MyAnimeList Tracking Properties & Commands
+        private bool _isMalTrackingActive;
+        public bool IsMalTrackingActive
+        {
+            get => _isMalTrackingActive;
+            set => this.RaiseAndSetIfChanged(ref _isMalTrackingActive, value);
+        }
+
+        private MangaTrack? _malTrack;
+        public MangaTrack? MalTrack
+        {
+            get => _malTrack;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _malTrack, value);
+                this.RaisePropertyChanged(nameof(IsMalTrackingActive));
+                this.RaisePropertyChanged(nameof(MalTrackTitle));
+                this.RaisePropertyChanged(nameof(MalTrackChaptersRead));
+                this.RaisePropertyChanged(nameof(MalTrackTotalChapters));
+                this.RaisePropertyChanged(nameof(MalTrackStatus));
+                this.RaisePropertyChanged(nameof(MalTrackScore));
+            }
+        }
+
+        public string MalTrackTitle => MalTrack?.Title ?? "";
+        public int MalTrackChaptersRead => MalTrack?.LastChapterRead ?? 0;
+        public int MalTrackTotalChapters => MalTrack?.TotalChapters ?? 0;
+        public string MalTrackStatus => MalTrack?.Status ?? "reading";
+        public int MalTrackScore => MalTrack?.Score ?? 0;
+
+        public bool IsMalConnected => _mainVM.MyAnimeListService.IsConnected;
+
+        private string _malSearchQuery = "";
+        public string MalSearchQuery
+        {
+            get => _malSearchQuery;
+            set => this.RaiseAndSetIfChanged(ref _malSearchQuery, value);
+        }
+
+        private System.Collections.ObjectModel.ObservableCollection<Core.Services.MalSearchResult> _malSearchResults = new();
+        public System.Collections.ObjectModel.ObservableCollection<Core.Services.MalSearchResult> MalSearchResults
+        {
+            get => _malSearchResults;
+            set => this.RaiseAndSetIfChanged(ref _malSearchResults, value);
+        }
+
+        private bool _isMalSearching;
+        public bool IsMalSearching
+        {
+            get => _isMalSearching;
+            set => this.RaiseAndSetIfChanged(ref _isMalSearching, value);
+        }
+
+        private bool _isMalSearchActive;
+        public bool IsMalSearchActive
+        {
+            get => _isMalSearchActive;
+            set => this.RaiseAndSetIfChanged(ref _isMalSearchActive, value);
+        }
+
+        public ReactiveCommand<Unit, Unit> SearchMalCommand { get; }
+        public ReactiveCommand<Core.Services.MalSearchResult, Unit> BindMalMangaCommand { get; }
+        public ReactiveCommand<Unit, Unit> UnbindMalMangaCommand { get; }
+        public ReactiveCommand<Unit, Unit> SyncMalMangaCommand { get; }
+        public ReactiveCommand<Unit, Unit> OpenMalSearchCommand { get; }
+        public ReactiveCommand<Unit, Unit> CloseMalSearchCommand { get; }
+
+        private void OpenMalSearch()
+        {
+            MalSearchQuery = Title;
+            MalSearchResults.Clear();
+            IsMalSearchActive = true;
+            _ = SearchMalAsync();
+        }
+
+        private void CloseMalSearch()
+        {
+            IsMalSearchActive = false;
+        }
+
+        private async Task SearchMalAsync()
+        {
+            if (string.IsNullOrEmpty(MalSearchQuery)) return;
+            IsMalSearching = true;
+            try
+            {
+                var res = await _mainVM.MyAnimeListService.SearchMangaAsync(MalSearchQuery);
+                Dispatcher.UIThread.Post(() =>
+                {
+                    MalSearchResults = new System.Collections.ObjectModel.ObservableCollection<Core.Services.MalSearchResult>(res);
+                });
+            }
+            finally
+            {
+                Dispatcher.UIThread.Post(() => IsMalSearching = false);
+            }
+        }
+
+        private async Task BindMalMangaAsync(Core.Services.MalSearchResult result)
+        {
+            if (result == null || _model.Id == 0) return;
+
+            try
+            {
+                var remoteStatus = await _mainVM.MyAnimeListService.FetchMangaStatusAsync(result.Id, _model.Id);
+                
+                using var db = new Core.Data.MangaDbContext();
+                var track = new MangaTrack
+                {
+                    MangaId = _model.Id,
+                    RemoteId = result.Id,
+                    Title = result.Title,
+                    TrackerName = "MyAnimeList",
+                    LastChapterRead = remoteStatus?.LastChapterRead ?? 0,
+                    TotalChapters = remoteStatus?.TotalChapters ?? 0,
+                    Status = remoteStatus?.Status ?? "reading",
+                    Score = remoteStatus?.Score ?? 0
+                };
+
+                db.Tracks.Add(track);
+                await db.SaveChangesAsync();
+
+                Dispatcher.UIThread.Post(() =>
+                {
+                    MalTrack = track;
+                    IsMalTrackingActive = true;
+                    IsMalSearchActive = false;
+                });
+                
+                _mainVM.ShowNotification($"Successfully bound to MAL: {result.Title}", NotificationType.Success);
+            }
+            catch (Exception ex)
+            {
+                _mainVM.ShowNotification($"Failed to bind: {ex.Message}", NotificationType.Error);
+            }
+        }
+
+        private async Task UnbindMalMangaAsync()
+        {
+            if (MalTrack == null || _model.Id == 0) return;
+
+            try
+            {
+                using var db = new Core.Data.MangaDbContext();
+                var track = await db.Tracks.FirstOrDefaultAsync(t => t.MangaId == _model.Id && t.TrackerName == "MyAnimeList");
+                if (track != null)
+                {
+                    db.Tracks.Remove(track);
+                    await db.SaveChangesAsync();
+                }
+
+                Dispatcher.UIThread.Post(() =>
+                {
+                    MalTrack = null;
+                    IsMalTrackingActive = false;
+                });
+
+                _mainVM.ShowNotification("Unbound MAL tracker.", NotificationType.Success);
+            }
+            catch (Exception ex)
+            {
+                _mainVM.ShowNotification($"Failed to unbind: {ex.Message}", NotificationType.Error);
+            }
+        }
+
+        private async Task SyncMalMangaAsync()
+        {
+            if (MalTrack == null) return;
+            try
+            {
+                var remoteStatus = await _mainVM.MyAnimeListService.FetchMangaStatusAsync(MalTrack.RemoteId, _model.Id);
+                if (remoteStatus != null)
+                {
+                    using var db = new Core.Data.MangaDbContext();
+                    var dbTrack = await db.Tracks.FirstOrDefaultAsync(t => t.Id == MalTrack.Id);
+                    if (dbTrack != null)
+                    {
+                        dbTrack.LastChapterRead = remoteStatus.LastChapterRead;
+                        dbTrack.TotalChapters = remoteStatus.TotalChapters;
+                        dbTrack.Status = remoteStatus.Status;
+                        dbTrack.Score = remoteStatus.Score;
+                        await db.SaveChangesAsync();
+
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            MalTrack = dbTrack;
+                        });
+                        
+                        _mainVM.ShowNotification("MAL tracker synced successfully!", NotificationType.Success);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _mainVM.ShowNotification($"Sync failed: {ex.Message}", NotificationType.Error);
+            }
+        }
+
+        public async Task UpdateMalProgressAsync(string status, int chaptersRead, int score)
+        {
+            if (MalTrack == null) return;
+
+            try
+            {
+                bool success = await _mainVM.MyAnimeListService.UpdateMangaStatusAsync(MalTrack.RemoteId, status, chaptersRead, score);
+                if (success)
+                {
+                    using var db = new Core.Data.MangaDbContext();
+                    var dbTrack = await db.Tracks.FirstOrDefaultAsync(t => t.Id == MalTrack.Id);
+                    if (dbTrack != null)
+                    {
+                        dbTrack.Status = status;
+                        dbTrack.LastChapterRead = chaptersRead;
+                        dbTrack.Score = score;
+                        await db.SaveChangesAsync();
+
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            MalTrack = dbTrack;
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MangaDetailVM] Error updating MAL progress: {ex.Message}");
+            }
+        }
+
+        private async Task LoadTrackingStatusAsync()
+        {
+            if (!IsMalConnected || _model.Id == 0) return;
+
+            try
+            {
+                using var db = new Core.Data.MangaDbContext();
+                var track = await db.Tracks.FirstOrDefaultAsync(t => t.MangaId == _model.Id && t.TrackerName == "MyAnimeList");
+                
+                if (track != null)
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        MalTrack = track;
+                        IsMalTrackingActive = true;
+                    });
+
+                    // Fetch latest status in background to update local DB
+                    var remoteStatus = await _mainVM.MyAnimeListService.FetchMangaStatusAsync(track.RemoteId, _model.Id);
+                    if (remoteStatus != null)
+                    {
+                        using var writeDb = new Core.Data.MangaDbContext();
+                        var dbTrack = await writeDb.Tracks.FirstOrDefaultAsync(t => t.Id == track.Id);
+                        if (dbTrack != null)
+                        {
+                            dbTrack.LastChapterRead = remoteStatus.LastChapterRead;
+                            dbTrack.TotalChapters = remoteStatus.TotalChapters;
+                            dbTrack.Status = remoteStatus.Status;
+                            dbTrack.Score = remoteStatus.Score;
+                            await writeDb.SaveChangesAsync();
+
+                            Dispatcher.UIThread.Post(() =>
+                            {
+                                MalTrack = dbTrack;
+                            });
+                        }
+                    }
+                }
+                else
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        IsMalTrackingActive = false;
+                        MalTrack = null;
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MangaDetailVM] Error loading tracking status: {ex.Message}");
             }
         }
 

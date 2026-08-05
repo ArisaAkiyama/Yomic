@@ -62,18 +62,91 @@
 
                     <!-- HEADER CONTENT -->
                     <Grid RowDefinitions="*, Auto" ColumnDefinitions="Auto, *" Margin="40,100,40,20">
-                        <!-- Left Column: Sharp Cover Image -->
-                        <Border Grid.Column="0"
-                                Width="230" Height="345"
-                                CornerRadius="12"
-                                ClipToBounds="True"
-                                Margin="0,0,40,0"
-                                VerticalAlignment="Top"
-                                BoxShadow="0 15 30 0 #60000000">
-                            <Image helpers:SecureImageLoader.Url="{Binding ThumbnailUrl}"
-                                   helpers:SecureImageLoader.DecodeWidth="300"
-                                   Stretch="UniformToFill"/>
-                        </Border>
+                        <!-- Left Column: Sharp Cover Image & MAL Tracker Card -->
+                        <StackPanel Grid.Column="0" Width="230" Margin="0,0,40,0" Spacing="15" VerticalAlignment="Top">
+                            <!-- Sharp Cover Image -->
+                            <Border Width="230" Height="345"
+                                    CornerRadius="12"
+                                    ClipToBounds="True"
+                                    BoxShadow="0 15 30 0 #60000000">
+                                <Image helpers:SecureImageLoader.Url="{Binding ThumbnailUrl}"
+                                       helpers:SecureImageLoader.DecodeWidth="300"
+                                       Stretch="UniformToFill"/>
+                            </Border>
+
+                            <!-- MAL Tracker Card -->
+                            <Border Background="{DynamicResource SidebarBackground}" 
+                                    BorderBrush="{DynamicResource SeparatorBrush}" 
+                                    BorderThickness="1" 
+                                    CornerRadius="8" 
+                                    Padding="12"
+                                    IsVisible="{Binding IsMalConnected}">
+                                <StackPanel Spacing="10">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="MyAnimeList Track" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource SecondaryText}"/>
+                                        <!-- Active Dot -->
+                                        <Ellipse Width="6" Height="6" Fill="#00C853" VerticalAlignment="Center" IsVisible="{Binding IsMalTrackingActive}"/>
+                                    </StackPanel>
+
+                                    <!-- Tracking Info -->
+                                    <StackPanel Spacing="8" IsVisible="{Binding IsMalTrackingActive}">
+                                        <TextBlock Text="{Binding MalTrackTitle}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource PrimaryText}"/>
+                                        
+                                        <!-- Progress Row -->
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <TextBlock Text="Progress" FontSize="11" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="{Binding MalTrackChaptersRead}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}"/>
+                                                <TextBlock Text="/" FontSize="12" Foreground="{DynamicResource SecondaryText}"/>
+                                                <TextBlock Text="{Binding MalTrackTotalChapters}" FontSize="12" Foreground="{DynamicResource SecondaryText}"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- Status Row -->
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <TextBlock Text="Status" FontSize="11" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding MalTrackStatus}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryAccent}"/>
+                                        </Grid>
+
+                                        <!-- Score Row -->
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <TextBlock Text="Score" FontSize="11" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                                                <TextBlock Text="{Binding MalTrackScore}" FontSize="12" FontWeight="Bold" Foreground="#F59E0B"/>
+                                                <TextBlock Text="/10" FontSize="10" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Bottom"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- Actions -->
+                                        <Grid ColumnDefinitions="*, *" Margin="0,5,0,0">
+                                            <Button Grid.Column="0" Command="{Binding SyncMalMangaCommand}" Content="Sync"
+                                                    Background="Transparent" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1"
+                                                    Foreground="{DynamicResource PrimaryText}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                                    Padding="0,6" CornerRadius="4" FontSize="11" Cursor="Hand"/>
+                                            <Button Grid.Column="1" Command="{Binding UnbindMalMangaCommand}" Content="Unbind"
+                                                    Background="Transparent" BorderThickness="0" Margin="4,0,0,0"
+                                                    Foreground="#ef4444" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                                    Padding="0,6" CornerRadius="4" FontSize="11" Cursor="Hand"/>
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <!-- Not Tracking State -->
+                                    <StackPanel Spacing="6" IsVisible="{Binding !IsMalTrackingActive}">
+                                        <TextBlock Text="Not tracked yet." FontSize="12" Foreground="{DynamicResource SecondaryText}"/>
+                                        <Button Command="{Binding OpenMalSearchCommand}" Content="Link to MAL"
+                                                Background="{DynamicResource PrimaryAccent}" Foreground="White"
+                                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                                Padding="0,8" CornerRadius="6" FontSize="12" FontWeight="SemiBold" Cursor="Hand">
+                                            <Button.Styles>
+                                                <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                                    <Setter Property="Background" Value="{DynamicResource PrimaryAccentHover}"/>
+                                                </Style>
+                                            </Button.Styles>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
 
                         <!-- Right Column: Info & Actions -->
                         <StackPanel Grid.Column="1" Spacing="0">
@@ -291,55 +364,6 @@
                                         </StackPanel>
                                     </Button>
                                 </UniformGrid>
-                            </StackPanel>
-
-                            <!-- TRACKER / EXTERNAL LINKS -->
-                            <StackPanel Spacing="8" Margin="0,5,0,25" IsVisible="{Binding HasTrackerIds}">
-                                <TextBlock Text="Track / External Links" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" FontSize="16" Margin="0,0,0,4"/>
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <!-- MyAnimeList Button -->
-                                    <Button Command="{Binding OpenTrackerLinkCommand}" 
-                                            CommandParameter="{Binding MyAnimeListUrl}"
-                                            IsVisible="{Binding IsMyAnimeListVisible}"
-                                            Background="#2E51A2" Foreground="White" CornerRadius="8" Padding="12,8">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <TextBlock Text="MAL" FontWeight="Bold" FontSize="11"/>
-                                            <TextBlock Text="MyAnimeList" FontSize="11" Opacity="0.8"/>
-                                        </StackPanel>
-                                    </Button>
-
-                                    <!-- AniList Button -->
-                                    <Button Command="{Binding OpenTrackerLinkCommand}" 
-                                            CommandParameter="{Binding AniListUrl}"
-                                            IsVisible="{Binding IsAniListVisible}"
-                                            Background="#02A9FF" Foreground="White" CornerRadius="8" Padding="12,8">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <TextBlock Text="AL" FontWeight="Bold" FontSize="11"/>
-                                            <TextBlock Text="AniList" FontSize="11" Opacity="0.8"/>
-                                        </StackPanel>
-                                    </Button>
-
-                                    <!-- MangaUpdates Button -->
-                                    <Button Command="{Binding OpenTrackerLinkCommand}" 
-                                            CommandParameter="{Binding MangaUpdatesUrl}"
-                                            IsVisible="{Binding IsMangaUpdatesVisible}"
-                                            Background="#E28C2C" Foreground="White" CornerRadius="8" Padding="12,8">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <TextBlock Text="MU" FontWeight="Bold" FontSize="11"/>
-                                            <TextBlock Text="MangaUpdates" FontSize="11" Opacity="0.8"/>
-                                        </StackPanel>
-                                    </Button>
-                                </StackPanel>
-                            </StackPanel>
-
-                            <!-- Tracker Resolving Placeholder -->
-                            <StackPanel Spacing="8" Margin="0,5,0,25" IsVisible="{Binding IsResolvingTrackers}">
-                                <TextBlock Text="Track / External Links" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" FontSize="16" Margin="0,0,0,4"/>
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <Border Classes="SkeletonCard" Width="100" Height="32" CornerRadius="8"/>
-                                    <Border Classes="SkeletonCard" Width="90" Height="32" CornerRadius="8"/>
-                                    <Border Classes="SkeletonCard" Width="110" Height="32" CornerRadius="8"/>
-                                </StackPanel>
                             </StackPanel>
 
                             <!-- Description / Synopsis -->
@@ -895,6 +919,89 @@
                 </Viewbox>
             </Button>
         </Grid>
+
+        <!-- MyAnimeList Search Modal Dialog -->
+        <Border Background="#A0000000" IsVisible="{Binding IsMalSearchActive}" ZIndex="90">
+            <Border Background="{DynamicResource PrimaryBackground}" 
+                    BorderBrush="{DynamicResource SeparatorBrush}" 
+                    BorderThickness="1" 
+                    CornerRadius="12" 
+                    Width="450" 
+                    Height="500" 
+                    VerticalAlignment="Center" 
+                    HorizontalAlignment="Center"
+                    BoxShadow="0 10 30 0 #80000000">
+                <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="20">
+                    <!-- Title & Close -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,15">
+                        <TextBlock Text="Link to MyAnimeList" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}"/>
+                        <Button Grid.Column="1" Command="{Binding CloseMalSearchCommand}" Content="✕" 
+                                Background="Transparent" Foreground="{DynamicResource SecondaryText}" 
+                                BorderThickness="0" CornerRadius="4" Cursor="Hand" Padding="8,4"/>
+                    </Grid>
+
+                    <!-- Search Input -->
+                    <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="0,0,0,15">
+                        <TextBox Text="{Binding MalSearchQuery, Mode=TwoWay}" Watermark="Search manga title on MAL..." 
+                                 Background="{DynamicResource SidebarBackground}" Foreground="{DynamicResource PrimaryText}" 
+                                 BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="1" CornerRadius="8,0,0,8" VerticalContentAlignment="Center"
+                                 Height="40"/>
+                        <Button Grid.Column="1" Command="{Binding SearchMalCommand}" Content="Search" 
+                                Background="{DynamicResource PrimaryAccent}" Foreground="White" 
+                                CornerRadius="0,8,8,0" Height="40" Padding="15,0" Cursor="Hand" VerticalContentAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Results List -->
+                    <Panel Grid.Row="2">
+                        <!-- Loading indicator -->
+                        <ProgressBar IsIndeterminate="True" VerticalAlignment="Top" IsVisible="{Binding IsMalSearching}" Foreground="{DynamicResource PrimaryAccent}"/>
+                        
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,10,0,0" IsVisible="{Binding !IsMalSearching}">
+                            <ItemsControl ItemsSource="{Binding MalSearchResults}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,0,0,1" Padding="0,10" Margin="0,0,0,5">
+                                            <Grid ColumnDefinitions="50, *, Auto">
+                                                <!-- Cover Image -->
+                                                <Border Grid.Column="0" CornerRadius="4" ClipToBounds="True" Height="65" Width="45">
+                                                    <Image helpers:SecureImageLoader.Url="{Binding CoverUrl}" Stretch="UniformToFill"/>
+                                                </Border>
+                                                
+                                                <!-- Details -->
+                                                <StackPanel Grid.Column="1" Margin="10,0,10,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" MaxLines="2" Foreground="{DynamicResource PrimaryText}"/>
+                                                    <TextBlock Text="{Binding Id, StringFormat='MAL ID: {0}'}" FontSize="11" Foreground="{DynamicResource SecondaryText}" Margin="0,4,0,0"/>
+                                                </StackPanel>
+
+                                                <!-- Select Button -->
+                                                <Button Grid.Column="2" 
+                                                        Command="{Binding $parent[UserControl].((vm:MangaDetailViewModel)DataContext).BindMalMangaCommand}" 
+                                                        CommandParameter="{Binding}" 
+                                                        Content="Select" 
+                                                        Background="{DynamicResource PrimaryAccent}" 
+                                                        Foreground="White" 
+                                                        Padding="12,6" 
+                                                        CornerRadius="6" 
+                                                        FontSize="12" 
+                                                        FontWeight="SemiBold"
+                                                        Cursor="Hand"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <!-- Empty State -->
+                        <TextBlock Text="No results found." 
+                                   Foreground="{DynamicResource SecondaryText}" 
+                                   HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center" 
+                                   IsVisible="{Binding !MalSearchResults.Count}"/>
+                    </Panel>
+                </Grid>
+            </Border>
+        </Border>
 
         <!-- CAPTCHA Bypass Loading Overlay -->
         <Border Background="#90000000" IsVisible="{Binding IsBypassing}" ZIndex="100">
