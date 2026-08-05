@@ -1,5 +1,6 @@
 using System;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Yomic.Core.Services
@@ -20,6 +21,42 @@ namespace Yomic.Core.Services
             _client = new HttpClient();
             _client.Timeout = TimeSpan.FromSeconds(10); // Fail fast (10s) if request hangs/stalls
             _client.DefaultRequestHeaders.Add("User-Agent", "Yomic-Desktop/1.0.0 (https://github.com/ArisaAkiyama/yomic)");
+        }
+
+        public static async Task<TrackerIds?> ResolveTrackerIdsFromUrlAsync(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return null;
+
+            try
+            {
+                // 1. Extract 36-character UUID from the URL
+                var match = Regex.Match(url, @"([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})", RegexOptions.IgnoreCase);
+                if (!match.Success) return null;
+
+                string uuid = match.Groups[1].Value;
+
+                // 2. Query direct MangaDex single manga endpoint
+                string apiEntryUrl = $"https://api.mangadex.org/manga/{uuid}";
+                var response = await _client.GetAsync(apiEntryUrl);
+                if (!response.IsSuccessStatusCode) return null;
+
+                var json = await response.Content.ReadAsStringAsync();
+                var root = Newtonsoft.Json.Linq.JObject.Parse(json);
+                var links = root["data"]?["attributes"]?["links"];
+                if (links == null) return null;
+
+                return new TrackerIds
+                {
+                    MyAnimeListId = links["mal"]?.ToString(),
+                    AniListId = links["al"]?.ToString(),
+                    MangaUpdatesId = links["mu"]?.ToString()
+                };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MangaDexResolver] Direct URL lookup failed: {ex.Message}");
+                return null;
+            }
         }
 
         public static async Task<TrackerIds?> ResolveTrackerIdsAsync(string localTitle)

@@ -665,16 +665,33 @@ namespace Yomic.ViewModels
             _downloadService.StatusChanged += OnDownloadStatusChanged;
 
             // Fire and forget load & tracker resolution
+            string localTitle = item.Title;
+            string localUrl = item.MangaUrl;
+            string sourceName = sourceManager.GetSource(item.SourceId)?.Name ?? "Unknown";
             System.Threading.Tasks.Task.Run(async () => await LoadDetails(item, sourceManager));
-            System.Threading.Tasks.Task.Run(async () => await ResolveTrackersAsync(item.Title));
+            System.Threading.Tasks.Task.Run(async () => await ResolveTrackersAsync(localTitle, localUrl, sourceName));
         }
 
-        private async System.Threading.Tasks.Task ResolveTrackersAsync(string title)
+        private async System.Threading.Tasks.Task ResolveTrackersAsync(string title, string url, string sourceName)
         {
             Dispatcher.UIThread.Post(() => IsResolvingTrackers = true);
             try
             {
-                var ids = await MangaDexResolverService.ResolveTrackerIdsAsync(title);
+                TrackerIds? ids = null;
+
+                // 1. Try direct UUID lookup if the source is MangaDex
+                if ((!string.IsNullOrEmpty(sourceName) && sourceName.Equals("MangaDex", StringComparison.OrdinalIgnoreCase)) || 
+                    (!string.IsNullOrEmpty(url) && url.Contains("mangadex.org", StringComparison.OrdinalIgnoreCase)))
+                {
+                    ids = await MangaDexResolverService.ResolveTrackerIdsFromUrlAsync(url);
+                }
+
+                // 2. Fallback to fuzzy search if not from MangaDex or direct lookup failed
+                if (ids == null)
+                {
+                    ids = await MangaDexResolverService.ResolveTrackerIdsAsync(title);
+                }
+
                 Dispatcher.UIThread.Post(() =>
                 {
                     TrackerIds = ids;
