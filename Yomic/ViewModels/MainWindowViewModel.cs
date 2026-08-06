@@ -114,6 +114,7 @@ namespace Yomic.ViewModels
             set => this.RaiseAndSetIfChanged(ref _isTracked, value);
         }
 
+        private static readonly System.Collections.Generic.HashSet<long> _attemptedDownloads = new();
         private Avalonia.Media.Imaging.Bitmap? _sourceIcon;
         [System.Text.Json.Serialization.JsonIgnore]
         public Avalonia.Media.Imaging.Bitmap? SourceIcon
@@ -132,6 +133,18 @@ namespace Yomic.ViewModels
                             using var ms = new System.IO.MemoryStream(bytes);
                             _sourceIcon = new Avalonia.Media.Imaging.Bitmap(ms);
                         }
+                        else
+                        {
+                            // Trigger background download
+                            lock (_attemptedDownloads)
+                            {
+                                if (!_attemptedDownloads.Contains(SourceId))
+                                {
+                                    _attemptedDownloads.Add(SourceId);
+                                    _ = DownloadSourceIconAsync(SourceId);
+                                }
+                            }
+                        }
                     }
                     catch
                     {
@@ -139,6 +152,52 @@ namespace Yomic.ViewModels
                     }
                 }
                 return _sourceIcon;
+            }
+        }
+
+        private async System.Threading.Tasks.Task DownloadSourceIconAsync(long sourceId)
+        {
+            try
+            {
+                var mainVM = MainWindowViewModel.Instance;
+                if (mainVM == null || mainVM.SourceManager == null) return;
+
+                var source = mainVM.SourceManager.GetSource(sourceId);
+                if (source == null) return;
+
+                string? url = source.IconUrl;
+                if (string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(source.BaseUrl) && Uri.TryCreate(source.BaseUrl, UriKind.Absolute, out var uri))
+                {
+                    url = $"https://www.google.com/s2/favicons?domain={uri.Host}&sz=128";
+                }
+
+                if (string.IsNullOrEmpty(url)) return;
+
+                using var client = new System.Net.Http.HttpClient();
+                using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(5));
+                
+                var bytes = await client.GetByteArrayAsync(url, cts.Token);
+                
+                var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var iconsDir = System.IO.Path.Combine(appData, "Yomic", "Icons");
+                if (!System.IO.Directory.Exists(iconsDir)) System.IO.Directory.CreateDirectory(iconsDir);
+
+                var iconFile = System.IO.Path.Combine(iconsDir, $"{sourceId}.png");
+                await System.IO.File.WriteAllBytesAsync(iconFile, bytes);
+
+                // Load the downloaded icon
+                using var ms = new System.IO.MemoryStream(bytes);
+                var bitmap = new Avalonia.Media.Imaging.Bitmap(ms);
+
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    _sourceIcon = bitmap;
+                    this.RaisePropertyChanged(nameof(SourceIcon));
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MangaItem] Failed to download icon for source {sourceId}: {ex.Message}");
             }
         }
         
@@ -347,6 +406,8 @@ namespace Yomic.ViewModels
 
         public ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> TogglePaneCommand { get; }
 
+        public static MainWindowViewModel? Instance { get; private set; }
+
         public MainWindowViewModel(Core.Services.SourceManager sourceManager, 
                                    Core.Services.LibraryService libraryService, 
                                    Core.Services.NetworkService networkService,
@@ -356,6 +417,7 @@ namespace Yomic.ViewModels
                                    Core.Services.SecureImageService secureImageService,
                                    Core.Services.SourceStatusService sourceStatusService)
         {
+            Instance = this;
             _sourceManager = sourceManager;
             _libraryService = libraryService;
             _networkService = networkService;
@@ -385,6 +447,7 @@ namespace Yomic.ViewModels
         // Default constructor for Designer Preview (Optional, but good practice)
         public MainWindowViewModel() 
         {
+            Instance = this;
             _sourceManager = new Core.Services.SourceManager(); // Fallback for designer
             _libraryService = new Core.Services.LibraryService();
             _settingsService = new Core.Services.SettingsService();
