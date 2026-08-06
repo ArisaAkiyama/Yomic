@@ -278,7 +278,7 @@ namespace Yomic.ViewModels
             }
         }
 
-        public bool IsTrackerVisible => IsMalConnected && InLibrary;
+        public bool IsTrackerVisible => InLibrary;
         
         public List<string> Tags { get; set; } = new();
         
@@ -627,8 +627,9 @@ namespace Yomic.ViewModels
             BindMalMangaCommand = ReactiveCommand.CreateFromTask<Core.Services.MalSearchResult>(BindMalMangaAsync);
             UnbindMalMangaCommand = ReactiveCommand.CreateFromTask(UnbindMalMangaAsync);
             SyncMalMangaCommand = ReactiveCommand.CreateFromTask(SyncMalMangaAsync);
-            OpenMalSearchCommand = ReactiveCommand.Create(OpenMalSearch);
+            OpenMalSearchCommand = ReactiveCommand.CreateFromTask(OpenMalSearchAsync);
             CloseMalSearchCommand = ReactiveCommand.Create(CloseMalSearch);
+            ConnectMalCommand = ReactiveCommand.CreateFromTask(ConnectMalAsync);
             
             OpenTrackerPopupCommand = ReactiveCommand.Create(OpenTrackerPopup);
             CloseTrackerPopupCommand = ReactiveCommand.Create(CloseTrackerPopup);
@@ -1656,6 +1657,7 @@ namespace Yomic.ViewModels
         public int MalTrackScore => MalTrack?.Score ?? 0;
 
         public bool IsMalConnected => _mainVM.MyAnimeListService.IsConnected;
+        public bool IsMalTrackingSetupVisible => IsMalConnected && !IsMalTrackingActive;
 
         private string _malSearchQuery = "";
         public string MalSearchQuery
@@ -1697,14 +1699,21 @@ namespace Yomic.ViewModels
         public ReactiveCommand<Unit, Unit> SyncMalMangaCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenMalSearchCommand { get; }
         public ReactiveCommand<Unit, Unit> CloseMalSearchCommand { get; }
+        public ReactiveCommand<Unit, Unit> ConnectMalCommand { get; }
 
-        private void OpenMalSearch()
+        private async Task OpenMalSearchAsync()
         {
+            if (!IsMalConnected)
+            {
+                await ConnectMalAsync();
+                return;
+            }
+
             IsTrackerPopupOpen = false;
             MalSearchQuery = Title;
             MalSearchResults.Clear();
             IsMalSearchActive = true;
-            _ = SearchMalAsync();
+            await SearchMalAsync();
         }
 
         private void CloseMalSearch()
@@ -1758,6 +1767,7 @@ namespace Yomic.ViewModels
                 {
                     MalTrack = track;
                     IsMalTrackingActive = true;
+                    _sourceItem.IsTracked = true;
                     IsMalSearchActive = false;
                     SelectedMalStatus = track.Status;
                     SelectedMalChaptersRead = track.LastChapterRead;
@@ -1791,6 +1801,7 @@ namespace Yomic.ViewModels
                 {
                     MalTrack = null;
                     IsMalTrackingActive = false;
+                    _sourceItem.IsTracked = false;
                 });
 
                 _mainVM.ShowNotification("Unbound MAL tracker.", NotificationType.Success);
@@ -1880,6 +1891,7 @@ namespace Yomic.ViewModels
                     {
                         MalTrack = track;
                         IsMalTrackingActive = true;
+                        _sourceItem.IsTracked = true;
                     });
 
                     // Fetch latest status in background to update local DB
@@ -1909,6 +1921,7 @@ namespace Yomic.ViewModels
                     {
                         IsMalTrackingActive = false;
                         MalTrack = null;
+                        _sourceItem.IsTracked = false;
                     });
                 }
             }
@@ -1978,7 +1991,14 @@ namespace Yomic.ViewModels
         public string SelectedMalStatus
         {
             get => _selectedMalStatus;
-            set => this.RaiseAndSetIfChanged(ref _selectedMalStatus, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedMalStatus, value);
+                if (value == "completed" && MalTrack != null && MalTrack.TotalChapters > 0)
+                {
+                    SelectedMalChaptersRead = MalTrack.TotalChapters;
+                }
+            }
         }
 
         private int _selectedMalChaptersRead;
@@ -2018,6 +2038,79 @@ namespace Yomic.ViewModels
         private void CloseTrackerPopup()
         {
             IsTrackerPopupOpen = false;
+        }
+
+        private async Task ConnectMalAsync()
+        {
+            try
+            {
+                var verifier = Core.Services.MyAnimeListService.GenerateCodeVerifier();
+                var authUrl = _mainVM.MyAnimeListService.GetAuthorizationUrl(verifier);
+                
+                _mainVM.ShowNotification("Opening browser for MyAnimeList login...", NotificationType.Info);
+                
+                var redirectUri = "http://127.0.0.1:49152/";
+                using var listener = new System.Net.HttpListener();
+                listener.Prefixes.Add(redirectUri);
+                listener.Start();
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(authUrl) { UseShellExecute = true });
+
+                var listenTask = listener.GetContextAsync();
+                var timeoutTask = Task.Delay(120000);
+                
+                var completedTask = await Task.WhenAny(listenTask, timeoutTask);
+                if (completedTask == timeoutTask)
+                {
+                    listener.Stop();
+                    _mainVM.ShowNotification("MyAnimeList login timed out.", NotificationType.Error);
+                    return;
+                }
+
+                var context = await listenTask;
+                var request = context.Request;
+                var response = context.Response;
+
+                string? code = request.QueryString["code"];
+
+                byte[] buffer = System.Text.Encoding.UTF8.GetBytes("<html><head><meta charset=\"utf-8\"><title>Yomic Auth</title><style>body { font-family: sans-serif; text-align: center; padding: 50px; background: #11111b; color: #cdd6f4; } h2 { color: #a6e3a1; }</style></head><body><h2>Login Sukses!</h2><p>Otorisasi MyAnimeList berhasil. Anda dapat menutup jendela browser ini sekarang dan kembali ke Yomic.</p></body></html>");
+                response.ContentLength64 = buffer.Length;
+                await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+                response.OutputStream.Close();
+                listener.Stop();
+
+                if (string.IsNullOrEmpty(code))
+                {
+                    _mainVM.ShowNotification("Authorization code not found.", NotificationType.Error);
+                    return;
+                }
+
+                bool success = await _mainVM.MyAnimeListService.AuthenticateAsync(code, verifier);
+                if (success)
+                {
+                    _mainVM.ShowNotification("Successfully connected to MyAnimeList!", NotificationType.Success);
+                    this.RaisePropertyChanged(nameof(IsMalConnected));
+                    this.RaisePropertyChanged(nameof(IsTrackerVisible));
+                    this.RaisePropertyChanged(nameof(IsMalTrackingSetupVisible));
+                    
+                    // Trigger details reload or tracking update
+                    await LoadDetails(new MangaItem 
+                    {
+                        Title = _model.Title,
+                        MangaUrl = _model.Url,
+                        SourceId = _model.Source,
+                        CoverUrl = _model.ThumbnailUrl,
+                    }, _sourceManager);
+                }
+                else
+                {
+                    _mainVM.ShowNotification("Failed to authenticate with MyAnimeList.", NotificationType.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                _mainVM.ShowNotification($"Error connecting to MAL: {ex.Message}", NotificationType.Error);
+            }
         }
 
         private async Task SaveTrackerChangesAsync()

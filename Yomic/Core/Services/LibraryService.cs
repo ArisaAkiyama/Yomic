@@ -19,6 +19,7 @@ namespace Yomic.Core.Services
             return await context.Mangas
                                 .Include(m => m.Chapters)
                                 .Include(m => m.Categories)
+                                .Include(m => m.Tracks)
                                 .Where(m => m.Favorite)
                                 .OrderBy(m => m.Title)
                                 .ToListAsync();
@@ -212,17 +213,15 @@ namespace Yomic.Core.Services
 
                  if (existing != null)
                  {
-                     existing.Favorite = false;
-                     context.Update(existing);
-                     await context.SaveChangesAsync();
-                     
-                     LogService.Info("Library", $"Removed from library (Unfavorited): {existing.Title}");
-                     
                      if (deleteFiles)
                      {
                          await DeleteMangaFilesInternalAsync(context, existing);
-                         await context.SaveChangesAsync();
                      }
+                     
+                     context.Mangas.Remove(existing);
+                     await context.SaveChangesAsync();
+                     
+                     LogService.Info("Library", $"Completely deleted manga from database: {existing.Title}");
                  }
              }
              catch (Exception ex)
@@ -1224,6 +1223,29 @@ namespace Yomic.Core.Services
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[LibraryService] Error clearing database: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task ClearNonLibraryMangasAsync()
+        {
+            try
+            {
+                using var context = new MangaDbContext();
+                
+                // Get all mangas that are NOT favorite
+                var nonFavorites = await context.Mangas.Where(m => !m.Favorite).ToListAsync();
+                
+                if (nonFavorites.Count > 0)
+                {
+                    context.Mangas.RemoveRange(nonFavorites);
+                    await context.SaveChangesAsync();
+                    System.Diagnostics.Debug.WriteLine($"[LibraryService] Cleared {nonFavorites.Count} non-library mangas from database.");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[LibraryService] Error clearing non-library mangas: {ex.Message}");
                 throw;
             }
         }

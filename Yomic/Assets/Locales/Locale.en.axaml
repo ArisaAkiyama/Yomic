@@ -104,6 +104,9 @@
     <sys:String x:Key="String.ClearHistoryCache">Clear Read History &amp; Cache</sys:String>
     <sys:String x:Key="String.ClearHistoryCacheDesc">Reset all chapters to unread status and free up memory</sys:String>
     <sys:String x:Key="String.ClearAll">Clear All</sys:String>
+    <sys:String x:Key="String.ClearNonLibrary">Clear Non-Library Cache</sys:String>
+    <sys:String x:Key="String.ClearNonLibraryDesc">Delete all manga records and reading history not saved in your library</sys:String>
+    <sys:String x:Key="String.CleanDatabase">Clean DB</sys:String>
     <sys:String x:Key="String.ClearAllData">Clear All Data</sys:String>
     <sys:String x:Key="String.ClearAllDataDesc">Irreversible action to clear local database</sys:String>
     <sys:String x:Key="String.ResetData">Reset Data</sys:String>

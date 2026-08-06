@@ -100,6 +100,7 @@ namespace Yomic.ViewModels
         public event Action? RequestRestoreDialog;
         public event Action? RequestClearDataDialog;
         public event Action? RequestClearHistoryDialog;
+        public event Action? RequestClearNonLibraryDialog;
 
         // General
         private bool _isDarkMode = true;
@@ -274,6 +275,7 @@ namespace Yomic.ViewModels
         
         public ReactiveCommand<Unit, Unit> ClearAllDataCommand { get; }
         public ReactiveCommand<Unit, Unit> ClearReadHistoryCommand { get; }
+        public ReactiveCommand<Unit, Unit> ClearNonLibraryCommand { get; }
         public ReactiveCommand<Unit, Unit> ClearCacheCookiesCommand { get; }
         public ReactiveCommand<Unit, Unit> BackupDataCommand { get; }
         public ReactiveCommand<Unit, Unit> RestoreDataCommand { get; }
@@ -581,6 +583,7 @@ namespace Yomic.ViewModels
             
             ClearAllDataCommand = ReactiveCommand.Create(() => RequestClearDataDialog?.Invoke());
             ClearReadHistoryCommand = ReactiveCommand.Create(() => RequestClearHistoryDialog?.Invoke());
+            ClearNonLibraryCommand = ReactiveCommand.Create(() => RequestClearNonLibraryDialog?.Invoke());
             ClearCacheCookiesCommand = ReactiveCommand.CreateFromTask(ClearCacheCookiesAsync);
             CheckForUpdatesCommand = ReactiveCommand.Create(CheckForUpdates);
             BackupDataCommand = ReactiveCommand.Create(RequestBackup);
@@ -1031,6 +1034,20 @@ namespace Yomic.ViewModels
                 _mainViewModel.ShowNotification($"Error clearing read history & cache: {ex.Message}");
             }
         }
+
+        public async System.Threading.Tasks.Task ProcessClearNonLibraryAsync()
+        {
+            try
+            {
+                await _libraryService.ClearNonLibraryMangasAsync();
+                _mainViewModel.ShowNotification("Non-library cache & history cleared successfully!", NotificationType.Success);
+            }
+            catch (System.Exception ex)
+            {
+                _mainViewModel.ShowNotification($"Error clearing non-library cache: {ex.Message}");
+            }
+        }
+        
         private bool _isSyncingLibrary;
         public bool IsSyncingLibrary
         {

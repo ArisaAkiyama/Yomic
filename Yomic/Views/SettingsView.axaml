@@ -705,6 +705,27 @@
                         </Grid>
                         
                         <Border Height="1" Background="#20FF5555" Margin="20,0"/>
+
+                        <!-- Clear Non-Library Cache -->
+                        <Grid ColumnDefinitions="*, Auto" Margin="20,15">
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="{DynamicResource String.ClearNonLibrary}" FontWeight="SemiBold" Foreground="#F59E0B" FontSize="16"/>
+                                <TextBlock Text="{DynamicResource String.ClearNonLibraryDesc}" FontSize="13" Foreground="{DynamicResource SecondaryText}"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="{DynamicResource String.CleanDatabase}" Command="{Binding ClearNonLibraryCommand}" 
+                                    Background="#15F59E0B" BorderBrush="Transparent" BorderThickness="0" 
+                                    Foreground="#F59E0B" CornerRadius="8" Padding="20,8" FontWeight="SemiBold" FontSize="13"
+                                    VerticalAlignment="Center" Cursor="Hand">
+                                <Button.Styles>
+                                    <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                        <Setter Property="Background" Value="#F59E0B"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Style>
+                                </Button.Styles>
+                            </Button>
+                        </Grid>
+                        
+                        <Border Height="1" Background="#20FF5555" Margin="20,0"/>
                         
                         <!-- Clear All Data -->
                         <Grid ColumnDefinitions="*, Auto" Margin="20,15">

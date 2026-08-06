@@ -104,6 +104,9 @@
     <sys:String x:Key="String.ClearHistoryCache">Hapus Riwayat Baca &amp; Cache</sys:String>
     <sys:String x:Key="String.ClearHistoryCacheDesc">Setel ulang semua bab ke status belum dibaca dan bebaskan memori</sys:String>
     <sys:String x:Key="String.ClearAll">Hapus Semua</sys:String>
+    <sys:String x:Key="String.ClearNonLibrary">Hapus Cache Non-Library</sys:String>
+    <sys:String x:Key="String.ClearNonLibraryDesc">Hapus semua data komik dan riwayat baca yang tidak disimpan di library</sys:String>
+    <sys:String x:Key="String.CleanDatabase">Bersihkan DB</sys:String>
     <sys:String x:Key="String.ClearAllData">Hapus Semua Data</sys:String>
     <sys:String x:Key="String.ClearAllDataDesc">Tindakan tidak dapat dibatalkan untuk menghapus basis data lokal</sys:String>
     <sys:String x:Key="String.ResetData">Setel Ulang Data</sys:String>

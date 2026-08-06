@@ -707,6 +707,7 @@ namespace Yomic.ViewModels
                       if (string.IsNullOrEmpty(existingItem.SourceName)) existingItem.SourceName = _mainVM.SourceManager.GetSource(m.Source)?.Name;
                       if (existingItem.HasDownloadedChapters != hasDownloaded) existingItem.HasDownloadedChapters = hasDownloaded;
                       if (existingItem.DownloadedCount != downloadedCount) existingItem.DownloadedCount = downloadedCount;
+                      existingItem.IsTracked = m.Tracks?.Count > 0;
                       
                       // Sync category IDs
                       existingItem.CategoryIds = m.Categories?.Select(c => c.Id).ToList() ?? new List<long>();
@@ -734,7 +735,8 @@ namespace Yomic.ViewModels
                            HasDownloadedChapters = hasDownloaded,
                            DownloadedCount = downloadedCount,
                            CategoryIds = m.Categories?.Select(c => c.Id).ToList() ?? new List<long>(),
-                           Genres = m.Genre != null ? new List<string>(m.Genre) : new List<string>()
+                           Genres = m.Genre != null ? new List<string>(m.Genre) : new List<string>(),
+                           IsTracked = m.Tracks?.Count > 0
                       };
                       newItem.HasNewChapters = m.HasNewChapters;
                       

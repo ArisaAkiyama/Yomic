@@ -27,6 +27,9 @@ namespace Yomic.Views
                 vm.RequestClearHistoryDialog -= OpenClearHistoryDialog;
                 vm.RequestClearHistoryDialog += OpenClearHistoryDialog;
 
+                vm.RequestClearNonLibraryDialog -= OpenClearNonLibraryDialog;
+                vm.RequestClearNonLibraryDialog += OpenClearNonLibraryDialog;
+
                 vm.RequestExportLogsDialog -= OpenExportLogsDialog;
                 vm.RequestExportLogsDialog += OpenExportLogsDialog;
 
@@ -158,6 +161,28 @@ namespace Yomic.Views
                 if (result && DataContext is Yomic.ViewModels.SettingsViewModel vm)
                 {
                     await vm.ProcessClearHistoryAsync();
+                }
+            }
+        }
+
+        private async void OpenClearNonLibraryDialog()
+        {
+            if (this.VisualRoot is Window parentWindow)
+            {
+                var title = GetResourceString("String.ClearNonLibrary", "Clear Non-Library Cache");
+                var message = GetResourceString("String.ClearNonLibraryDesc", "Are you sure you want to delete all manga records and reading history not saved in your library?");
+                var dialog = new ConfirmDialog(title, message);
+                
+                var mainVM = parentWindow.DataContext as Yomic.ViewModels.MainWindowViewModel;
+                if (mainVM != null) mainVM.IsDialogOverlayVisible = true;
+
+                var result = await dialog.ShowDialog<bool>(parentWindow);
+
+                if (mainVM != null) mainVM.IsDialogOverlayVisible = false;
+
+                if (result && DataContext is Yomic.ViewModels.SettingsViewModel vm)
+                {
+                    await vm.ProcessClearNonLibraryAsync();
                 }
             }
         }
