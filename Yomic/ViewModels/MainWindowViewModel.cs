@@ -107,6 +107,41 @@ namespace Yomic.ViewModels
         public string? SourceName { get; set; }
         public string MangaUrl { get; set; } = string.Empty; // This corresponds to Manga.Url (ID)
         
+        private bool _isTracked;
+        public bool IsTracked
+        {
+            get => _isTracked;
+            set => this.RaiseAndSetIfChanged(ref _isTracked, value);
+        }
+
+        private Avalonia.Media.Imaging.Bitmap? _sourceIcon;
+        [System.Text.Json.Serialization.JsonIgnore]
+        public Avalonia.Media.Imaging.Bitmap? SourceIcon
+        {
+            get
+            {
+                if (_sourceIcon == null && SourceId > 0)
+                {
+                    try
+                    {
+                        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                        var iconFile = System.IO.Path.Combine(appData, "Yomic", "Icons", $"{SourceId}.png");
+                        if (System.IO.File.Exists(iconFile))
+                        {
+                            var bytes = System.IO.File.ReadAllBytes(iconFile);
+                            using var ms = new System.IO.MemoryStream(bytes);
+                            _sourceIcon = new Avalonia.Media.Imaging.Bitmap(ms);
+                        }
+                    }
+                    catch
+                    {
+                        // Fallback
+                    }
+                }
+                return _sourceIcon;
+            }
+        }
+        
         // Formatted Last Update String
         public long LastUpdate { get; set; }
         
@@ -165,7 +200,8 @@ namespace Yomic.ViewModels
                 Genres = m.Genre ?? new(),
                 LastUpdate = m.LastUpdate,
                 LastViewed = m.LastViewed, // Map from Core
-                HasNewChapters = m.HasNewChapters // Map from Core
+                HasNewChapters = m.HasNewChapters, // Map from Core
+                IsTracked = m.Tracks?.Count > 0 // Map from Core
             };
         }
     }
