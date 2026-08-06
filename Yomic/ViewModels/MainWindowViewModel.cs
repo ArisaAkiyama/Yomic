@@ -157,13 +157,30 @@ namespace Yomic.ViewModels
 
         private async System.Threading.Tasks.Task DownloadSourceIconAsync(long sourceId)
         {
+            var logPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Yomic", "icon_download_errors.log");
             try
             {
+                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] Starting download for source {sourceId}...\n");
                 var mainVM = MainWindowViewModel.Instance;
-                if (mainVM == null || mainVM.SourceManager == null) return;
+                if (mainVM == null)
+                {
+                    System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] Error: MainWindowViewModel.Instance is null!\n");
+                    return;
+                }
+                if (mainVM.SourceManager == null)
+                {
+                    System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] Error: SourceManager is null!\n");
+                    return;
+                }
 
                 var source = mainVM.SourceManager.GetSource(sourceId);
-                if (source == null) return;
+                if (source == null)
+                {
+                    System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] Error: source {sourceId} not found in SourceManager!\n");
+                    return;
+                }
+
+                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] Source: {source.Name}, BaseUrl: {source.BaseUrl}, IconUrl: {source.IconUrl}\n");
 
                 string? url = source.IconUrl;
                 if (string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(source.BaseUrl) && Uri.TryCreate(source.BaseUrl, UriKind.Absolute, out var uri))
@@ -171,12 +188,22 @@ namespace Yomic.ViewModels
                     url = $"https://www.google.com/s2/favicons?domain={uri.Host}&sz=128";
                 }
 
-                if (string.IsNullOrEmpty(url)) return;
+                if (string.IsNullOrEmpty(url))
+                {
+                    System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] Error: Resolved icon URL is empty!\n");
+                    return;
+                }
+
+                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] Resolved URL: {url}\n");
 
                 using var client = new System.Net.Http.HttpClient();
-                using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(5));
+                // Add a standard web browser User-Agent to pass security/bot filters of Google, Cloudflare, etc.
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
                 
+                using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(8));
                 var bytes = await client.GetByteArrayAsync(url, cts.Token);
+                
+                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] Successfully downloaded {bytes.Length} bytes.\n");
                 
                 var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                 var iconsDir = System.IO.Path.Combine(appData, "Yomic", "Icons");
@@ -184,8 +211,9 @@ namespace Yomic.ViewModels
 
                 var iconFile = System.IO.Path.Combine(iconsDir, $"{sourceId}.png");
                 await System.IO.File.WriteAllBytesAsync(iconFile, bytes);
+                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] Saved icon to: {iconFile}\n");
 
-                // Load the downloaded icon
+                // Verify the bytes are a valid image
                 using var ms = new System.IO.MemoryStream(bytes);
                 var bitmap = new Avalonia.Media.Imaging.Bitmap(ms);
 
@@ -197,7 +225,7 @@ namespace Yomic.ViewModels
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[MangaItem] Failed to download icon for source {sourceId}: {ex.Message}");
+                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] Exception: {ex.Message}\nStack: {ex.StackTrace}\n\n");
             }
         }
         
