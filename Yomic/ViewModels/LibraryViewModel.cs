@@ -927,15 +927,15 @@ namespace Yomic.ViewModels
                          x.Genres.Any(xg => string.Equals(xg.Trim(), g, StringComparison.OrdinalIgnoreCase))));
                  }
 
-                 // 3. Apply Sort
+                 // 3. Apply Sort (Always prioritize items with new chapters first)
                  IEnumerable<MangaItem> sorted = SelectedSortMode switch
                  {
-                     LibrarySortMode.TitleAsc => query.OrderBy(x => x.Title),
-                     LibrarySortMode.TitleDesc => query.OrderByDescending(x => x.Title),
-                     LibrarySortMode.DateModified => query.OrderByDescending(x => x.LastUpdate > 0 ? x.LastUpdate : x.LastViewed).ThenBy(x => x.Title),
-                     LibrarySortMode.UnreadCountDesc => query.OrderByDescending(x => int.TryParse(x.UnreadCount, out int c) ? c : 0).ThenBy(x => x.Title),
-                     LibrarySortMode.LastReadDesc => query.OrderByDescending(x => x.LastViewed).ThenBy(x => x.Title),
-                     _ => query.OrderBy(x => x.Title)
+                     LibrarySortMode.TitleAsc => query.OrderByDescending(x => x.HasNewChapters).ThenBy(x => x.Title),
+                     LibrarySortMode.TitleDesc => query.OrderByDescending(x => x.HasNewChapters).ThenByDescending(x => x.Title),
+                     LibrarySortMode.DateModified => query.OrderByDescending(x => x.HasNewChapters).ThenByDescending(x => x.LastUpdate > 0 ? x.LastUpdate : x.LastViewed).ThenBy(x => x.Title),
+                     LibrarySortMode.UnreadCountDesc => query.OrderByDescending(x => x.HasNewChapters).ThenByDescending(x => int.TryParse(x.UnreadCount, out int c) ? c : 0).ThenBy(x => x.Title),
+                     LibrarySortMode.LastReadDesc => query.OrderByDescending(x => x.HasNewChapters).ThenByDescending(x => x.LastViewed).ThenBy(x => x.Title),
+                     _ => query.OrderByDescending(x => x.HasNewChapters).ThenBy(x => x.Title)
                  };
                        
                  var source = sorted.ToList();
