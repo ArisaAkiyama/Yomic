@@ -1034,28 +1034,19 @@ namespace Yomic.Core.Services
                                 await Task.Delay(Math.Max(50, actualDelay));
                             }
 
-                            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
-                            var fetchTask = Task.Run(async () =>
+                            if (forceRefresh)
                             {
-                                Manga? fm = null;
-                                if (forceRefresh)
+                                try
                                 {
-                                    try
-                                    {
-                                        fm = await source.GetMangaDetailsAsync(manga.Url);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        System.Diagnostics.Debug.WriteLine($"[LibraryService] Error updating metadata for {manga.Title}: {ex.Message}");
-                                    }
+                                    freshManga = await source.GetMangaDetailsAsync(manga.Url).WaitAsync(TimeSpan.FromSeconds(25));
                                 }
-                                var chs = await source.GetChapterListAsync(manga.Url);
-                                return (fm, chs);
-                            }, cts.Token);
+                                catch (Exception ex)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"[LibraryService] Error updating metadata for {manga.Title}: {ex.Message}");
+                                }
+                            }
 
-                            var (fetchedManga, fetchedChapters) = await fetchTask.WaitAsync(TimeSpan.FromSeconds(25));
-                            freshManga = fetchedManga;
-                            chapters = fetchedChapters;
+                            chapters = await source.GetChapterListAsync(manga.Url).WaitAsync(TimeSpan.FromSeconds(25));
                         }
                     }
                     catch (TimeoutException)
