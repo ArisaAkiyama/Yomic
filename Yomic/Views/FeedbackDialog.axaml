@@ -9,26 +9,15 @@
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource PrimaryBackground}"
         Foreground="{DynamicResource PrimaryText}"
-        Title="{DynamicResource String.Feedback.Title}"
-        Icon="/Assets/app.ico"
         ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaTitleBarHeightHint="32"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        Title="{DynamicResource String.Feedback.Title}"
         x:DataType="vm:FeedbackDialogViewModel"
         x:Name="FeedbackWindow">
 
-    <Grid RowDefinitions="Auto, *">
-        <!-- Title Bar (Dark theme header matching MainWindow - Image 2) -->
-        <Grid Grid.Row="0" Height="32" IsHitTestVisible="False" Background="{DynamicResource PrimaryBackground}">
-            <StackPanel Orientation="Horizontal" Spacing="8" Margin="16,0,0,0" VerticalAlignment="Center">
-                <Image Source="/Assets/app.ico" Height="16" Width="16" VerticalAlignment="Center" RenderOptions.BitmapInterpolationMode="HighQuality"/>
-                <TextBlock Text="{DynamicResource String.Feedback.Title}" FontSize="12" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-            </StackPanel>
-        </Grid>
-
-        <!-- Main Dialog Content -->
-        <Grid Grid.Row="1" RowDefinitions="Auto, Auto, *, Auto, Auto" Margin="24,12,24,24">
-            <!-- Title Header -->
-            <TextBlock Grid.Row="0" Text="{DynamicResource String.Feedback.Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,16"/>
+    <Grid RowDefinitions="Auto, Auto, *, Auto, Auto" Margin="24,36,24,24">
+        <!-- Title Header -->
+        <TextBlock Grid.Row="0" Text="{DynamicResource String.Feedback.Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,16"/>
         
         <!-- Category Selection -->
         <ComboBox Grid.Row="1" 
@@ -227,5 +216,4 @@
             </StackPanel>
         </Grid>
     </Grid>
-</Grid>
 </Window>
