@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,19 @@ namespace Yomic.Views
         public FeedbackDialog()
         {
             InitializeComponent();
+        }
+
+        private void OnTitleBarPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            {
+                BeginMoveDrag(e);
+            }
+        }
+
+        private void OnCloseClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            Close();
         }
 
         protected override void OnDataContextChanged(EventArgs e)
