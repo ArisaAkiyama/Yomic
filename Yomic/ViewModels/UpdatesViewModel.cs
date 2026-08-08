@@ -197,8 +197,14 @@ namespace Yomic.ViewModels
             // Let's resolve the full manga first
             if (item.MangaRef != null)
             {
+                // Mark manga as seen in DB so HasNewChapters badge is cleared
+                item.MangaRef.HasNewChapters = false;
+                await _libraryService.MarkMangaAsSeenAsync(item.MangaRef.Id);
+
                 // Create minimal object safely using standard helper
                 var mangaItem = MangaItem.FromCoreManga(item.MangaRef);
+                mangaItem.HasNewChapters = false;
+                mangaItem.IsNewBadgeVisible = false;
                 
                 // Go to detail first (safe)
                 _mainVM.GoToDetail(mangaItem);

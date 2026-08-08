@@ -441,6 +441,12 @@ namespace Yomic.ViewModels
         public void GoToDetail(MangaItem item)
         {
             if (item == null) return;
+            
+            // Mark manga as seen in memory & DB when opening detail page
+            item.HasNewChapters = false;
+            item.IsNewBadgeVisible = false;
+            _ = _libraryService.MarkMangaAsSeenAsync(item.MangaUrl, item.SourceId);
+
             if (CurrentPage != null) _navigationStack.Push(CurrentPage);
             CurrentPage = new MangaDetailViewModel(item, this, _sourceManager, _libraryService, _networkService, _downloadService, _imageCacheService);
         }

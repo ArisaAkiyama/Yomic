@@ -759,6 +759,14 @@ namespace Yomic.ViewModels
                 
                 if (existing != null)
                 {
+                    if (existing.HasNewChapters)
+                    {
+                        existing.HasNewChapters = false;
+                        await _libraryService.MarkMangaAsSeenAsync(existing.Id);
+                    }
+                    _sourceItem.HasNewChapters = false;
+                    _sourceItem.IsNewBadgeVisible = false;
+
                     // Update History (Async) for Library Items
                     await _libraryService.UpdateHistoryAsync(new Manga 
                     { 
