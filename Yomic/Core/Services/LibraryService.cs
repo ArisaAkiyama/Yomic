@@ -1025,33 +1025,41 @@ namespace Yomic.Core.Services
                         var source = sourceManager.GetSource(manga.Source);
                         if (source != null)
                         {
-                            // Stagger requests per-source with a custom delay based on the source's limit
-                            int delayMs = source.RateLimitDelayMs;
-                            if (delayMs > 0)
+                            var updateTask = Task.Run(async () =>
                             {
-                                int variance = delayMs / 4;
-                                int actualDelay = delayMs + Random.Shared.Next(-variance, variance);
-                                await Task.Delay(Math.Max(50, actualDelay));
-                            }
-
-                            if (forceRefresh)
-                            {
-                                try
+                                int delayMs = source.RateLimitDelayMs;
+                                if (delayMs > 0)
                                 {
-                                    freshManga = await source.GetMangaDetailsAsync(manga.Url).WaitAsync(TimeSpan.FromSeconds(25));
+                                    int variance = delayMs / 4;
+                                    int actualDelay = delayMs + Random.Shared.Next(-variance, variance);
+                                    await Task.Delay(Math.Max(50, actualDelay));
                                 }
-                                catch (Exception ex)
-                                {
-                                    System.Diagnostics.Debug.WriteLine($"[LibraryService] Error updating metadata for {manga.Title}: {ex.Message}");
-                                }
-                            }
 
-                            chapters = await source.GetChapterListAsync(manga.Url).WaitAsync(TimeSpan.FromSeconds(25));
+                                Manga? details = null;
+                                if (forceRefresh)
+                                {
+                                    try
+                                    {
+                                        details = await source.GetMangaDetailsAsync(manga.Url);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"[LibraryService] Error updating metadata for {manga.Title}: {ex.Message}");
+                                    }
+                                }
+
+                                var chs = await source.GetChapterListAsync(manga.Url);
+                                return (details, chs);
+                            });
+
+                            var res = await updateTask.WaitAsync(TimeSpan.FromSeconds(25));
+                            freshManga = res.details;
+                            chapters = res.chs;
                         }
                     }
                     catch (TimeoutException)
                     {
-                        System.Diagnostics.Debug.WriteLine($"[LibraryService] Timeout (25s) updating {manga.Title}");
+                        LogService.Warning("LibraryService", $"Timeout updating '{manga.Title}' from source {manga.Source} (>25s). Skipping.");
                     }
                     catch (Exception ex)
                     {
