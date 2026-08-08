@@ -7,6 +7,8 @@
         Icon="/Assets/app.ico"
         Title="{Binding Title}"
         Background="Black"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="32"
         Width="1000" Height="700">
     
     <views:ReaderView/>
