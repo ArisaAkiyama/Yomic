@@ -1034,20 +1034,33 @@ namespace Yomic.Core.Services
                                 await Task.Delay(Math.Max(50, actualDelay));
                             }
 
-                            if (forceRefresh)
+                            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+                            var fetchTask = Task.Run(async () =>
                             {
-                                try
+                                Manga? fm = null;
+                                if (forceRefresh)
                                 {
-                                    freshManga = await source.GetMangaDetailsAsync(manga.Url);
+                                    try
+                                    {
+                                        fm = await source.GetMangaDetailsAsync(manga.Url);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"[LibraryService] Error updating metadata for {manga.Title}: {ex.Message}");
+                                    }
                                 }
-                                catch (Exception ex)
-                                {
-                                    System.Diagnostics.Debug.WriteLine($"[LibraryService] Error updating metadata for {manga.Title}: {ex.Message}");
-                                }
-                            }
+                                var chs = await source.GetChapterListAsync(manga.Url);
+                                return (fm, chs);
+                            }, cts.Token);
 
-                            chapters = await source.GetChapterListAsync(manga.Url);
+                            var (fetchedManga, fetchedChapters) = await fetchTask.WaitAsync(TimeSpan.FromSeconds(25));
+                            freshManga = fetchedManga;
+                            chapters = fetchedChapters;
                         }
+                    }
+                    catch (TimeoutException)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[LibraryService] Timeout (25s) updating {manga.Title}");
                     }
                     catch (Exception ex)
                     {

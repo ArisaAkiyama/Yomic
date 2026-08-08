@@ -5,20 +5,31 @@
         xmlns:vm="using:Yomic.ViewModels"
         mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="350"
         x:Class="Yomic.Views.FeedbackDialog"
-        Width="600" Height="520"
+        Icon="/Assets/app.ico"
+        Width="600" Height="560"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource PrimaryBackground}"
         Foreground="{DynamicResource PrimaryText}"
         Title="{DynamicResource String.Feedback.Title}"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="36"
         x:DataType="vm:FeedbackDialogViewModel"
         x:Name="FeedbackWindow">
 
-    <Grid RowDefinitions="Auto, Auto, *, Auto, Auto" Margin="24">
+    <Grid RowDefinitions="Auto, Auto, Auto, *, Auto, Auto" Margin="24,10,24,24">
+        <!-- Title Bar Header (Dark Custom Chrome) -->
+        <Grid Grid.Row="0" Height="36" Margin="-24,-10,-24,12" IsHitTestVisible="False">
+             <StackPanel Orientation="Horizontal" Spacing="10" Margin="15,0,0,0" VerticalAlignment="Center">
+                 <Image Source="/Assets/app.ico" Height="18" Width="18" VerticalAlignment="Center" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                 <TextBlock Text="{DynamicResource String.Feedback.Title}" FontSize="12" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+             </StackPanel>
+        </Grid>
+
         <!-- Title Header -->
-        <TextBlock Grid.Row="0" Text="{DynamicResource String.Feedback.Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,16"/>
+        <TextBlock Grid.Row="1" Text="{DynamicResource String.Feedback.Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,16"/>
         
         <!-- Category Selection -->
-        <ComboBox Grid.Row="1" 
+        <ComboBox Grid.Row="2" 
                   ItemsSource="{Binding FeedbackCategories}" 
                   SelectedItem="{Binding SelectedCategory}"
                   Background="{DynamicResource SidebarBackground}"
@@ -35,7 +46,7 @@
         </ComboBox>
 
         <!-- Message Input TextBox -->
-        <Grid Grid.Row="2" RowDefinitions="*, Auto" Margin="0,0,0,16">
+        <Grid Grid.Row="3" RowDefinitions="*, Auto" Margin="0,0,0,16">
             <TextBox Grid.Row="0"
                      Text="{Binding FeedbackText}"
                      Watermark="{DynamicResource String.Feedback.Watermark}"
@@ -75,7 +86,7 @@
         </Grid>
 
         <!-- Screenshots & Warnings Section -->
-        <StackPanel Grid.Row="3" Spacing="10" Margin="0,0,0,16">
+        <StackPanel Grid.Row="4" Spacing="10" Margin="0,0,0,16">
             <ItemsControl ItemsSource="{Binding ScreenshotAttachments}" IsVisible="{Binding HasScreenshot}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -123,7 +134,7 @@
         </StackPanel>
 
         <!-- Footer Actions -->
-        <Grid Grid.Row="4" ColumnDefinitions="Auto, *, Auto, Auto" Margin="0,8,0,0">
+        <Grid Grid.Row="5" ColumnDefinitions="Auto, *, Auto, Auto" Margin="0,8,0,0">
             <!-- Left screenshot button -->
             <Button Grid.Column="0" Command="{Binding AttachScreenshotCommand}"
                     IsVisible="{Binding CanAttachMoreScreenshots}"
