@@ -15,9 +15,14 @@
         x:DataType="vm:FeedbackDialogViewModel"
         x:Name="FeedbackWindow">
 
-    <Grid RowDefinitions="Auto, Auto, *, Auto, Auto" Margin="24,36,24,24">
-        <!-- Title Header -->
-        <TextBlock Grid.Row="0" Text="{DynamicResource String.Feedback.Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,16"/>
+    <Grid RowDefinitions="Auto, Auto, *, Auto, Auto" Margin="20,10,20,20">
+        <!-- Title Bar Header (App Icon + Window Title) -->
+        <Grid Grid.Row="0" Height="30" VerticalAlignment="Top" IsHitTestVisible="False" Margin="0,0,0,12">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Image Source="/Assets/app.ico" Height="18" Width="18" VerticalAlignment="Center" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                <TextBlock Text="{DynamicResource String.Feedback.Title}" FontSize="12" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+            </StackPanel>
+        </Grid>
         
         <!-- Category Selection -->
         <ComboBox Grid.Row="1" 

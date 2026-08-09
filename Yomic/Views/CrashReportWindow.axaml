@@ -8,9 +8,17 @@
         Foreground="{DynamicResource PrimaryText}"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1">
-    <Grid RowDefinitions="Auto, *, Auto" Margin="24,36,24,24">
+    <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="20,10,20,20">
+        <!-- Title Bar Header (App Icon + Window Title) -->
+        <Grid Grid.Row="0" Height="30" VerticalAlignment="Top" IsHitTestVisible="False" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Image Source="/Assets/app.ico" Height="18" Width="18" VerticalAlignment="Center" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                <TextBlock Text="{DynamicResource String.CrashReport.Title}" FontSize="12" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+            </StackPanel>
+        </Grid>
+
         <!-- Title and description -->
-        <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,16">
+        <StackPanel Grid.Row="1" Spacing="8" Margin="0,0,0,16">
             <TextBlock Text="{DynamicResource String.CrashReport.Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}"/>
             <TextBlock Text="{DynamicResource String.CrashReport.Description}" FontSize="13" Foreground="{DynamicResource SecondaryText}" TextWrapping="Wrap"/>
         </StackPanel>
