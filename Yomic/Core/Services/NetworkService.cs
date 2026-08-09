@@ -129,7 +129,7 @@ namespace Yomic.Core.Services
                     return IsOnline;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Fallback: Ping Google DNS 8.8.8.8 with 1.5s timeout
                 try 
