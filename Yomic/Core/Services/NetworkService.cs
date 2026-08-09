@@ -26,8 +26,8 @@ namespace Yomic.Core.Services
         
         // Debounce/Grace period settings
         private int _consecutiveFailures = 0;
-        private const int FailureThreshold = 3; // Ditingkatkan agar lebih kebal lag spike
-        private const int PollingIntervalSeconds = 60; // Cek setiap 60 detik agar tidak spam
+        private const int FailureThreshold = 1; // Instant offline detection on failure
+        private const int PollingIntervalSeconds = 3; // Fast 3s check
 
         private readonly SettingsService _settingsService;
 
@@ -37,67 +37,74 @@ namespace Yomic.Core.Services
             
             _connectivityClient = new System.Net.Http.HttpClient 
             { 
-                Timeout = TimeSpan.FromSeconds(5) // Toleransi waktu tunggu dinaikkan ke 5 detik
+                Timeout = TimeSpan.FromSeconds(3) // Fast 3s HTTP timeout
             };
             _connectivityClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
 
             // Initial check
             _ = CheckConnectivityAsync();
 
-            // Hook into network availability changes (backup)
-            // Hook into network availability changes
+            // Hook into OS network availability & address changes for immediate detection
             NetworkChange.NetworkAvailabilityChanged += (s, e) =>
             {
                 if (!e.IsAvailable)
                 {
-                    // OS reports network lost - Go offline immediately irrespective of threshold
-                    Dispatcher.UIThread.Post(() => 
-                    {
-                        if (IsOnline)
-                        {
-                            IsOnline = false;
-                            StatusChanged?.Invoke(this, false);
-                             Interlocked.Exchange(ref _consecutiveFailures, FailureThreshold); // Sync failure count
-                            LogService.Warning("Network", "Immediate Offline via OS Event.");
-                        }
-                    });
+                    SetOnlineStatus(false);
                 }
                 else
                 {
-                    // Network became available - verify actual internet connectivity
                     _ = CheckConnectivityAsync();
                 }
+            };
+
+            NetworkChange.NetworkAddressChanged += (s, e) =>
+            {
+                _ = CheckConnectivityAsync();
             };
 
             // Hook into Settings Offline Mode
             _settingsService.OfflineModeChanged += (isOffline) => 
             {
-                // Trigger immediate check to update status
                 _ = CheckConnectivityAsync();
             };
             
-            // Start polling (keep generic lambda for Timer)
+            // Start polling timer
             _pollingTimer = new Timer(async _ => 
             {
                 await CheckConnectivityAsync();
             }, null, TimeSpan.FromSeconds(PollingIntervalSeconds), TimeSpan.FromSeconds(PollingIntervalSeconds));
         }
 
-        // Fallback constructor for designer if needed, but better to enforce DI
+        // Fallback constructor for designer
         public NetworkService() : this(new SettingsService()) { }
+
+        private void SetOnlineStatus(bool online)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (IsOnline != online)
+                {
+                    IsOnline = online;
+                    StatusChanged?.Invoke(this, online);
+                    LogService.Info("Network", $"Status changed: {(online ? "Online" : "Offline / Disconnected")}");
+                }
+            });
+        }
 
         public async Task<bool> CheckConnectivityAsync()
         {
             // 1. Enforce Offline Mode from Settings
             if (_settingsService.IsOfflineMode)
             {
-                if (IsOnline)
-                {
-                    IsOnline = false;
-                    StatusChanged?.Invoke(this, false);
-                    LogService.Info("Network", "Forced Offline via Settings.");
-                }
+                SetOnlineStatus(false);
                 return false; 
+            }
+
+            // 2. Instant OS level check: Is any network interface active?
+            if (!NetworkInterface.GetIsNetworkAvailable())
+            {
+                SetOnlineStatus(false);
+                return false;
             }
 
             try
@@ -108,63 +115,40 @@ namespace Yomic.Core.Services
                 
                 if (isConnected)
                 {
-                    // Success: reset failure counter and immediately go online
                     Interlocked.Exchange(ref _consecutiveFailures, 0);
-                    
-                    if (!IsOnline)
-                    {
-                        IsOnline = true;
-                        StatusChanged?.Invoke(this, true);
-                        LogService.Success("Network", "Status changed: Online (recovered)");
-                    }
+                    SetOnlineStatus(true);
+                    return true;
                 }
                 else
                 {
-                    // Failure: increment counter
-                     var currentFailures = Interlocked.Increment(ref _consecutiveFailures);
-                     LogService.Debug("Network", $"Connectivity check failed. Consecutive failures: {currentFailures}/{FailureThreshold}");
-                    
-                    // Only go offline if threshold exceeded
-                     if (Volatile.Read(ref _consecutiveFailures) >= FailureThreshold && IsOnline)
+                    var currentFailures = Interlocked.Increment(ref _consecutiveFailures);
+                    if (currentFailures >= FailureThreshold)
                     {
-                        IsOnline = false;
-                        StatusChanged?.Invoke(this, false);
-                        LogService.Warning("Network", $"Status changed: Offline (after {FailureThreshold} failures)");
+                        SetOnlineStatus(false);
                     }
+                    return IsOnline;
                 }
-                
-                return IsOnline;
             }
             catch (Exception ex)
             {
-                // Fallback: Jika HTTP gagal (mungkin masalah DNS/Proxy), coba Ping langsung ke IP Google
+                // Fallback: Ping Google DNS 8.8.8.8 with 1.5s timeout
                 try 
                 {
                     using var ping = new System.Net.NetworkInformation.Ping();
-                    var reply = await ping.SendPingAsync("8.8.8.8", 2000);
+                    var reply = await ping.SendPingAsync("8.8.8.8", 1500);
                     if (reply.Status == System.Net.NetworkInformation.IPStatus.Success)
                     {
                         Interlocked.Exchange(ref _consecutiveFailures, 0);
-                        if (!IsOnline)
-                        {
-                            IsOnline = true;
-                            StatusChanged?.Invoke(this, true);
-                            LogService.Success("Network", "Status changed: Online (recovered via Ping fallback)");
-                        }
+                        SetOnlineStatus(true);
                         return true;
                     }
                 } 
                 catch { }
 
-                // Jika Ping juga gagal, maka benar-benar dihitung sebagai kegagalan
                 var currentFailures = Interlocked.Increment(ref _consecutiveFailures);
-                LogService.Debug("Network", $"Check exception: {ex.Message}. Consecutive failures: {currentFailures}/{FailureThreshold}");
-                
-                if (Volatile.Read(ref _consecutiveFailures) >= FailureThreshold && IsOnline)
+                if (currentFailures >= FailureThreshold)
                 {
-                    IsOnline = false;
-                    StatusChanged?.Invoke(this, false);
-                    LogService.Warning("Network", $"Status changed: Offline (exception, after {FailureThreshold} failures)");
+                    SetOnlineStatus(false);
                 }
                 return false;
             }
