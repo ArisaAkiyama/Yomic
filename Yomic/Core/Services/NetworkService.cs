@@ -78,16 +78,43 @@ namespace Yomic.Core.Services
         // Fallback constructor for designer
         public NetworkService() : this(new SettingsService()) { }
 
-        private void SetOnlineStatus(bool online)
+        private int _signalLevel = 3;
+        public int SignalLevel
+        {
+            get => _signalLevel;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _signalLevel, value);
+                this.RaisePropertyChanged(nameof(IsSignalLevel0));
+                this.RaisePropertyChanged(nameof(IsSignalLevel1));
+                this.RaisePropertyChanged(nameof(IsSignalLevel2));
+                this.RaisePropertyChanged(nameof(IsSignalLevel3));
+            }
+        }
+
+        public bool IsSignalLevel0 => IsOnline && SignalLevel == 0;
+        public bool IsSignalLevel1 => IsOnline && SignalLevel == 1;
+        public bool IsSignalLevel2 => IsOnline && SignalLevel == 2;
+        public bool IsSignalLevel3 => IsOnline && SignalLevel >= 3;
+
+        private void SetOnlineStatus(bool online, int signalLevel = 3)
         {
             Dispatcher.UIThread.Post(() =>
             {
+                int newSignal = online ? signalLevel : -1;
+                
                 if (IsOnline != online)
                 {
                     IsOnline = online;
                     StatusChanged?.Invoke(this, online);
                     LogService.Info("Network", $"Status changed: {(online ? "Online" : "Offline / Disconnected")}");
                 }
+                
+                SignalLevel = newSignal;
+                this.RaisePropertyChanged(nameof(IsSignalLevel0));
+                this.RaisePropertyChanged(nameof(IsSignalLevel1));
+                this.RaisePropertyChanged(nameof(IsSignalLevel2));
+                this.RaisePropertyChanged(nameof(IsSignalLevel3));
             });
         }
 
@@ -96,27 +123,32 @@ namespace Yomic.Core.Services
             // 1. Enforce Offline Mode from Settings
             if (_settingsService.IsOfflineMode)
             {
-                SetOnlineStatus(false);
+                SetOnlineStatus(false, -1);
                 return false; 
             }
 
             // 2. Instant OS level check: Is any network interface active?
             if (!NetworkInterface.GetIsNetworkAvailable())
             {
-                SetOnlineStatus(false);
+                SetOnlineStatus(false, -1);
                 return false;
             }
 
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             try
             {
                 // Use a lightweight HTTP check (204 No Content is fastest)
                 using var response = await _connectivityClient.GetAsync("http://clients3.google.com/generate_204");
+                sw.Stop();
                 var isConnected = response.IsSuccessStatusCode;
                 
                 if (isConnected)
                 {
                     Interlocked.Exchange(ref _consecutiveFailures, 0);
-                    SetOnlineStatus(true);
+                    int level = sw.ElapsedMilliseconds < 70 ? 3 :
+                                sw.ElapsedMilliseconds < 180 ? 2 :
+                                sw.ElapsedMilliseconds < 350 ? 1 : 0;
+                    SetOnlineStatus(true, level);
                     return true;
                 }
                 else
@@ -124,7 +156,7 @@ namespace Yomic.Core.Services
                     var currentFailures = Interlocked.Increment(ref _consecutiveFailures);
                     if (currentFailures >= FailureThreshold)
                     {
-                        SetOnlineStatus(false);
+                        SetOnlineStatus(false, -1);
                     }
                     return IsOnline;
                 }
@@ -139,7 +171,11 @@ namespace Yomic.Core.Services
                     if (reply.Status == System.Net.NetworkInformation.IPStatus.Success)
                     {
                         Interlocked.Exchange(ref _consecutiveFailures, 0);
-                        SetOnlineStatus(true);
+                        long rtt = reply.RoundtripTime;
+                        int level = rtt < 70 ? 3 :
+                                    rtt < 180 ? 2 :
+                                    rtt < 350 ? 1 : 0;
+                        SetOnlineStatus(true, level);
                         return true;
                     }
                 } 
@@ -148,7 +184,7 @@ namespace Yomic.Core.Services
                 var currentFailures = Interlocked.Increment(ref _consecutiveFailures);
                 if (currentFailures >= FailureThreshold)
                 {
-                    SetOnlineStatus(false);
+                    SetOnlineStatus(false, -1);
                 }
                 return false;
             }
