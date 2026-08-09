@@ -459,7 +459,7 @@ namespace Yomic.Core.Services
                             var customHeaders = new Dictionary<string, string>();
                             if (pageUrl.Contains("|"))
                             {
-                                var parts = pageUrl.Split(new[] { '|', '&' }, StringSplitOptions.RemoveEmptyEntries);
+                                var parts = pageUrl.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
                                 requestUrl = parts[0];
                                 for (int j = 1; j < parts.Length; j++)
                                 {
@@ -517,6 +517,11 @@ namespace Yomic.Core.Services
                                             if (data.Length == 0)
                                             {
                                                 throw new IOException("Downloaded page is empty.");
+                                            }
+
+                                            if (customHeaders.ContainsKey("AesKey") && customHeaders.ContainsKey("AesIv"))
+                                            {
+                                                data = DecryptAes256Cbc(data, customHeaders["AesKey"], customHeaders["AesIv"]);
                                             }
 
                                             // Write to .part file first
@@ -811,6 +816,29 @@ namespace Yomic.Core.Services
                 request.CancellationTokenSource.Cancel();
                 QueueChanged?.Invoke(this, request);
                 SaveQueue();
+            }
+        }
+
+        private static byte[] DecryptAes256Cbc(byte[] cipherText, string keyHex, string ivHex)
+        {
+            try
+            {
+                byte[] key = Convert.FromHexString(keyHex);
+                byte[] iv = Convert.FromHexString(ivHex);
+
+                using var aes = System.Security.Cryptography.Aes.Create();
+                aes.Key = key;
+                aes.IV = iv;
+                aes.Mode = System.Security.Cryptography.CipherMode.CBC;
+                aes.Padding = System.Security.Cryptography.PaddingMode.PKCS7;
+
+                using var decryptor = aes.CreateDecryptor();
+                return decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DownloadService] AES Decryption Error: {ex.Message}");
+                return cipherText;
             }
         }
     }

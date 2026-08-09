@@ -185,7 +185,7 @@ namespace Yomic.ViewModels
                 // Parse Custom Headers: url|Key=Value|Key2=Value2 or url|Key=Value&Key2=Value2
                 if (Url.Contains("|"))
                 {
-                    var parts = Url.Split(new[] { '|', '&' }, StringSplitOptions.RemoveEmptyEntries);
+                    var parts = Url.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
                     requestUrl = parts[0];
                     for (int j = 1; j < parts.Length; j++)
                     {
