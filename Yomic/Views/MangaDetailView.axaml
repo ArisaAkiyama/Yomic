@@ -258,7 +258,13 @@
                                     <!-- Track Button -->
                                     <Button Command="{Binding OpenTrackerPopupCommand}" IsVisible="{Binding IsTrackerVisible}">
                                         <StackPanel Spacing="6" HorizontalAlignment="Center">
-                                            <Image Source="/Assets/MyAnimeList_Logo.png" Width="26" Height="26" HorizontalAlignment="Center" Stretch="Uniform"/>
+                                            <Viewbox Width="26" Height="26" HorizontalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2 M9 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2 M9 14l2 2l4 -4" 
+                                                          Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" 
+                                                          Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
                                             <TextBlock Text="Track" FontSize="11" HorizontalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
