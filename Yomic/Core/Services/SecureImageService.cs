@@ -154,10 +154,16 @@ namespace Yomic.Core.Services
                 var req = new HttpRequestMessage(HttpMethod.Get, url)
                 {
                     Version = System.Net.HttpVersion.Version20,
-                    VersionPolicy = HttpVersionPolicy.RequestVersionOrLower
+                    VersionPolicy = HttpVersionPolicy.RequestVersionExact
                 };
                 req.Headers.TryAddWithoutValidation("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8");
                 req.Headers.TryAddWithoutValidation("Accept-Language", "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7");
+                req.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "image");
+                req.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "no-cors");
+                req.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "same-site");
+                req.Headers.TryAddWithoutValidation("sec-ch-ua", "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"131\", \"Google Chrome\";v=\"131\"");
+                req.Headers.TryAddWithoutValidation("sec-ch-ua-mobile", "?0");
+                req.Headers.TryAddWithoutValidation("sec-ch-ua-platform", "\"Windows\"");
 
                 string uaToUse = !string.IsNullOrEmpty(userAgent) 
                     ? userAgent 
@@ -177,7 +183,8 @@ namespace Yomic.Core.Services
                 else
                 {
                     // Fallback heuristics based on image URL domain
-                    if (url.Contains("komikcast")) req.Headers.Referrer = new Uri("https://komikcast.ch/");
+                    if (url.Contains("mangamillion")) req.Headers.Referrer = new Uri("https://mangamillion.shueisha.co.jp/");
+                    else if (url.Contains("komikcast")) req.Headers.Referrer = new Uri("https://komikcast.ch/");
                     else if (url.Contains("mangabats") || url.Contains("2xstorage.com") || url.Contains("waitst.com")) req.Headers.Referrer = new Uri("https://www.mangabats.com/");
                     else if (url.Contains("weebcentral")) req.Headers.Referrer = new Uri("https://weebcentral.com/");
                     else if (url.Contains("komiku") || url.Contains("img.komiku")) req.Headers.Referrer = new Uri("https://komiku.org/");
@@ -371,7 +378,7 @@ namespace Yomic.Core.Services
                 var psi = new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = "curl.exe",
-                    Arguments = $"--http2 -s -f -k -A \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36\" -H \"Referer: {refUrl}\" \"{url}\" -o \"{cachePath}\"",
+                    Arguments = $"--http2 -s -f -k -A \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36\" -H \"Referer: {refUrl}\" -H \"sec-ch-ua: \\\"Not/A)Brand\\\";v=\\\"8\\\", \\\"Chromium\\\";v=\\\"131\\\", \\\"Google Chrome\\\";v=\\\"131\\\"\" -H \"Sec-Fetch-Dest: image\" -H \"Sec-Fetch-Mode: no-cors\" -H \"Sec-Fetch-Site: same-site\" \"{url}\" -o \"{cachePath}\"",
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
