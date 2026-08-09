@@ -278,7 +278,11 @@ namespace Yomic.Core.Sources
                 }
 
                 // Otherwise make a custom request using our client
-                var request = new HttpRequestMessage(method, url);
+                var request = new HttpRequestMessage(method, url)
+                {
+                    Version = System.Net.HttpVersion.Version20,
+                    VersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionOrLower
+                };
                 foreach (var h in headers)
                 {
                     request.Headers.TryAddWithoutValidation(h.Key, h.Value);
@@ -300,6 +304,7 @@ namespace Yomic.Core.Sources
                 {
                     bodyText = System.Text.Encoding.UTF8.GetString(responseBytes);
                 }
+                Console.WriteLine($"[JsMangaSource.FetchUrl] {method} {url} -> Status {(int)response.StatusCode}, Bytes {responseBytes.Length}");
                 return new JsResponse { body = bodyText, status = (int)response.StatusCode };
             }
             catch (Exception ex)

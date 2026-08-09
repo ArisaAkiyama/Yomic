@@ -367,11 +367,11 @@ namespace Yomic.Core.Services
         {
             try
             {
-                var refUrl = !string.IsNullOrEmpty(referer) ? referer : "https://www.manhwaindo.my/";
+                var refUrl = !string.IsNullOrEmpty(referer) ? referer : "https://mangamillion.shueisha.co.jp/";
                 var psi = new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = "curl.exe",
-                    Arguments = $"-s -f -k -A \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36\" -H \"Referer: {refUrl}\" \"{url}\" -o \"{cachePath}\"",
+                    Arguments = $"--http2 -s -f -k -A \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36\" -H \"Referer: {refUrl}\" \"{url}\" -o \"{cachePath}\"",
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
