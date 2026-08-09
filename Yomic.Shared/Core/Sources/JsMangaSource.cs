@@ -281,7 +281,7 @@ namespace Yomic.Core.Sources
                 var request = new HttpRequestMessage(method, url)
                 {
                     Version = System.Net.HttpVersion.Version20,
-                    VersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionOrLower
+                    VersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionExact
                 };
                 foreach (var h in headers)
                 {
