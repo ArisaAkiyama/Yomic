@@ -162,11 +162,21 @@ namespace Yomic.Core.Services
                     Version = System.Net.HttpVersion.Version20,
                     VersionPolicy = HttpVersionPolicy.RequestVersionExact
                 };
-                req.Headers.TryAddWithoutValidation("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8");
-                req.Headers.TryAddWithoutValidation("Accept-Language", "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7");
-                req.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "image");
-                req.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "no-cors");
-                req.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "same-site");
+                req.Headers.TryAddWithoutValidation("Accept", "*/*");
+                req.Headers.TryAddWithoutValidation("Accept-Language", "en-US,en;q=0.9");
+                if (url.Contains("mangamillion"))
+                {
+                    req.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "empty");
+                    req.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "cors");
+                    req.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "same-site");
+                    req.Headers.TryAddWithoutValidation("Origin", "https://mangamillion.shueisha.co.jp");
+                }
+                else
+                {
+                    req.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "image");
+                    req.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "no-cors");
+                    req.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "same-site");
+                }
                 req.Headers.TryAddWithoutValidation("sec-ch-ua", "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"131\", \"Google Chrome\";v=\"131\"");
                 req.Headers.TryAddWithoutValidation("sec-ch-ua-mobile", "?0");
                 req.Headers.TryAddWithoutValidation("sec-ch-ua-platform", "\"Windows\"");

@@ -211,7 +211,11 @@ namespace Yomic.ViewModels
                 var client = _client;
                 
                 // Construct Request
-                var req = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, requestUrl);
+                var req = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, requestUrl)
+                {
+                    Version = System.Net.HttpVersion.Version20,
+                    VersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionExact
+                };
                 
                 // Add Referer header
                 if (customHeaders.ContainsKey("Referer"))
@@ -267,10 +271,19 @@ namespace Yomic.ViewModels
                 }
                 
                 // CRITICAL: Add Sec-Fetch-* headers that Chrome sends for image requests
-                // These Client Hints are used by CDNs to verify requests come from real browsers
-                req.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "image");
-                req.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "no-cors");
-                req.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "cross-site");
+                if (requestUrl.Contains("mangamillion"))
+                {
+                    req.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "empty");
+                    req.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "cors");
+                    req.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "same-site");
+                    req.Headers.TryAddWithoutValidation("Origin", "https://mangamillion.shueisha.co.jp");
+                }
+                else
+                {
+                    req.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "image");
+                    req.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "no-cors");
+                    req.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "cross-site");
+                }
                 req.Headers.TryAddWithoutValidation("Sec-Ch-Ua", "\"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\", \"Not_A Brand\";v=\"8\"");
                 req.Headers.TryAddWithoutValidation("Sec-Ch-Ua-Mobile", "?0");
                 req.Headers.TryAddWithoutValidation("Sec-Ch-Ua-Platform", "\"Windows\"");
@@ -307,12 +320,6 @@ namespace Yomic.ViewModels
                     data = DecryptAes256Cbc(data, customHeaders["AesKey"], customHeaders["AesIv"]);
                 }
 
-                // Log first few bytes to detect if it's the placeholder
-                if (data.Length > 20)
-                {
-                    // System.Diagnostics.Debug.WriteLine($"[PageVM] First 20 bytes: {BitConverter.ToString(data.Take(20).ToArray())}");
-                }
-                
                 using var remoteStream = new System.IO.MemoryStream(data);
                 
                 // Load original image quality as requested, size will be restricted by UI
@@ -337,6 +344,7 @@ namespace Yomic.ViewModels
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[PageVM ERROR] {ex.Message} (Url: {Url})");
                 Avalonia.Threading.Dispatcher.UIThread.Post(() => 
                 {
                     Error = "Failed: " + ex.Message;

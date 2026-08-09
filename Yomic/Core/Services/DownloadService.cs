@@ -492,25 +492,36 @@ namespace Yomic.Core.Services
 
                                         try
                                         {
-                                            var req = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-                                            if (customHeaders.ContainsKey("Referer"))
-                                            {
-                                                var customRef = customHeaders["Referer"];
-                                                if (customRef != "none" && customRef != "null")
-                                                {
-                                                    req.Headers.Referrer = new Uri(customRef);
-                                                }
-                                            }
-                                            else
-                                            {
-                                                req.Headers.Referrer = new Uri(refererUrl);
-                                            }
+                                             var req = new HttpRequestMessage(HttpMethod.Get, requestUrl)
+                                             {
+                                                 Version = System.Net.HttpVersion.Version20,
+                                                 VersionPolicy = HttpVersionPolicy.RequestVersionExact
+                                             };
+                                             if (requestUrl.Contains("mangamillion"))
+                                             {
+                                                 req.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "empty");
+                                                 req.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "cors");
+                                                 req.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "same-site");
+                                                 req.Headers.TryAddWithoutValidation("Origin", "https://mangamillion.shueisha.co.jp");
+                                             }
+                                             if (customHeaders.ContainsKey("Referer"))
+                                             {
+                                                 var customRef = customHeaders["Referer"];
+                                                 if (customRef != "none" && customRef != "null")
+                                                 {
+                                                     req.Headers.Referrer = new Uri(customRef);
+                                                 }
+                                             }
+                                             else
+                                             {
+                                                 req.Headers.Referrer = new Uri(refererUrl);
+                                             }
 
-                                            if (customHeaders.ContainsKey("User-Agent")) req.Headers.UserAgent.TryParseAdd(customHeaders["User-Agent"]);
-                                            else if (customHeaders.ContainsKey("UserAgent")) req.Headers.UserAgent.TryParseAdd(customHeaders["UserAgent"]);
-                                            else req.Headers.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+                                             if (customHeaders.ContainsKey("User-Agent")) req.Headers.UserAgent.TryParseAdd(customHeaders["User-Agent"]);
+                                             else if (customHeaders.ContainsKey("UserAgent")) req.Headers.UserAgent.TryParseAdd(customHeaders["UserAgent"]);
+                                             else req.Headers.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36");
 
-                                            using var response = await client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, pageCts.Token);
+                                             using var response = await client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, pageCts.Token);
                                             response.EnsureSuccessStatusCode();
                                             var data = await response.Content.ReadAsByteArrayAsync(pageCts.Token);
 
