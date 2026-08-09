@@ -278,7 +278,8 @@ namespace Yomic.Core.Sources
                 }
 
                 var response = Task.Run(() => Client.SendAsync(request)).GetAwaiter().GetResult();
-                var bodyText = Task.Run(() => response.Content.ReadAsStringAsync()).GetAwaiter().GetResult();
+                var bytes = Task.Run(() => response.Content.ReadAsByteArrayAsync()).GetAwaiter().GetResult();
+                var bodyText = System.Text.Encoding.Latin1.GetString(bytes);
                 return new JsResponse { body = bodyText, status = (int)response.StatusCode };
             }
             catch (Exception ex)
