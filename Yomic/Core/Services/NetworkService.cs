@@ -78,43 +78,93 @@ namespace Yomic.Core.Services
         // Fallback constructor for designer
         public NetworkService() : this(new SettingsService()) { }
 
-        private int _signalLevel = 3;
+        private int _signalLevel = 3; // Default 3 (Full)
         public int SignalLevel
         {
             get => _signalLevel;
             set
             {
-                this.RaiseAndSetIfChanged(ref _signalLevel, value);
-                this.RaisePropertyChanged(nameof(IsSignalLevel0));
-                this.RaisePropertyChanged(nameof(IsSignalLevel1));
-                this.RaisePropertyChanged(nameof(IsSignalLevel2));
-                this.RaisePropertyChanged(nameof(IsSignalLevel3));
+                if (_signalLevel != value)
+                {
+                    _signalLevel = value;
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        this.RaisePropertyChanged(nameof(SignalLevel));
+                        this.RaisePropertyChanged(nameof(IsWifiLevel0));
+                        this.RaisePropertyChanged(nameof(IsWifiLevel1));
+                        this.RaisePropertyChanged(nameof(IsWifiLevel2));
+                        this.RaisePropertyChanged(nameof(IsWifiLevel3));
+                        this.RaisePropertyChanged(nameof(StatusTooltipText));
+                    });
+                }
             }
         }
 
-        public bool IsSignalLevel0 => IsOnline && SignalLevel == 0;
-        public bool IsSignalLevel1 => IsOnline && SignalLevel == 1;
-        public bool IsSignalLevel2 => IsOnline && SignalLevel == 2;
-        public bool IsSignalLevel3 => IsOnline && SignalLevel >= 3;
+        public bool IsWifiLevel0 => IsOnline && SignalLevel == 0;
+        public bool IsWifiLevel1 => IsOnline && SignalLevel == 1;
+        public bool IsWifiLevel2 => IsOnline && SignalLevel == 2;
+        public bool IsWifiLevel3 => IsOnline && SignalLevel >= 3;
 
-        private void SetOnlineStatus(bool online, int signalLevel = 3)
+        private long _currentPingMs = 0;
+        public long CurrentPingMs
+        {
+            get => _currentPingMs;
+            set
+            {
+                _currentPingMs = value;
+                Dispatcher.UIThread.Post(() => this.RaisePropertyChanged(nameof(StatusTooltipText)));
+            }
+        }
+
+        public string StatusTooltipText
+        {
+            get
+            {
+                if (!IsOnline) return "Offline (Diskonisi / Network Disconnected)";
+                string quality = SignalLevel switch
+                {
+                    0 => "Weak Signal",
+                    1 => "Fair Signal",
+                    2 => "Good Signal",
+                    _ => "Excellent Connection"
+                };
+                return CurrentPingMs > 0 ? $"Online ({quality} - {CurrentPingMs}ms)" : $"Online ({quality})";
+            }
+        }
+
+        private async Task TriggerOnlineWaveAnimationAsync(int targetLevel)
+        {
+            try
+            {
+                for (int lvl = 0; lvl <= targetLevel; lvl++)
+                {
+                    SignalLevel = lvl;
+                    await Task.Delay(100);
+                }
+            }
+            catch { }
+        }
+
+        private void SetOnlineStatus(bool online, int newSignalLevel = 3)
         {
             Dispatcher.UIThread.Post(() =>
             {
-                int newSignal = online ? signalLevel : -1;
-                
+                bool wasOffline = !IsOnline;
                 if (IsOnline != online)
                 {
                     IsOnline = online;
                     StatusChanged?.Invoke(this, online);
                     LogService.Info("Network", $"Status changed: {(online ? "Online" : "Offline / Disconnected")}");
+                    
+                    if (online && wasOffline)
+                    {
+                        _ = TriggerOnlineWaveAnimationAsync(newSignalLevel);
+                    }
                 }
-                
-                SignalLevel = newSignal;
-                this.RaisePropertyChanged(nameof(IsSignalLevel0));
-                this.RaisePropertyChanged(nameof(IsSignalLevel1));
-                this.RaisePropertyChanged(nameof(IsSignalLevel2));
-                this.RaisePropertyChanged(nameof(IsSignalLevel3));
+                else if (online)
+                {
+                    SignalLevel = newSignalLevel;
+                }
             });
         }
 
@@ -123,21 +173,20 @@ namespace Yomic.Core.Services
             // 1. Enforce Offline Mode from Settings
             if (_settingsService.IsOfflineMode)
             {
-                SetOnlineStatus(false, -1);
+                SetOnlineStatus(false);
                 return false; 
             }
 
             // 2. Instant OS level check: Is any network interface active?
             if (!NetworkInterface.GetIsNetworkAvailable())
             {
-                SetOnlineStatus(false, -1);
+                SetOnlineStatus(false);
                 return false;
             }
 
-            var sw = System.Diagnostics.Stopwatch.StartNew();
             try
             {
-                // Use a lightweight HTTP check (204 No Content is fastest)
+                var sw = System.Diagnostics.Stopwatch.StartNew();
                 using var response = await _connectivityClient.GetAsync("http://clients3.google.com/generate_204");
                 sw.Stop();
                 var isConnected = response.IsSuccessStatusCode;
@@ -145,9 +194,18 @@ namespace Yomic.Core.Services
                 if (isConnected)
                 {
                     Interlocked.Exchange(ref _consecutiveFailures, 0);
-                    int level = sw.ElapsedMilliseconds < 70 ? 3 :
-                                sw.ElapsedMilliseconds < 180 ? 2 :
-                                sw.ElapsedMilliseconds < 350 ? 1 : 0;
+                    long rtt = sw.ElapsedMilliseconds;
+                    CurrentPingMs = rtt;
+
+                    // Calculate Signal Level based on Latency / Network Quality
+                    int level = rtt switch
+                    {
+                        < 80 => 3,   // Excellent (0-80ms) -> wifi.svg (full)
+                        < 180 => 2,  // Good (80-180ms)    -> wifi-2.svg
+                        < 350 => 1,  // Fair (180-350ms)   -> wifi-1.svg
+                        _ => 0       // Weak (>350ms)      -> wifi-0.svg
+                    };
+
                     SetOnlineStatus(true, level);
                     return true;
                 }
@@ -156,7 +214,7 @@ namespace Yomic.Core.Services
                     var currentFailures = Interlocked.Increment(ref _consecutiveFailures);
                     if (currentFailures >= FailureThreshold)
                     {
-                        SetOnlineStatus(false, -1);
+                        SetOnlineStatus(false);
                     }
                     return IsOnline;
                 }
@@ -172,9 +230,16 @@ namespace Yomic.Core.Services
                     {
                         Interlocked.Exchange(ref _consecutiveFailures, 0);
                         long rtt = reply.RoundtripTime;
-                        int level = rtt < 70 ? 3 :
-                                    rtt < 180 ? 2 :
-                                    rtt < 350 ? 1 : 0;
+                        CurrentPingMs = rtt;
+
+                        int level = rtt switch
+                        {
+                            < 80 => 3,
+                            < 180 => 2,
+                            < 350 => 1,
+                            _ => 0
+                        };
+
                         SetOnlineStatus(true, level);
                         return true;
                     }
@@ -184,7 +249,7 @@ namespace Yomic.Core.Services
                 var currentFailures = Interlocked.Increment(ref _consecutiveFailures);
                 if (currentFailures >= FailureThreshold)
                 {
-                    SetOnlineStatus(false, -1);
+                    SetOnlineStatus(false);
                 }
                 return false;
             }
