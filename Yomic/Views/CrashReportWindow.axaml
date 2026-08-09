@@ -7,43 +7,46 @@
         Background="{DynamicResource PrimaryBackground}"
         Foreground="{DynamicResource PrimaryText}"
         ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaTitleBarHeightHint="-1">
-    <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="20,10,20,20">
-        <!-- Title Bar Header (App Icon + Window Title) -->
-        <Grid Grid.Row="0" Height="30" VerticalAlignment="Top" IsHitTestVisible="False" Margin="0,0,0,8">
-            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                <Image Source="/Assets/app.ico" Height="18" Width="18" VerticalAlignment="Center" RenderOptions.BitmapInterpolationMode="HighQuality"/>
-                <TextBlock Text="{DynamicResource String.CrashReport.Title}" FontSize="12" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+        ExtendClientAreaTitleBarHeightHint="30">
+    <Panel>
+        <!-- Custom Title Bar Visuals (App Icon + Yomic) - Identical to MainWindow -->
+        <Grid Height="30" VerticalAlignment="Top" IsHitTestVisible="False">
+            <StackPanel Orientation="Horizontal" Spacing="10" Margin="15,0,0,0" VerticalAlignment="Center">
+                <Image Source="/Assets/app.ico" Height="20" Width="20" VerticalAlignment="Center" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                <TextBlock Text="Yomic" FontSize="12" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center" FontWeight="SemiBold"/>
             </StackPanel>
         </Grid>
 
-        <!-- Title and description -->
-        <StackPanel Grid.Row="1" Spacing="8" Margin="0,0,0,16">
-            <TextBlock Text="{DynamicResource String.CrashReport.Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}"/>
-            <TextBlock Text="{DynamicResource String.CrashReport.Description}" FontSize="13" Foreground="{DynamicResource SecondaryText}" TextWrapping="Wrap"/>
-        </StackPanel>
-        
-        <!-- Code editor style log display -->
-        <TextBox Grid.Row="1" 
-                 Name="LogTextBox"
-                 AcceptsReturn="True" 
-                 TextWrapping="Wrap"
-                 Background="{DynamicResource SidebarBackground}"
-                 Foreground="{DynamicResource PrimaryText}"
-                 BorderThickness="1"
-                 BorderBrush="{DynamicResource SeparatorBrush}"
-                 Padding="12"
-                 FontSize="12"
-                 FontFamily="Consolas, Courier New, monospace"
-                 ScrollViewer.VerticalScrollBarVisibility="Auto"/>
-
-        <!-- Actions -->
-        <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto, Auto" Margin="0,16,0,0">
-            <Button Grid.Column="0" Content="{DynamicResource String.SendFeedback}" Click="OnSendFeedbackClick" Background="{DynamicResource AccentColor}" Foreground="White" CornerRadius="4" Padding="16,8" FontWeight="SemiBold"/>
-            <StackPanel Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="12">
-                <Button Content="{DynamicResource String.Ok}" Click="OnOkClick" Background="{DynamicResource AccentColor}" Foreground="White" CornerRadius="4" Padding="20,8" FontWeight="SemiBold"/>
-                <Button Content="{DynamicResource String.Cancel}" Click="OnCancelClick" Background="{DynamicResource HoverBackground}" CornerRadius="4" Padding="20,8"/>
+        <!-- Window Content Grid -->
+        <Grid RowDefinitions="Auto, *, Auto" Margin="24,38,24,24">
+            <!-- Title and description -->
+            <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,16">
+                <TextBlock Text="{DynamicResource String.CrashReport.Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryText}"/>
+                <TextBlock Text="{DynamicResource String.CrashReport.Description}" FontSize="13" Foreground="{DynamicResource SecondaryText}" TextWrapping="Wrap"/>
             </StackPanel>
+            
+            <!-- Code editor style log display -->
+            <TextBox Grid.Row="1" 
+                     Name="LogTextBox"
+                     AcceptsReturn="True" 
+                     TextWrapping="Wrap"
+                     Background="{DynamicResource SidebarBackground}"
+                     Foreground="{DynamicResource PrimaryText}"
+                     BorderThickness="1"
+                     BorderBrush="{DynamicResource SeparatorBrush}"
+                     Padding="12"
+                     FontSize="12"
+                     FontFamily="Consolas, Courier New, monospace"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+
+            <!-- Actions -->
+            <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto, Auto" Margin="0,16,0,0">
+                <Button Grid.Column="0" Content="{DynamicResource String.SendFeedback}" Click="OnSendFeedbackClick" Background="{DynamicResource AccentColor}" Foreground="White" CornerRadius="4" Padding="16,8" FontWeight="SemiBold"/>
+                <StackPanel Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="12">
+                    <Button Content="{DynamicResource String.Ok}" Click="OnOkClick" Background="{DynamicResource AccentColor}" Foreground="White" CornerRadius="4" Padding="20,8" FontWeight="SemiBold"/>
+                    <Button Content="{DynamicResource String.Cancel}" Click="OnCancelClick" Background="{DynamicResource HoverBackground}" CornerRadius="4" Padding="20,8"/>
+                </StackPanel>
+            </Grid>
         </Grid>
-    </Grid>
+    </Panel>
 </Window>
