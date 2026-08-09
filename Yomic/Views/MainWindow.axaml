@@ -130,6 +130,7 @@
 
         <!-- Custom Title Bar Visuals - Hidden in Fullscreen -->
         <Grid Height="30" VerticalAlignment="Top" IsHitTestVisible="False"
+              Background="{DynamicResource PrimaryBackground}"
               IsVisible="{Binding !IsFullscreen}">
              <StackPanel Orientation="Horizontal" Spacing="10" Margin="15,0,0,0" VerticalAlignment="Center">
                  <Image Source="/Assets/app.ico" Height="20" Width="20" VerticalAlignment="Center" RenderOptions.BitmapInterpolationMode="HighQuality"/>

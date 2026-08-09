@@ -23,7 +23,8 @@
 
     <Panel Name="RootContainer">
         <!-- Custom Title Bar Visuals (App Icon + Yomic) - Identical to MainWindow -->
-        <Grid Height="30" VerticalAlignment="Top" IsHitTestVisible="False">
+        <Grid Height="30" VerticalAlignment="Top" IsHitTestVisible="False"
+              Background="{DynamicResource PrimaryBackground}">
             <StackPanel Orientation="Horizontal" Spacing="10" Margin="15,0,0,0" VerticalAlignment="Center">
                 <Image Source="/Assets/app.ico" Height="20" Width="20" VerticalAlignment="Center" RenderOptions.BitmapInterpolationMode="HighQuality"/>
                 <TextBlock Text="Yomic" FontSize="12" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center" FontWeight="SemiBold"/>
