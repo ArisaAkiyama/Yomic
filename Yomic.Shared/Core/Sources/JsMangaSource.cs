@@ -259,11 +259,22 @@ namespace Yomic.Core.Sources
                     }
                 }
 
-                // If it's a GET and no custom headers, call our built-in GetStringAsync which has cloudflare bypass built-in!
+                // If it's a GET and no custom headers, check media type or binary bytes cleanly
                 if (method == HttpMethod.Get && headers.Count == 0)
                 {
-                    var content = Task.Run(() => GetStringAsync(url)).GetAwaiter().GetResult();
-                    return new JsResponse { body = content, status = 200 };
+                    var responseNoHead = Task.Run(() => Client.GetAsync(url)).GetAwaiter().GetResult();
+                    var bytesNoHead = Task.Run(() => responseNoHead.Content.ReadAsByteArrayAsync()).GetAwaiter().GetResult();
+                    var mediaTypeNoHead = responseNoHead.Content.Headers.ContentType?.MediaType?.ToLowerInvariant() ?? "";
+                    string content;
+                    if (mediaTypeNoHead.Contains("protobuf") || mediaTypeNoHead.Contains("octet-stream") || bytesNoHead.Contains((byte)0))
+                    {
+                        content = System.Text.Encoding.Latin1.GetString(bytesNoHead);
+                    }
+                    else
+                    {
+                        content = System.Text.Encoding.UTF8.GetString(bytesNoHead);
+                    }
+                    return new JsResponse { body = content, status = (int)responseNoHead.StatusCode };
                 }
 
                 // Otherwise make a custom request using our client
@@ -278,8 +289,17 @@ namespace Yomic.Core.Sources
                 }
 
                 var response = Task.Run(() => Client.SendAsync(request)).GetAwaiter().GetResult();
-                var bytes = Task.Run(() => response.Content.ReadAsByteArrayAsync()).GetAwaiter().GetResult();
-                var bodyText = System.Text.Encoding.Latin1.GetString(bytes);
+                var responseBytes = Task.Run(() => response.Content.ReadAsByteArrayAsync()).GetAwaiter().GetResult();
+                var mediaType = response.Content.Headers.ContentType?.MediaType?.ToLowerInvariant() ?? "";
+                string bodyText;
+                if (mediaType.Contains("protobuf") || mediaType.Contains("octet-stream") || responseBytes.Contains((byte)0))
+                {
+                    bodyText = System.Text.Encoding.Latin1.GetString(responseBytes);
+                }
+                else
+                {
+                    bodyText = System.Text.Encoding.UTF8.GetString(responseBytes);
+                }
                 return new JsResponse { body = bodyText, status = (int)response.StatusCode };
             }
             catch (Exception ex)
