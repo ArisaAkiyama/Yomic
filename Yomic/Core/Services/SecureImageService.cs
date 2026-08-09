@@ -58,9 +58,11 @@ namespace Yomic.Core.Services
             }
 
             string? userAgent = null;
+            string? aesKey = null;
+            string? aesIv = null;
 
-            // Handle URL|Referer= and URL|UserAgent= syntax
-            // Example: https://url.com/image.jpg|Referer=xyz|UserAgent=abc
+            // Handle URL|Referer= and URL|UserAgent= and URL|AesKey= and URL|AesIv= syntax
+            // Example: https://url.com/image.jpg|Referer=xyz|UserAgent=abc|AesKey=123|AesIv=456
             if (url.Contains("|"))
             {
                 var parts = url.Split(new[] { "|" }, StringSplitOptions.RemoveEmptyEntries);
@@ -72,6 +74,10 @@ namespace Yomic.Core.Services
                         referer = parts[i].Substring("Referer=".Length);
                     else if (parts[i].StartsWith("UserAgent="))
                         userAgent = parts[i].Substring("UserAgent=".Length);
+                    else if (parts[i].StartsWith("AesKey="))
+                        aesKey = parts[i].Substring("AesKey=".Length);
+                    else if (parts[i].StartsWith("AesIv="))
+                        aesIv = parts[i].Substring("AesIv=".Length);
                 }
             }
 
@@ -120,7 +126,7 @@ namespace Yomic.Core.Services
             }
 
             // 4. Download
-            return await DownloadAndCacheAsync(url, cachePath, referer, userAgent, decodeWidth);
+            return await DownloadAndCacheAsync(url, cachePath, referer, userAgent, decodeWidth, aesKey, aesIv);
         }
 
         public void ClearDiskCache()
@@ -141,7 +147,7 @@ namespace Yomic.Core.Services
             }
         }
 
-        private async Task<Bitmap?> DownloadAndCacheAsync(string url, string cachePath, string? referer, string? userAgent, int? decodeWidth)
+        private async Task<Bitmap?> DownloadAndCacheAsync(string url, string cachePath, string? referer, string? userAgent, int? decodeWidth, string? aesKey = null, string? aesIv = null)
         {
             await _downloadSemaphore.WaitAsync();
             try
@@ -263,6 +269,10 @@ namespace Yomic.Core.Services
                                 var retryData = await retryRes.Content.ReadAsByteArrayAsync();
                                 if (retryData.Length > 0)
                                 {
+                                    if (!string.IsNullOrEmpty(aesKey) && !string.IsNullOrEmpty(aesIv))
+                                    {
+                                        retryData = DecryptAes256Cbc(retryData, aesKey, aesIv);
+                                    }
                                     await File.WriteAllBytesAsync(cachePath, retryData);
                                     using var msRetry = new MemoryStream(retryData);
                                     var retryBitmap = decodeWidth.HasValue
@@ -281,6 +291,12 @@ namespace Yomic.Core.Services
 
                 var data = await response.Content.ReadAsByteArrayAsync();
                 if (data.Length == 0) return null;
+
+                // Decrypt AES-256-CBC if key and IV are provided (e.g. MangaMillion page images)
+                if (!string.IsNullOrEmpty(aesKey) && !string.IsNullOrEmpty(aesIv))
+                {
+                    data = DecryptAes256Cbc(data, aesKey, aesIv);
+                }
 
                 // Save to Disk
                 await File.WriteAllBytesAsync(cachePath, data);
@@ -412,6 +428,29 @@ namespace Yomic.Core.Services
                 System.Diagnostics.Debug.WriteLine($"[SecureImageService] Curl fallback failed: {ex.Message}");
             }
             return null;
+        }
+
+        private static byte[] DecryptAes256Cbc(byte[] cipherText, string keyHex, string ivHex)
+        {
+            try
+            {
+                byte[] key = Convert.FromHexString(keyHex);
+                byte[] iv = Convert.FromHexString(ivHex);
+
+                using var aes = System.Security.Cryptography.Aes.Create();
+                aes.Key = key;
+                aes.IV = iv;
+                aes.Mode = System.Security.Cryptography.CipherMode.CBC;
+                aes.Padding = System.Security.Cryptography.PaddingMode.PKCS7;
+
+                using var decryptor = aes.CreateDecryptor();
+                return decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[SecureImageService] AES Decryption Error: {ex.Message}");
+                return cipherText;
+            }
         }
 
         private string GenerateCacheKey(string url)
