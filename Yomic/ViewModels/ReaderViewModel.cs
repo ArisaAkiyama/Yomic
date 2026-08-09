@@ -301,6 +301,12 @@ namespace Yomic.ViewModels
 
             ProcessPageData:
                 
+                // Decrypt AES-256-CBC if key and IV are passed in customHeaders (e.g. MangaMillion page images)
+                if (customHeaders.ContainsKey("AesKey") && customHeaders.ContainsKey("AesIv"))
+                {
+                    data = DecryptAes256Cbc(data, customHeaders["AesKey"], customHeaders["AesIv"]);
+                }
+
                 // Log first few bytes to detect if it's the placeholder
                 if (data.Length > 20)
                 {
@@ -346,16 +352,39 @@ namespace Yomic.ViewModels
             }
         }
 
+        private static byte[] DecryptAes256Cbc(byte[] cipherText, string keyHex, string ivHex)
+        {
+            try
+            {
+                byte[] key = Convert.FromHexString(keyHex);
+                byte[] iv = Convert.FromHexString(ivHex);
+
+                using var aes = System.Security.Cryptography.Aes.Create();
+                aes.Key = key;
+                aes.IV = iv;
+                aes.Mode = System.Security.Cryptography.CipherMode.CBC;
+                aes.Padding = System.Security.Cryptography.PaddingMode.PKCS7;
+
+                using var decryptor = aes.CreateDecryptor();
+                return decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PageVM] AES Decryption Error: {ex.Message}");
+                return cipherText;
+            }
+        }
+
         private static async System.Threading.Tasks.Task<byte[]?> DownloadPageWithCurlAsync(string url, string? referer, System.Threading.CancellationToken ct)
         {
             try
             {
                 var tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".tmp");
-                var refUrl = !string.IsNullOrEmpty(referer) ? referer : "https://www.manhwaindo.my/";
+                var refUrl = !string.IsNullOrEmpty(referer) ? referer : "https://mangamillion.shueisha.co.jp/";
                 var psi = new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = "curl.exe",
-                    Arguments = $"-s -f -k -A \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36\" -H \"Referer: {refUrl}\" \"{url}\" -o \"{tempFile}\"",
+                    Arguments = $"--http2 -s -f -k -A \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36\" -H \"Referer: {refUrl}\" -H \"sec-ch-ua: \\\"Not/A)Brand\\\";v=\\\"8\\\", \\\"Chromium\\\";v=\\\"131\\\", \\\"Google Chrome\\\";v=\\\"131\\\"\" -H \"Sec-Fetch-Dest: image\" -H \"Sec-Fetch-Mode: no-cors\" -H \"Sec-Fetch-Site: same-site\" \"{url}\" -o \"{tempFile}\"",
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
