@@ -2,6 +2,17 @@
 
 All notable changes to **Yomic** will be documented in this file.
 
+## [1.8.0] - 2026-08-10
+
+### Added
+- Skeleton loading placeholder animations for library and source list view items.
+- Enhanced window title bar header styling with solid Charcoal Black (`#111214`) background.
+- Improved window caption button alignment and title bar margins on maximized window state.
+
+### Changed
+- Updated application version to 1.8.0.
+- Built new installer package for distribution.
+
 ## [1.7.1] - 2026-07-26
 
 ### Added

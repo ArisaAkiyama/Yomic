@@ -33,7 +33,7 @@
   <tr>
     <td align="center" width="260">
       <b>📥 Download Here</b><br/><br/>
-      <a href="https://github.com/ArisaAkiyama/yomic/releases/download/v1.7.1/Yomic_Setup_v1.7.1.exe">
+      <a href="https://github.com/ArisaAkiyama/yomic/releases/download/v1.8.0/Yomic_Setup_v1.8.0.exe">
         <img src="./Yomic/Assets/win-download.png" alt="Download Yomic for Windows" height="42"/>
       </a>
     </td>

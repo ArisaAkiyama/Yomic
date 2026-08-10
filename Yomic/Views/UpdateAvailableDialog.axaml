@@ -30,7 +30,7 @@
                 </Border>
 
                 <Border Background="#10FFFFFF" CornerRadius="16" BorderBrush="#30FFFFFF" BorderThickness="1" Padding="14,6">
-                    <TextBlock x:Name="CurrentVersionText" Text="Current: v1.7.1" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource SecondaryText}"/>
+                    <TextBlock x:Name="CurrentVersionText" Text="Current: v1.8.0" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource SecondaryText}"/>
                 </Border>
             </StackPanel>
 

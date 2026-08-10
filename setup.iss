@@ -6,7 +6,7 @@
 ; ============================================================
 
 #define MyAppName        "Yomic"
-#define MyAppVersion     "1.7.1"
+#define MyAppVersion     "1.8.0"
 #define MyAppPublisher   "ArisaAkiyama"
 #define MyAppURL         "https://github.com/ArisaAkiyama/yomic"
 #define MyAppExeName     "Yomic.exe"
