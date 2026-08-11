@@ -1,81 +1,120 @@
 using Avalonia.Controls;
 using System;
-using System.Reactive.Linq;
 using System.Reactive;
 using Avalonia.VisualTree;
+using Avalonia.Threading;
 
 namespace Yomic.Views
 {
     public partial class SourceFeedView : UserControl
     {
+        private DispatcherTimer? _restoreTimer;
+        private double _targetScrollOffset = -1;
+        private int _restoreAttempts = 0;
+
         public SourceFeedView()
         {
             InitializeComponent();
             
-            // Listen to scroll changes on both grid and list view mode list boxes to save the scroll offset
+            // Save scroll position changes in both grid mode and list mode
             MangaListBox.AddHandler(ScrollViewer.ScrollChangedEvent, OnScrollChanged);
             MangaListModeBox.AddHandler(ScrollViewer.ScrollChangedEvent, OnScrollChanged);
 
-            Loaded += OnViewLoaded;
+            DataContextChanged += OnDataContextChanged;
         }
 
-        private double _targetScrollOffset = -1;
-
-        private void OnViewLoaded(object? sender, EventArgs e)
+        private void OnDataContextChanged(object? sender, EventArgs e)
         {
+            // Stop any running restore timer when DataContext changes
+            StopRestoreTimer();
+
             if (DataContext is ViewModels.SourceFeedViewModel vm && vm.SavedScrollOffset > 0)
             {
                 _targetScrollOffset = vm.SavedScrollOffset;
+                _restoreAttempts = 0;
+                StartRestoreTimer();
+            }
+        }
+
+        private void StartRestoreTimer()
+        {
+            _restoreTimer = new DispatcherTimer(DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromMilliseconds(50)
+            };
+            _restoreTimer.Tick += OnRestoreTimerTick;
+            _restoreTimer.Start();
+        }
+
+        private void StopRestoreTimer()
+        {
+            if (_restoreTimer != null)
+            {
+                _restoreTimer.Stop();
+                _restoreTimer.Tick -= OnRestoreTimerTick;
+                _restoreTimer = null;
+            }
+            _targetScrollOffset = -1;
+            _restoreAttempts = 0;
+        }
+
+        private void OnRestoreTimerTick(object? sender, EventArgs e)
+        {
+            _restoreAttempts++;
+
+            // Give up after ~2 seconds (40 attempts × 50ms)
+            if (_restoreAttempts > 40)
+            {
+                StopRestoreTimer();
+                return;
+            }
+
+            if (DataContext is not ViewModels.SourceFeedViewModel vm)
+            {
+                StopRestoreTimer();
+                return;
+            }
+
+            var listBox = vm.IsListView ? MangaListModeBox : MangaListBox;
+            var sv = listBox?.FindDescendantOfType<ScrollViewer>();
+
+            if (sv == null) return;
+
+            double maxScroll = sv.Extent.Height - sv.Viewport.Height;
+
+            // Wait until the list has rendered enough content to scroll to our target
+            if (maxScroll >= _targetScrollOffset - 10)
+            {
+                sv.Offset = new Avalonia.Vector(sv.Offset.X, _targetScrollOffset);
+                System.Diagnostics.Debug.WriteLine($"[Scroll] Restored position to {_targetScrollOffset}px after {_restoreAttempts} attempts");
+                StopRestoreTimer();
             }
         }
 
         private void OnScrollChanged(object? sender, ScrollChangedEventArgs e)
         {
+            // Skip saving scroll position while we are in the middle of restoring it
+            if (_targetScrollOffset > 0) return;
+
             if (e.Source is ScrollViewer sv && DataContext is ViewModels.SourceFeedViewModel vm)
             {
-                // Do not save scroll position if the view is detaching or has no valid size
-                if (sv.Viewport.Height <= 0 || sv.Extent.Height <= 0)
-                {
-                    return;
-                }
-
-                if (_targetScrollOffset > 0)
-                {
-                    double maxScroll = Math.Max(0, sv.Extent.Height - sv.Viewport.Height);
-                    if (maxScroll > 0)
-                    {
-                        sv.Offset = new Avalonia.Vector(sv.Offset.X, Math.Min(_targetScrollOffset, maxScroll));
-                        if (Math.Abs(sv.Offset.Y - _targetScrollOffset) < 5 || sv.Offset.Y >= maxScroll - 1)
-                        {
-                            _targetScrollOffset = -1;
-                        }
-                    }
-                    return;
-                }
-
                 // Save the current vertical scroll position in the ViewModel
                 vm.SavedScrollOffset = sv.Offset.Y;
 
-                // Infinite Scroll Logic (only for the active ListBox grid when pagination is hidden)
+                // Infinite Scroll Logic (only for the active ListBox when pagination is hidden i.e. Latest mode)
                 var activeBox = vm.IsListView ? MangaListModeBox : MangaListBox;
                 if (sender == activeBox)
                 {
-                    // Trigger when close to bottom (e.g., 500px buffer)
                     if (sv.Offset.Y >= sv.Extent.Height - sv.Viewport.Height - 500)
                     {
                         if (vm.HasNextPage && !vm.IsLoading && !vm.IsPaginationVisible)
                         {
                             System.Diagnostics.Debug.WriteLine("[Scroll] Triggering Next Page!");
-                            vm.NextPageCommand.Execute(System.Reactive.Unit.Default).Subscribe(System.Reactive.Observer.Create<System.Reactive.Unit>(_ => { }));
+                            vm.NextPageCommand.Execute(Unit.Default).Subscribe(System.Reactive.Observer.Create<Unit>(_ => { }));
                         }
                     }
                 }
             }
-        }
-
-        private void RestoreScrollPosition()
-        {
-            // Handled directly inside OnScrollChanged layout updates
         }
     }
 }
