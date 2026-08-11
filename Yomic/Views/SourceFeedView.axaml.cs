@@ -33,6 +33,12 @@ namespace Yomic.Views
         {
             if (e.Source is ScrollViewer sv && DataContext is ViewModels.SourceFeedViewModel vm)
             {
+                // Do not save scroll position if the view is detaching or has no valid size
+                if (sv.Viewport.Height <= 0 || sv.Extent.Height <= 0)
+                {
+                    return;
+                }
+
                 if (_targetScrollOffset > 0)
                 {
                     double maxScroll = Math.Max(0, sv.Extent.Height - sv.Viewport.Height);
