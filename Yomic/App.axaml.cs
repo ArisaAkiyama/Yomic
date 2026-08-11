@@ -238,7 +238,7 @@ namespace Yomic
                         downloadService.SaveQueueSynchronously();
                         System.Diagnostics.Debug.WriteLine("[App] Download queue saved successfully on shutdown.");
                     }
-                    catch (Exception ex)
+                    catch (System.Exception ex)
                     {
                         System.Diagnostics.Debug.WriteLine($"[App] Failed to save queue on exit: {ex.Message}");
                     }

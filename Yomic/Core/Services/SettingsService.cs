@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Yomic.Core.Services
 {
@@ -92,7 +93,7 @@ namespace Yomic.Core.Services
             {
                 foreach (var r in CustomExtensionRepos)
                 {
-                    if (!string.IsNullOrWhiteSpace(r) && !repos.Contains(r, StringComparer.OrdinalIgnoreCase))
+                    if (!string.IsNullOrWhiteSpace(r) && !repos.Any(x => x.Equals(r.Trim(), StringComparison.OrdinalIgnoreCase)))
                     {
                         repos.Add(r.Trim());
                     }
@@ -107,7 +108,7 @@ namespace Yomic.Core.Services
             url = url.Trim();
             if (CustomExtensionRepos == null) CustomExtensionRepos = new();
             if (url.Equals(OfficialDefaultExtensionRepo, StringComparison.OrdinalIgnoreCase)) return false;
-            if (CustomExtensionRepos.Contains(url, StringComparer.OrdinalIgnoreCase)) return false;
+            if (CustomExtensionRepos.Any(x => x.Equals(url, StringComparison.OrdinalIgnoreCase))) return false;
             
             CustomExtensionRepos.Add(url);
             Save();
