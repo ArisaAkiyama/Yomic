@@ -25,6 +25,8 @@ namespace Yomic.ViewModels
 
     public class SourceFeedViewModel : ViewModelBase, IDisposable
     {
+        public double SavedScrollOffset { get; set; } = -1;
+
         private readonly IMangaSource _source;
         private readonly MainWindowViewModel _mainVm;
         private readonly SourceManager _sourceManager;
@@ -626,6 +628,11 @@ namespace Yomic.ViewModels
         private async Task LoadMangaList(bool append = false, bool forceRefresh = false)
         {
             if (IsLoading) return; // Prevent double trigger
+
+            if (!append)
+            {
+                SavedScrollOffset = -1;
+            }
 
             var selectedGenres = AvailableGenres.Where(g => g.IsSelected).Select(g => g.Name).ToList();
             var selectedFormats = AvailableFormats.Where(f => f.IsSelected).Select(f => f.Name).ToList();
