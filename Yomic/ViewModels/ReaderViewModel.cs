@@ -893,6 +893,7 @@ namespace Yomic.ViewModels
 
         public void Dispose()
         {
+            SaveProgress();
             _disposables.Dispose();
             // Cancel all ongoing downloads
             _cts.Cancel();
