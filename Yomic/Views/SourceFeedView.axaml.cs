@@ -101,17 +101,14 @@ namespace Yomic.Views
                 // Save the current vertical scroll position in the ViewModel
                 vm.SavedScrollOffset = sv.Offset.Y;
 
-                // Infinite Scroll Logic (only for the active ListBox when pagination is hidden i.e. Latest mode)
-                var activeBox = vm.IsListView ? MangaListModeBox : MangaListBox;
-                if (sender == activeBox)
+                // Infinite Scroll Logic: trigger when scrolled near the bottom in Latest mode
+                // No sender check needed — guards below (HasNextPage, !IsLoading, !IsPaginationVisible) are sufficient
+                if (sv.Offset.Y >= sv.Extent.Height - sv.Viewport.Height - 500)
                 {
-                    if (sv.Offset.Y >= sv.Extent.Height - sv.Viewport.Height - 500)
+                    if (vm.HasNextPage && !vm.IsLoading && !vm.IsPaginationVisible)
                     {
-                        if (vm.HasNextPage && !vm.IsLoading && !vm.IsPaginationVisible)
-                        {
-                            System.Diagnostics.Debug.WriteLine("[Scroll] Triggering Next Page!");
-                            vm.NextPageCommand.Execute(Unit.Default).Subscribe(System.Reactive.Observer.Create<Unit>(_ => { }));
-                        }
+                        System.Diagnostics.Debug.WriteLine("[Scroll] Triggering Next Page!");
+                        vm.NextPageCommand.Execute(Unit.Default).Subscribe(System.Reactive.Observer.Create<Unit>(_ => { }));
                     }
                 }
             }
