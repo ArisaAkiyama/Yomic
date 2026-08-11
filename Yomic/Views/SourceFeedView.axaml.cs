@@ -50,7 +50,7 @@ namespace Yomic.Views
                 }
 
                 // Save the current vertical scroll position in the ViewModel, but only if the view is attached
-                if (this.IsAttachedToVisualTree && sv.IsAttachedToVisualTree && sv.Extent.Height > sv.Viewport.Height)
+                if (this.IsAttachedToVisualTree() && sv.IsAttachedToVisualTree() && sv.Extent.Height > sv.Viewport.Height)
                 {
                     vm.SavedScrollOffset = sv.Offset.Y;
                 }
