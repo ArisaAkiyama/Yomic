@@ -179,23 +179,53 @@
                                 </Grid>
                             </Button>
 
-                            <Button Grid.Column="1" Command="{Binding CancelCommand}" 
-                                    Classes="header-action" Foreground="{DynamicResource SecondaryText}"
-                                    ToolTip.Tip="Cancel Download" Padding="8" CornerRadius="20" VerticalAlignment="Center" Margin="10,0,0,0">
-                                <Button.Styles>
-                                    <Style Selector="Button:pointerover">
-                                        <Setter Property="Foreground" Value="#F38BA8"/>
-                                    </Style>
-                                    <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                        <Setter Property="Background" Value="#15F38BA8"/>
-                                    </Style>
-                                </Button.Styles>
-                                <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Canvas Width="24" Height="24">
-                                        <Path Data="M18 6l-12 12 M6 6l12 12" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
-                                    </Canvas>
-                                </Viewbox>
-                            </Button>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" Margin="10,0,0,0">
+                                <!-- Pause/Resume Button -->
+                                <Button Command="{Binding TogglePauseCommand}" 
+                                        Classes="header-action" Foreground="{DynamicResource SecondaryText}"
+                                        IsVisible="{Binding ShowPauseButton}"
+                                        ToolTip.Tip="Pause/Resume" Padding="8" CornerRadius="20">
+                                    <Button.Styles>
+                                        <Style Selector="Button:pointerover">
+                                            <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+                                        </Style>
+                                        <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                            <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+                                        </Style>
+                                    </Button.Styles>
+                                    <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Panel>
+                                            <!-- Play/Resume Icon (Show if Paused) -->
+                                            <Canvas Width="24" Height="24" IsVisible="{Binding IsPaused}">
+                                                <Path Data="M8 5v14l11 -7z" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                            </Canvas>
+                                            <!-- Pause Icon (Show if Not Paused) -->
+                                            <Canvas Width="24" Height="24" IsVisible="{Binding !IsPaused}">
+                                                <Path Data="M6 5m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z M14 5m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                            </Canvas>
+                                        </Panel>
+                                    </Viewbox>
+                                </Button>
+
+                                <!-- Cancel Button -->
+                                <Button Command="{Binding CancelCommand}" 
+                                        Classes="header-action" Foreground="{DynamicResource SecondaryText}"
+                                        ToolTip.Tip="Cancel Download" Padding="8" CornerRadius="20">
+                                    <Button.Styles>
+                                        <Style Selector="Button:pointerover">
+                                            <Setter Property="Foreground" Value="#F38BA8"/>
+                                        </Style>
+                                        <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                            <Setter Property="Background" Value="#15F38BA8"/>
+                                        </Style>
+                                    </Button.Styles>
+                                    <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="M18 6l-12 12 M6 6l12 12" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Button>
+                            </StackPanel>
                         </Grid>
                     </Border>
                 </DataTemplate>

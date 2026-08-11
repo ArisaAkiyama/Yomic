@@ -65,12 +65,29 @@ namespace Yomic.ViewModels
         // Commands
         public System.Windows.Input.ICommand CancelCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenChapterCommand { get; }
+        public ReactiveCommand<Unit, Unit> TogglePauseCommand { get; }
+
+        public bool IsPaused => _request.Status == "Paused";
+        public bool ShowPauseButton => _request.Status == "Downloading" || _request.Status == "Queued" || _request.Status == "Paused";
 
         public DownloadItemViewModel(Core.Services.DownloadRequest request, Core.Services.DownloadService service, MainWindowViewModel mainVM)
         {
             _request = request;
             CancelCommand = ReactiveCommand.Create(() => service.Cancel(request));
             
+            TogglePauseCommand = ReactiveCommand.Create(() => 
+            {
+                if (IsPaused)
+                {
+                    service.Resume(request);
+                }
+                else
+                {
+                    service.Pause(request);
+                }
+                RaisePropertyChanges();
+            });
+
             OpenChapterCommand = ReactiveCommand.Create(() => 
             {
                 var chapterItem = new ChapterItem(null, null, null, null, null)
@@ -95,6 +112,8 @@ namespace Yomic.ViewModels
             this.RaisePropertyChanged(nameof(IsActive));
             this.RaisePropertyChanged(nameof(ShowProgress));
             this.RaisePropertyChanged(nameof(IsIndeterminate));
+            this.RaisePropertyChanged(nameof(IsPaused));
+            this.RaisePropertyChanged(nameof(ShowPauseButton));
         }
 
         public void Dispose()

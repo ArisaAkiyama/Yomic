@@ -359,8 +359,8 @@ namespace Yomic.Core.Services
 
                 lock (_queueLock)
                 {
-                    // Find first non-cancelled item in queue
-                    var request = _queue.FirstOrDefault(x => !x.CancellationTokenSource.IsCancellationRequested);
+                    // Find first non-cancelled, non-paused item in queue
+                    var request = _queue.FirstOrDefault(x => x.Status != "Paused" && !x.CancellationTokenSource.IsCancellationRequested);
                     if (request != null)
                     {
                         _queue.Remove(request);
@@ -874,6 +874,46 @@ namespace Yomic.Core.Services
                 }
             }
             
+            ProcessQueue();
+        }
+
+        public void Pause(DownloadRequest request)
+        {
+            if (request == null) return;
+
+            if (_currentDownload == request)
+            {
+                request.Status = "Paused";
+                StatusChanged?.Invoke(this, request);
+                request.CancellationTokenSource.Cancel();
+                return;
+            }
+
+            lock (_queueLock)
+            {
+                if (_queue.Contains(request))
+                {
+                    request.Status = "Paused";
+                    StatusChanged?.Invoke(this, request);
+                    SaveQueue();
+                }
+            }
+        }
+
+        public void Resume(DownloadRequest request)
+        {
+            if (request == null) return;
+
+            lock (_queueLock)
+            {
+                if (_queue.Contains(request))
+                {
+                    request.Status = "Queued";
+                    StatusChanged?.Invoke(this, request);
+                    SaveQueue();
+                }
+            }
+
             ProcessQueue();
         }
 
