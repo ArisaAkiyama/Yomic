@@ -8,8 +8,6 @@ namespace Yomic.Views
 {
     public partial class SourceFeedView : UserControl
     {
-        private double _targetScrollOffset = -1;
-
         public SourceFeedView()
         {
             InitializeComponent();
@@ -21,39 +19,36 @@ namespace Yomic.Views
             Loaded += OnViewLoaded;
         }
 
+        private double _targetScrollOffset = -1;
+
         private void OnViewLoaded(object? sender, EventArgs e)
         {
-            RestoreScrollPosition();
+            if (DataContext is ViewModels.SourceFeedViewModel vm && vm.SavedScrollOffset > 0)
+            {
+                _targetScrollOffset = vm.SavedScrollOffset;
+            }
         }
 
         private void OnScrollChanged(object? sender, ScrollChangedEventArgs e)
         {
             if (e.Source is ScrollViewer sv && DataContext is ViewModels.SourceFeedViewModel vm)
             {
-                // If we are currently restoring the scroll offset
                 if (_targetScrollOffset > 0)
                 {
-                    // Only apply offset if the scroll viewer layout has initialized with valid extent height
-                    if (sv.Extent.Height > sv.Viewport.Height)
+                    double maxScroll = Math.Max(0, sv.Extent.Height - sv.Viewport.Height);
+                    if (maxScroll > 0)
                     {
-                        sv.Offset = new Avalonia.Vector(sv.Offset.X, _targetScrollOffset);
-                        
-                        // Check if we successfully reached the target or hit the scroll boundary
-                        double maxScroll = Math.Max(0, sv.Extent.Height - sv.Viewport.Height);
-                        if (Math.Abs(sv.Offset.Y - _targetScrollOffset) < 1.5 || sv.Offset.Y >= maxScroll - 1.5)
+                        sv.Offset = new Avalonia.Vector(sv.Offset.X, Math.Min(_targetScrollOffset, maxScroll));
+                        if (Math.Abs(sv.Offset.Y - _targetScrollOffset) < 5 || sv.Offset.Y >= maxScroll - 1)
                         {
-                            _targetScrollOffset = -1; // Finished restoring
-                            System.Diagnostics.Debug.WriteLine($"[Scroll] Finished restoring scroll offset to: {sv.Offset.Y}");
+                            _targetScrollOffset = -1;
                         }
                     }
-                    return; // Skip saving the offset during restoration
+                    return;
                 }
 
-                // Save the current vertical scroll position in the ViewModel, but only if the view is attached
-                if (this.IsAttachedToVisualTree() && sv.IsAttachedToVisualTree() && sv.Extent.Height > sv.Viewport.Height)
-                {
-                    vm.SavedScrollOffset = sv.Offset.Y;
-                }
+                // Save the current vertical scroll position in the ViewModel
+                vm.SavedScrollOffset = sv.Offset.Y;
 
                 // Infinite Scroll Logic (only for the active ListBox grid when pagination is hidden)
                 var activeBox = vm.IsListView ? MangaListModeBox : MangaListBox;
@@ -74,26 +69,7 @@ namespace Yomic.Views
 
         private void RestoreScrollPosition()
         {
-            if (DataContext is ViewModels.SourceFeedViewModel vm && vm.SavedScrollOffset > 0)
-            {
-                _targetScrollOffset = vm.SavedScrollOffset;
-                
-                var listBox = vm.IsListView ? MangaListModeBox : MangaListBox;
-                if (listBox != null)
-                {
-                    // Try immediate restore
-                    var sv = listBox.FindDescendantOfType<ScrollViewer>();
-                    if (sv != null && sv.Extent.Height > sv.Viewport.Height)
-                    {
-                        sv.Offset = new Avalonia.Vector(sv.Offset.X, _targetScrollOffset);
-                        double maxScroll = Math.Max(0, sv.Extent.Height - sv.Viewport.Height);
-                        if (Math.Abs(sv.Offset.Y - _targetScrollOffset) < 1.5 || sv.Offset.Y >= maxScroll - 1.5)
-                        {
-                            _targetScrollOffset = -1;
-                        }
-                    }
-                }
-            }
+            // Handled directly inside OnScrollChanged layout updates
         }
     }
 }
