@@ -249,6 +249,9 @@ namespace Yomic.ViewModels
                 {
                     foreach (var m in history)
                     {
+                        if (HistoryItems.Any(x => x.MangaUrl == m.Url && x.SourceId == m.Source))
+                            continue;
+
                         int unread = m.Chapters?.Count(c => !c.Read) ?? 0;
                         string? unreadString = unread > 0 ? unread.ToString() : null;
 

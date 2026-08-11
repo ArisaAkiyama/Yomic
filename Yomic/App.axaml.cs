@@ -231,6 +231,19 @@ namespace Yomic
                     DataContext = new MainWindowViewModel(sourceManager, libraryService, networkService, downloadService, settingsService, imageCacheService, secureImageService, sourceStatusService),
                 };
 
+                desktop.Exit += (s, e) =>
+                {
+                    try
+                    {
+                        downloadService.SaveQueueSynchronously();
+                        System.Diagnostics.Debug.WriteLine("[App] Download queue saved successfully on shutdown.");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[App] Failed to save queue on exit: {ex.Message}");
+                    }
+                };
+
                 // Check for app updates asynchronously in background if enabled in Settings
                 if (System.OperatingSystem.IsWindows() && settingsService.CheckAppUpdateOnStart)
                 {

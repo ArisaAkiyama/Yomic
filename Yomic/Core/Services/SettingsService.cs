@@ -80,6 +80,63 @@ namespace Yomic.Core.Services
         public string AppLanguage { get; set; } = "en";
         public string LastFeedbackDate { get; set; } = "";
         
+        public System.Collections.Generic.List<string> CustomExtensionRepos { get; set; } = new();
+        public event Action? ExtensionReposChanged;
+
+        public static string OfficialDefaultExtensionRepo => "https://raw.githubusercontent.com/ArisaAkiyama/extension-yomic/repo/index.min.json";
+
+        public System.Collections.Generic.List<string> GetAllExtensionRepos()
+        {
+            var repos = new System.Collections.Generic.List<string> { OfficialDefaultExtensionRepo };
+            if (CustomExtensionRepos != null)
+            {
+                foreach (var r in CustomExtensionRepos)
+                {
+                    if (!string.IsNullOrWhiteSpace(r) && !repos.Contains(r, StringComparer.OrdinalIgnoreCase))
+                    {
+                        repos.Add(r.Trim());
+                    }
+                }
+            }
+            return repos;
+        }
+
+        public bool AddExtensionRepo(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return false;
+            url = url.Trim();
+            if (CustomExtensionRepos == null) CustomExtensionRepos = new();
+            if (url.Equals(OfficialDefaultExtensionRepo, StringComparison.OrdinalIgnoreCase)) return false;
+            if (CustomExtensionRepos.Contains(url, StringComparer.OrdinalIgnoreCase)) return false;
+            
+            CustomExtensionRepos.Add(url);
+            Save();
+            ExtensionReposChanged?.Invoke();
+            return true;
+        }
+
+        public bool RemoveExtensionRepo(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url) || CustomExtensionRepos == null) return false;
+            bool removed = CustomExtensionRepos.RemoveAll(r => r.Equals(url.Trim(), StringComparison.OrdinalIgnoreCase)) > 0;
+            if (removed)
+            {
+                Save();
+                ExtensionReposChanged?.Invoke();
+            }
+            return removed;
+        }
+
+        public void ResetExtensionRepos()
+        {
+            if (CustomExtensionRepos != null && CustomExtensionRepos.Count > 0)
+            {
+                CustomExtensionRepos.Clear();
+                Save();
+                ExtensionReposChanged?.Invoke();
+            }
+        }
+        
         // MyAnimeList Tokens
         public string MalAccessToken { get; set; } = "";
         public string MalRefreshToken { get; set; } = "";
@@ -134,6 +191,7 @@ namespace Yomic.Core.Services
                         MalAccessToken = settings.MalAccessToken ?? "";
                         MalRefreshToken = settings.MalRefreshToken ?? "";
                         MalTokenExpiresAt = settings.MalTokenExpiresAt;
+                        CustomExtensionRepos = settings.CustomExtensionRepos ?? new();
                         if (settings.SourceStatusRefreshIntervalMinutes > 0)
                         {
                             SourceStatusRefreshIntervalMinutes = settings.SourceStatusRefreshIntervalMinutes;
@@ -193,7 +251,8 @@ namespace Yomic.Core.Services
                     MalAccessToken = MalAccessToken,
                     MalRefreshToken = MalRefreshToken,
                     MalTokenExpiresAt = MalTokenExpiresAt,
-                    SourceStatusRefreshIntervalMinutes = SourceStatusRefreshIntervalMinutes
+                    SourceStatusRefreshIntervalMinutes = SourceStatusRefreshIntervalMinutes,
+                    CustomExtensionRepos = CustomExtensionRepos
                 };
 
                 var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
@@ -240,6 +299,10 @@ namespace Yomic.Core.Services
                 MalAccessToken = "";
                 MalRefreshToken = "";
                 MalTokenExpiresAt = 0;
+                if (CustomExtensionRepos != null)
+                {
+                    CustomExtensionRepos.Clear();
+                }
             }
             catch (Exception ex)
             {
@@ -274,6 +337,8 @@ namespace Yomic.Core.Services
             public string LastFeedbackDate { get; set; } = "";
             public int SourceStatusRefreshIntervalMinutes { get; set; } = 5;
             
+            public System.Collections.Generic.List<string> CustomExtensionRepos { get; set; } = new();
+
             // MyAnimeList Tokens
             public string MalAccessToken { get; set; } = "";
             public string MalRefreshToken { get; set; } = "";

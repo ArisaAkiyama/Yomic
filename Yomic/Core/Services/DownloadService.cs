@@ -103,19 +103,24 @@ namespace Yomic.Core.Services
             }
         }
 
+        public void SaveQueueSynchronously()
+        {
+            lock (_debounceLock)
+            {
+                _saveDebounceTimer?.Dispose();
+                _saveDebounceTimer = null;
+            }
+            SaveQueueInternal();
+        }
+
         private void SaveQueueInternal()
         {
             try
             {
                 var options = new System.Text.Json.JsonSerializerOptions 
                 { 
-                    WriteIndented = true,
-                    ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+                    WriteIndented = true
                 };
-                
-                // Save both Queue and History (only active history, maybe?)
-                // Actually, let's just save the Queue + Active Download
-                // History is less critical, but good for UX. Let's save all.
                 
                 List<DownloadRequest> historySnapshot;
                 lock (_historyLock)
@@ -129,11 +134,11 @@ namespace Yomic.Core.Services
                     queueSnapshot = _queue.ToList();
                 }
 
-                var data = new 
+                var data = new QueueDataDto
                 {
-                    Queue = queueSnapshot,
-                    History = historySnapshot,
-                    Current = _currentDownload
+                    Queue = queueSnapshot.Select(ToDto).ToList(),
+                    History = historySnapshot.Select(ToDto).ToList(),
+                    Current = _currentDownload != null ? ToDto(_currentDownload) : null
                 };
                 
                 string json = System.Text.Json.JsonSerializer.Serialize(data, options);
@@ -156,22 +161,20 @@ namespace Yomic.Core.Services
                 string json = File.ReadAllText(path);
                 var options = new System.Text.Json.JsonSerializerOptions 
                 { 
-                    PropertyNameCaseInsensitive = true,
-                    ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles 
+                    PropertyNameCaseInsensitive = true
                 };
                 
-                var data = System.Text.Json.JsonSerializer.Deserialize<QueueData>(json, options);
+                var data = System.Text.Json.JsonSerializer.Deserialize<QueueDataDto>(json, options);
                 
                 if (data != null)
                 {
-                    if (data.Current != null && data.Current.Status == "Downloading")
+                    if (data.Current != null && (data.Current.Status == "Downloading" || data.Current.Status == "Queued"))
                     {
-                        // Reset status to queued if it was interrupted
-                        data.Current.Status = "Queued";
-                        data.Current.CancellationTokenSource = new CancellationTokenSource();
+                        var req = FromDto(data.Current);
+                        req.Status = "Queued";
                         lock (_queueLock)
                         {
-                            _queue.Add(data.Current);
+                            _queue.Add(req);
                         }
                     }
                     
@@ -179,11 +182,11 @@ namespace Yomic.Core.Services
                     {
                         lock (_queueLock)
                         {
-                            foreach(var item in data.Queue)
+                            foreach(var dto in data.Queue)
                             {
-                                item.CancellationTokenSource = new CancellationTokenSource(); // Recreate CTS
-                                if (item.Status == "Downloading") item.Status = "Queued"; // Reset interrupted
-                                _queue.Add(item);
+                                var req = FromDto(dto);
+                                if (req.Status == "Downloading") req.Status = "Queued";
+                                _queue.Add(req);
                             }
                         }
                     }
@@ -192,7 +195,10 @@ namespace Yomic.Core.Services
                     {
                         lock (_historyLock)
                         {
-                            _history.AddRange(data.History);
+                            foreach(var dto in data.History)
+                            {
+                                _history.Add(FromDto(dto));
+                            }
                         }
                     }
                     
@@ -206,11 +212,113 @@ namespace Yomic.Core.Services
             }
         }
         
-        private class QueueData
+        private class MangaDto
         {
-            public List<DownloadRequest>? Queue { get; set; }
-            public List<DownloadRequest>? History { get; set; }
-            public DownloadRequest? Current { get; set; }
+            public long Id { get; set; }
+            public long Source { get; set; }
+            public string Url { get; set; } = string.Empty;
+            public string Title { get; set; } = string.Empty;
+            public string? ThumbnailUrl { get; set; }
+        }
+
+        private class ChapterDto
+        {
+            public long Id { get; set; }
+            public long MangaId { get; set; }
+            public string Url { get; set; } = string.Empty;
+            public string Name { get; set; } = string.Empty;
+            public float ChapterNumber { get; set; }
+            public bool Read { get; set; }
+            public bool Bookmark { get; set; }
+            public long LastPageRead { get; set; }
+            public bool IsDownloaded { get; set; }
+            public string? Scanlator { get; set; }
+        }
+
+        private class DownloadRequestDto
+        {
+            public MangaDto Manga { get; set; } = null!;
+            public ChapterDto Chapter { get; set; } = null!;
+            public int Progress { get; set; }
+            public string Status { get; set; } = "Queued";
+            public int RetryCount { get; set; }
+        }
+
+        private class QueueDataDto
+        {
+            public List<DownloadRequestDto>? Queue { get; set; }
+            public List<DownloadRequestDto>? History { get; set; }
+            public DownloadRequestDto? Current { get; set; }
+        }
+
+        private static DownloadRequestDto ToDto(DownloadRequest req)
+        {
+            if (req == null) return null!;
+            return new DownloadRequestDto
+            {
+                Progress = req.Progress,
+                Status = req.Status,
+                RetryCount = req.RetryCount,
+                Manga = new MangaDto
+                {
+                    Id = req.Manga.Id,
+                    Source = req.Manga.Source,
+                    Url = req.Manga.Url,
+                    Title = req.Manga.Title,
+                    ThumbnailUrl = req.Manga.ThumbnailUrl
+                },
+                Chapter = new ChapterDto
+                {
+                    Id = req.Chapter.Id,
+                    MangaId = req.Chapter.MangaId,
+                    Url = req.Chapter.Url,
+                    Name = req.Chapter.Name,
+                    ChapterNumber = req.Chapter.ChapterNumber,
+                    Read = req.Chapter.Read,
+                    Bookmark = req.Chapter.Bookmark,
+                    LastPageRead = req.Chapter.LastPageRead,
+                    IsDownloaded = req.Chapter.IsDownloaded,
+                    Scanlator = req.Chapter.Scanlator
+                }
+            };
+        }
+
+        private static DownloadRequest FromDto(DownloadRequestDto dto)
+        {
+            if (dto == null) return null!;
+            var manga = new Manga
+            {
+                Id = dto.Manga.Id,
+                Source = dto.Manga.Source,
+                Url = dto.Manga.Url,
+                Title = dto.Manga.Title,
+                ThumbnailUrl = dto.Manga.ThumbnailUrl
+            };
+            var chapter = new Chapter
+            {
+                Id = dto.Chapter.Id,
+                MangaId = dto.Chapter.MangaId,
+                Url = dto.Chapter.Url,
+                Name = dto.Chapter.Name,
+                ChapterNumber = dto.Chapter.ChapterNumber,
+                Read = dto.Chapter.Read,
+                Bookmark = dto.Chapter.Bookmark,
+                LastPageRead = dto.Chapter.LastPageRead,
+                IsDownloaded = dto.Chapter.IsDownloaded,
+                Scanlator = dto.Chapter.Scanlator,
+                Manga = manga
+            };
+            manga.Chapters.Add(chapter);
+            
+            return new DownloadRequest
+            {
+                Manga = manga,
+                Chapter = chapter,
+                Progress = dto.Progress,
+                Status = dto.Status,
+                RetryCount = dto.RetryCount,
+                CancellationTokenSource = new CancellationTokenSource()
+            };
         }
 
         public void QueueDownload(Manga manga, Chapter chapter)

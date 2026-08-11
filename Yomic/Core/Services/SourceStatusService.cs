@@ -119,49 +119,80 @@ namespace Yomic.Core.Services
             // Update state to Checking
             NotifyStatus(source.Id, SourceStatus.Checking, "Memeriksa koneksi...");
 
-            await _semaphore.WaitAsync(ct);
             try
             {
-                if (ct.IsCancellationRequested || _settingsService.IsOfflineMode) return;
-
-                using var client = _networkService.CreateOptimizedHttpClient();
-                client.Timeout = TimeSpan.FromSeconds(10); // 10-second timeout allowance
-
-                SourceStatus status;
-                string tooltip;
-
-                var baseResult = await PingUrlAsync(client, source.BaseUrl, ct);
-                status = baseResult.Status;
-                tooltip = baseResult.Tooltip;
-
-                // Fallback check ApiUrl if BaseUrl is Offline and ApiUrl is specified
-                if (status == SourceStatus.Offline && !string.IsNullOrWhiteSpace(source.ApiUrl) && !source.ApiUrl.Equals(source.BaseUrl, StringComparison.OrdinalIgnoreCase))
+                await _semaphore.WaitAsync(ct);
+                try
                 {
-                    var apiResult = await PingUrlAsync(client, source.ApiUrl, ct);
-                    if (apiResult.Status != SourceStatus.Offline)
+                    if (ct.IsCancellationRequested)
                     {
-                        status = apiResult.Status;
-                        tooltip = apiResult.Status == SourceStatus.Online 
-                            ? $"Online (API {source.ApiUrl} terhubung)" 
-                            : apiResult.Tooltip;
+                        var lastStatus = GetStatus(source.Id);
+                        NotifyStatus(source.Id, lastStatus.Status, lastStatus.Tooltip);
+                        return;
                     }
-                }
 
+                    if (_settingsService.IsOfflineMode)
+                    {
+                        NotifyStatus(source.Id, SourceStatus.Offline, "Mode Offline Aktif");
+                        return;
+                    }
+
+                    using var client = _networkService.CreateOptimizedHttpClient();
+                    client.Timeout = TimeSpan.FromSeconds(10); // 10-second timeout allowance
+
+                    SourceStatus status;
+                    string tooltip;
+
+                    var baseResult = await PingUrlAsync(client, source.BaseUrl, ct);
+                    status = baseResult.Status;
+                    tooltip = baseResult.Tooltip;
+
+                    // Fallback check ApiUrl if BaseUrl is Offline and ApiUrl is specified
+                    if (status == SourceStatus.Offline && !string.IsNullOrWhiteSpace(source.ApiUrl) && !source.ApiUrl.Equals(source.BaseUrl, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var apiResult = await PingUrlAsync(client, source.ApiUrl, ct);
+                        if (apiResult.Status != SourceStatus.Offline)
+                        {
+                            status = apiResult.Status;
+                            tooltip = apiResult.Status == SourceStatus.Online 
+                                ? $"Online (API {source.ApiUrl} terhubung)" 
+                                : apiResult.Tooltip;
+                        }
+                    }
+
+                    var record = new SourceStatusRecord
+                    {
+                        Status = status,
+                        Tooltip = tooltip,
+                        LastChecked = DateTime.Now
+                    };
+
+                    _cache[source.Id] = record;
+                    SaveCacheToDisk();
+
+                    NotifyStatus(source.Id, status, tooltip);
+                }
+                finally
+                {
+                    _semaphore.Release();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                var lastStatus = GetStatus(source.Id);
+                NotifyStatus(source.Id, lastStatus.Status, lastStatus.Tooltip);
+            }
+            catch (Exception ex)
+            {
                 var record = new SourceStatusRecord
                 {
-                    Status = status,
-                    Tooltip = tooltip,
+                    Status = SourceStatus.Offline,
+                    Tooltip = $"Offline ({ex.Message})",
                     LastChecked = DateTime.Now
                 };
-
                 _cache[source.Id] = record;
                 SaveCacheToDisk();
-
-                NotifyStatus(source.Id, status, tooltip);
-            }
-            finally
-            {
-                _semaphore.Release();
+                NotifyStatus(source.Id, SourceStatus.Offline, record.Tooltip);
             }
         }
 

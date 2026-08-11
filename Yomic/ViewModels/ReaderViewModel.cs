@@ -985,8 +985,21 @@ namespace Yomic.ViewModels
 
                                     if (currentChapterNum > track.LastChapterRead)
                                     {
+                                        bool isMangaCompleted = manga.Status == Core.Models.Manga.COMPLETED;
+                                        bool isLastChapter = false;
+                                        var maxChapterNum = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.MaxAsync(
+                                            db.Chapters.Where(c => c.MangaId == manga.Id), c => (float?)c.ChapterNumber);
+                                        if (maxChapterNum != null)
+                                        {
+                                            isLastChapter = _currentChapter.ChapterNumber >= maxChapterNum.Value;
+                                        }
+
                                         string status = track.Status;
                                         if (track.TotalChapters > 0 && currentChapterNum >= track.TotalChapters)
+                                        {
+                                            status = "completed";
+                                        }
+                                        else if (isMangaCompleted && isLastChapter)
                                         {
                                             status = "completed";
                                         }
