@@ -219,9 +219,14 @@ namespace Yomic.Core.Sources
         public abstract Task<List<Models.Chapter>> GetChapterListAsync(string mangaUrl);
         public abstract Task<List<string>> GetPageListAsync(string chapterUrl);
 
+        public virtual async Task<List<Models.Chapter>> GetLatestChaptersAsync(string mangaUrl)
+        {
+            return await GetChapterListAsync(mangaUrl);
+        }
+
         public virtual async Task<ChapterListCacheResult> GetChapterListWithCacheAsync(string mangaUrl, string? eTag, string? lastModified)
         {
-            var chapters = await GetChapterListAsync(mangaUrl);
+            var chapters = await GetLatestChaptersAsync(mangaUrl);
             return new ChapterListCacheResult { Chapters = chapters };
         }
 

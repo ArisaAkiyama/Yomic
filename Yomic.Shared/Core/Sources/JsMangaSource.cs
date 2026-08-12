@@ -496,6 +496,46 @@ namespace Yomic.Core.Sources
             });
         }
 
+        private List<Chapter> ParseChapterListFromJs(JsValue jsResult)
+        {
+            var list = new List<Chapter>();
+            if (jsResult.IsArray())
+            {
+                var arr = jsResult.AsArray();
+                for (int i = 0; i < arr.Length; i++)
+                {
+                    var obj = arr.Get(i).AsObject();
+                    var name = GetSafeString(obj, "name", GetSafeString(obj, "title"));
+                    
+                    var jsNumVal = obj.Get("chapterNumber");
+                    if (jsNumVal.IsUndefined()) jsNumVal = obj.Get("chapter");
+                    
+                    float chapterNumber = -1;
+                    if (jsNumVal.IsNumber())
+                    {
+                        chapterNumber = (float)jsNumVal.AsNumber();
+                    }
+                    else if (jsNumVal.IsString() && float.TryParse(jsNumVal.AsString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float parsedJsNum))
+                    {
+                        chapterNumber = parsedJsNum;
+                    }
+                    else
+                    {
+                        chapterNumber = ParseChapterNumber(name);
+                    }
+
+                    list.Add(new Chapter
+                    {
+                        Name = name,
+                        Url = GetSafeString(obj, "url"),
+                        DateUpload = (long)GetSafeNumber(obj, "dateUpload"),
+                        ChapterNumber = chapterNumber
+                    });
+                }
+            }
+            return list;
+        }
+
         public override async Task<List<Chapter>> GetChapterListAsync(string mangaUrl)
         {
             return await ExecuteJsAsync(engine =>
@@ -504,42 +544,27 @@ namespace Yomic.Core.Sources
                 if (!hasMethod) return new List<Chapter>();
 
                 var jsResult = engine.Invoke("__callMethod", "getChapterList", mangaUrl);
-                var list = new List<Chapter>();
-                if (jsResult.IsArray())
-                {
-                    var arr = jsResult.AsArray();
-                    for (int i = 0; i < arr.Length; i++)
-                    {
-                        var obj = arr.Get(i).AsObject();
-                        var name = GetSafeString(obj, "name", GetSafeString(obj, "title"));
-                        
-                        var jsNumVal = obj.Get("chapterNumber");
-                        if (jsNumVal.IsUndefined()) jsNumVal = obj.Get("chapter");
-                        
-                        float chapterNumber = -1;
-                        if (jsNumVal.IsNumber())
-                        {
-                            chapterNumber = (float)jsNumVal.AsNumber();
-                        }
-                        else if (jsNumVal.IsString() && float.TryParse(jsNumVal.AsString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float parsedJsNum))
-                        {
-                            chapterNumber = parsedJsNum;
-                        }
-                        else
-                        {
-                            chapterNumber = ParseChapterNumber(name);
-                        }
+                return ParseChapterListFromJs(jsResult);
+            });
+        }
 
-                        list.Add(new Chapter
-                        {
-                            Name = name,
-                            Url = GetSafeString(obj, "url"),
-                            DateUpload = (long)GetSafeNumber(obj, "dateUpload"),
-                            ChapterNumber = chapterNumber
-                        });
-                    }
+        public override async Task<List<Chapter>> GetLatestChaptersAsync(string mangaUrl)
+        {
+            return await ExecuteJsAsync(engine =>
+            {
+                var hasMethod = engine.Invoke("__hasMethod", "getLatestChapters").AsBoolean();
+                if (hasMethod)
+                {
+                    var jsResult = engine.Invoke("__callMethod", "getLatestChapters", mangaUrl);
+                    var latest = ParseChapterListFromJs(jsResult);
+                    if (latest.Count > 0) return latest;
                 }
-                return list;
+
+                var hasStandard = engine.Invoke("__hasMethod", "getChapterList").AsBoolean();
+                if (!hasStandard) return new List<Chapter>();
+
+                var fallbackResult = engine.Invoke("__callMethod", "getChapterList", mangaUrl);
+                return ParseChapterListFromJs(fallbackResult);
             });
         }
 
@@ -553,7 +578,7 @@ namespace Yomic.Core.Sources
 
             try
             {
-                var chapters = await GetChapterListAsync(mangaUrl);
+                var chapters = await GetLatestChaptersAsync(mangaUrl);
 
                 if (_lastFetchWas304)
                 {
