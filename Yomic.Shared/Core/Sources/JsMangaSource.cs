@@ -344,12 +344,12 @@ namespace Yomic.Core.Sources
                 {
                     bodyText = System.Text.Encoding.UTF8.GetString(responseBytes);
                 }
-                Console.WriteLine($"[JsMangaSource.FetchUrl] {method} {url} -> Status {(int)response.StatusCode}, Bytes {responseBytes.Length}");
+                if (!SilenceLogs) Console.WriteLine($"[JsMangaSource.FetchUrl] {method} {url} -> Status {(int)response.StatusCode}, Bytes {responseBytes.Length}");
                 return new JsResponse { body = bodyText, status = (int)response.StatusCode };
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[JsMangaSource] Fetch failed for {url}. Error: {ex}");
+                if (!SilenceLogs) Console.WriteLine($"[JsMangaSource] Fetch failed for {url}. Error: {ex}");
                 return new JsResponse { body = ex.Message, status = 500 };
             }
         }
