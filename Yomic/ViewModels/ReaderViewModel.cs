@@ -654,8 +654,8 @@ namespace Yomic.ViewModels
             });
             
             // Zoom Logic
-            ZoomInCommand = ReactiveCommand.Create(() => ZoomScale = Math.Min(2.0, ZoomScale + 0.25));
-            ZoomOutCommand = ReactiveCommand.Create(() => ZoomScale = Math.Max(0.5, ZoomScale - 0.25));
+            ZoomInCommand = ReactiveCommand.Create(() => ZoomScale = Math.Min(3.0, ZoomScale + 0.25));
+            ZoomOutCommand = ReactiveCommand.Create(() => ZoomScale = Math.Max(0.25, ZoomScale - 0.25));
             ResetZoomCommand = ReactiveCommand.Create(() => ZoomScale = 1.0);
             
             // Fullscreen Toggle
