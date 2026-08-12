@@ -1015,7 +1015,7 @@ namespace Yomic.Core.Services
                 var tasks = libraryManga.Select(async manga =>
                 {
                     await globalSemaphore.WaitAsync();
-                    var sourceSemaphore = _sourceSemaphores.GetOrAdd(manga.Source, _ => new System.Threading.SemaphoreSlim(3));
+                    var sourceSemaphore = _sourceSemaphores.GetOrAdd(manga.Source, _ => new System.Threading.SemaphoreSlim(5));
                     await sourceSemaphore.WaitAsync();
                     
                     Manga? freshManga = null;
@@ -1027,14 +1027,6 @@ namespace Yomic.Core.Services
                         {
                             var updateTask = Task.Run(async () =>
                             {
-                                int delayMs = source.RateLimitDelayMs;
-                                if (delayMs > 0)
-                                {
-                                    int variance = delayMs / 4;
-                                    int actualDelay = delayMs + Random.Shared.Next(-variance, variance);
-                                    await Task.Delay(Math.Max(50, actualDelay));
-                                }
-
                                 Manga? details = null;
                                 if (forceRefresh)
                                 {

@@ -31,7 +31,7 @@ namespace Yomic.Core.Sources
         private bool _requiresProxy = false;
         private string? _userAgent = null;
 
-        private static readonly SemaphoreSlim _globalExecutionLimit = new(6, 6);
+        private static readonly SemaphoreSlim _globalExecutionLimit = new(14, 14);
         private readonly ConcurrentQueue<Engine> _enginePool = new();
         private string _scriptCode = "";
         private bool _supportsStatusFilter;
