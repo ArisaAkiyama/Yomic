@@ -29,6 +29,10 @@ namespace Yomic.Core.Models
         public long CoverLastModified { get; set; }
         public long DateAdded { get; set; }
 
+        // HTTP Caching Headers
+        public string? ResponseETag { get; set; }
+        public string? ResponseLastModified { get; set; }
+
         // Relationships
         public virtual ICollection<Chapter> Chapters { get; set; } = new List<Chapter>();
         public virtual ICollection<History> History { get; set; } = new List<History>();

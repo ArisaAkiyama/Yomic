@@ -1008,7 +1008,7 @@ namespace Yomic.Core.Services
                 
                 // Process in parallel using a global semaphore and per-source semaphores
                 using var globalSemaphore = new System.Threading.SemaphoreSlim(20);
-                var completedBatch = new List<(Manga manga, Manga? freshManga, List<Chapter>? chapters)>();
+                var completedBatch = new List<(Manga manga, Manga? freshManga, List<Chapter>? chapters, string? eTag, string? lastModified, bool is304NotModified)>();
                 var batchLock = new object();
                 int totalNewChapters = 0;
 
@@ -1020,6 +1020,9 @@ namespace Yomic.Core.Services
                     
                     Manga? freshManga = null;
                     List<Chapter>? chapters = null;
+                    string? freshETag = null;
+                    string? freshLastModified = null;
+                    bool is304NotModified = false;
                     try
                     {
                         var source = sourceManager.GetSource(manga.Source);
@@ -1028,6 +1031,11 @@ namespace Yomic.Core.Services
                             var updateTask = Task.Run(async () =>
                             {
                                 Manga? details = null;
+                                List<Chapter>? chs = null;
+                                string? taskETag = null;
+                                string? taskLastModified = null;
+                                bool taskIs304 = false;
+
                                 if (forceRefresh)
                                 {
                                     try
@@ -1040,13 +1048,33 @@ namespace Yomic.Core.Services
                                     }
                                 }
 
-                                var chs = await source.GetChapterListAsync(manga.Url);
-                                return (details, chs);
+                                var cacheResult = await source.GetChapterListWithCacheAsync(
+                                    manga.Url, 
+                                    forceRefresh ? null : manga.ResponseETag, 
+                                    forceRefresh ? null : manga.ResponseLastModified
+                                );
+
+                                if (cacheResult.IsNotModified)
+                                {
+                                    taskIs304 = true;
+                                    chs = null;
+                                }
+                                else
+                                {
+                                    chs = cacheResult.Chapters;
+                                    taskETag = cacheResult.ETag;
+                                    taskLastModified = cacheResult.LastModified;
+                                }
+
+                                return (details, chs, taskETag, taskLastModified, taskIs304);
                             });
 
                             var res = await updateTask.WaitAsync(TimeSpan.FromSeconds(25));
                             freshManga = res.details;
                             chapters = res.chs;
+                            freshETag = res.taskETag;
+                            freshLastModified = res.taskLastModified;
+                            is304NotModified = res.taskIs304;
                         }
                     }
                     catch (TimeoutException)
@@ -1067,8 +1095,8 @@ namespace Yomic.Core.Services
                         globalSemaphore.Release();
                     }
 
-                    var result = (manga, freshManga, chapters);
-                    List<(Manga manga, Manga? freshManga, List<Chapter>? chapters)>? batchToWrite = null;
+                    var result = (manga, freshManga, chapters, freshETag, freshLastModified, is304NotModified);
+                    List<(Manga manga, Manga? freshManga, List<Chapter>? chapters, string? eTag, string? lastModified, bool is304NotModified)>? batchToWrite = null;
                     lock (batchLock)
                     {
                         completedBatch.Add(result);
@@ -1136,7 +1164,7 @@ namespace Yomic.Core.Services
             }
         }
 
-        private async Task<int> SaveLibraryUpdateBatchAsync(List<(Manga manga, Manga? freshManga, List<Chapter>? chapters)> batch, bool forceRefresh)
+        private async Task<int> SaveLibraryUpdateBatchAsync(List<(Manga manga, Manga? freshManga, List<Chapter>? chapters, string? eTag, string? lastModified, bool is304NotModified)> batch, bool forceRefresh)
         {
             int batchNewChaptersCount = 0;
             await _dbLock.WaitAsync();
@@ -1152,12 +1180,21 @@ namespace Yomic.Core.Services
                 var dbMangaDict = dbMangas.ToDictionary(m => (m.Url, m.Source));
                 long now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-                foreach (var (manga, freshManga, chapters) in batch)
+                foreach (var (manga, freshManga, chapters, eTag, lastModified, is304NotModified) in batch)
                 {
-                    if (chapters == null) continue;
-
                     if (dbMangaDict.TryGetValue((manga.Url, manga.Source), out var dbManga))
                     {
+                        if (eTag != null) dbManga.ResponseETag = eTag;
+                        if (lastModified != null) dbManga.ResponseLastModified = lastModified;
+
+                        if (is304NotModified)
+                        {
+                            UpdateMangaUpdateSchedule(dbManga, now);
+                            continue;
+                        }
+
+                        if (chapters == null) continue;
+
                         // 1. Update metadata if forceRefresh
                         if (forceRefresh && freshManga != null)
                         {

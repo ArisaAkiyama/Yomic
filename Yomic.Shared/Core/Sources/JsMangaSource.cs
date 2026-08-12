@@ -222,6 +222,12 @@ namespace Yomic.Core.Sources
             return BitConverter.ToInt64(hash, 0);
         }
 
+        [ThreadStatic] private static string? _currentCacheETag;
+        [ThreadStatic] private static string? _currentCacheLastModified;
+        [ThreadStatic] private static string? _lastExtractedETag;
+        [ThreadStatic] private static string? _lastExtractedLastModified;
+        [ThreadStatic] private static bool _lastFetchWas304;
+
         private JsResponse FetchUrl(string url, JsValue options)
         {
             try
@@ -259,10 +265,31 @@ namespace Yomic.Core.Sources
                     }
                 }
 
+                if (!string.IsNullOrEmpty(_currentCacheETag) && !headers.ContainsKey("If-None-Match"))
+                {
+                    headers["If-None-Match"] = _currentCacheETag;
+                }
+                if (!string.IsNullOrEmpty(_currentCacheLastModified) && !headers.ContainsKey("If-Modified-Since"))
+                {
+                    headers["If-Modified-Since"] = _currentCacheLastModified;
+                }
+
                 // If it's a GET and no custom headers, check media type or binary bytes cleanly
                 if (method == HttpMethod.Get && headers.Count == 0)
                 {
                     var responseNoHead = Task.Run(() => Client.GetAsync(url)).GetAwaiter().GetResult();
+                    if (responseNoHead.StatusCode == System.Net.HttpStatusCode.NotModified)
+                    {
+                        _lastFetchWas304 = true;
+                        return new JsResponse { body = "", status = 304 };
+                    }
+
+                    if (responseNoHead.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        if (responseNoHead.Headers.ETag != null) _lastExtractedETag = responseNoHead.Headers.ETag.Tag;
+                        if (responseNoHead.Content.Headers.LastModified != null) _lastExtractedLastModified = responseNoHead.Content.Headers.LastModified.Value.ToString("r");
+                    }
+
                     var bytesNoHead = Task.Run(() => responseNoHead.Content.ReadAsByteArrayAsync()).GetAwaiter().GetResult();
                     var mediaTypeNoHead = responseNoHead.Content.Headers.ContentType?.MediaType?.ToLowerInvariant() ?? "";
                     string content;
@@ -293,6 +320,19 @@ namespace Yomic.Core.Sources
                 }
 
                 var response = Task.Run(() => Client.SendAsync(request)).GetAwaiter().GetResult();
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NotModified)
+                {
+                    _lastFetchWas304 = true;
+                    return new JsResponse { body = "", status = 304 };
+                }
+
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    if (response.Headers.ETag != null) _lastExtractedETag = response.Headers.ETag.Tag;
+                    if (response.Content.Headers.LastModified != null) _lastExtractedLastModified = response.Content.Headers.LastModified.Value.ToString("r");
+                }
+
                 var responseBytes = Task.Run(() => response.Content.ReadAsByteArrayAsync()).GetAwaiter().GetResult();
                 var mediaType = response.Content.Headers.ContentType?.MediaType?.ToLowerInvariant() ?? "";
                 string bodyText;
@@ -501,6 +541,41 @@ namespace Yomic.Core.Sources
                 }
                 return list;
             });
+        }
+
+        public override async Task<ChapterListCacheResult> GetChapterListWithCacheAsync(string mangaUrl, string? eTag, string? lastModified)
+        {
+            _currentCacheETag = eTag;
+            _currentCacheLastModified = lastModified;
+            _lastExtractedETag = null;
+            _lastExtractedLastModified = null;
+            _lastFetchWas304 = false;
+
+            try
+            {
+                var chapters = await GetChapterListAsync(mangaUrl);
+
+                if (_lastFetchWas304)
+                {
+                    return new ChapterListCacheResult { IsNotModified = true };
+                }
+
+                return new ChapterListCacheResult
+                {
+                    IsNotModified = false,
+                    Chapters = chapters,
+                    ETag = _lastExtractedETag,
+                    LastModified = _lastExtractedLastModified
+                };
+            }
+            finally
+            {
+                _currentCacheETag = null;
+                _currentCacheLastModified = null;
+                _lastExtractedETag = null;
+                _lastExtractedLastModified = null;
+                _lastFetchWas304 = false;
+            }
         }
 
         public override async Task<List<string>> GetPageListAsync(string chapterUrl)
