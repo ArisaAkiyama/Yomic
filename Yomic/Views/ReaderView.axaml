@@ -206,7 +206,7 @@
                      Background="Black"
                      ItemsSource="{Binding Pages}" 
                      HorizontalAlignment="Stretch"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
                      ScrollViewer.VerticalScrollBarVisibility="Auto"
                      ScrollViewer.ScrollChanged="OnScrollChanged"
                      SelectionMode="Single">
@@ -292,8 +292,8 @@
                         </LayoutTransformControl.LayoutTransform>
 
                         <ContentControl Content="{Binding CurrentPage}"
-                                        MaxHeight="{Binding Bounds.Height, ElementName=PagedScroll}"
-                                        MaxWidth="{Binding Bounds.Width, ElementName=PagedScroll}">
+                                        MaxHeight="{Binding Bounds.Height, ElementName=PagedScroll, Converter={x:Static vm:MathConverters.FitScale}}"
+                                        MaxWidth="{Binding Bounds.Width, ElementName=PagedScroll, Converter={x:Static vm:MathConverters.FitScale}}">
                             <ContentControl.ContentTemplate>
                                 <DataTemplate x:DataType="vm:PageViewModel">
                                      <Panel>
@@ -328,8 +328,8 @@
                         </LayoutTransformControl.LayoutTransform>
 
                         <Grid ColumnDefinitions="*,*" HorizontalAlignment="Center" VerticalAlignment="Center"
-                              MaxHeight="{Binding Bounds.Height, ElementName=DualPagedScroll}"
-                              MaxWidth="{Binding Bounds.Width, ElementName=DualPagedScroll}">
+                              MaxHeight="{Binding Bounds.Height, ElementName=DualPagedScroll, Converter={x:Static vm:MathConverters.FitScale}}"
+                              MaxWidth="{Binding Bounds.Width, ElementName=DualPagedScroll, Converter={x:Static vm:MathConverters.FitScale}}">
                             <!-- Left Side: Next Page (Index + 1) -->
                             <ContentControl Content="{Binding CurrentPageLeft}" Grid.Column="0">
                                 <ContentControl.ContentTemplate>
@@ -612,7 +612,7 @@
                                                     Foreground="{DynamicResource AccentColor}"
                                                     Background="{DynamicResource HoverBackground}"
                                                     Value="{Binding ZoomScale}" 
-                                                    Minimum="0.1" Maximum="3.0" 
+                                                    Minimum="0.5" Maximum="3.0" 
                                                     Height="140"
                                                     IsSnapToTickEnabled="True" 
                                                     TickFrequency="0.1"/>

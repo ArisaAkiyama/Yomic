@@ -597,9 +597,9 @@ namespace Yomic.Views
             if (e.Source is Visual visual && visual.FindAncestorOfType<Avalonia.Controls.Primitives.ScrollBar>(true) != null)
                 return;
             
-            if (DataContext is ReaderViewModel vm && vm.ZoomScale <= 1.5)
+            if (DataContext is ReaderViewModel vm && vm.ZoomScale <= 1.05)
             {
-                // --- AUTO SCROLL MODE (Zoom <= 150%) ---
+                // --- AUTO SCROLL MODE (Zoom <= 100%) ---
                 _isAutoScrolling = true;
                 
                 // Clamp Anchor Position to avoid overlapping scrollbar or edges
