@@ -172,12 +172,11 @@ namespace Yomic
                 // Ensure Database is Created
                 using (var context = new Core.Data.MangaDbContext())
                 {
+                    Core.Data.MangaDbContext.EnsureMangaColumnsExist(context);
                     try
                     {
                         context.Database.Migrate();
                         context.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA cache_size=-10000; PRAGMA temp_store=MEMORY; PRAGMA busy_timeout=10000;");
-                        try { context.Database.ExecuteSqlRaw("ALTER TABLE Mangas ADD COLUMN ResponseETag TEXT;"); } catch { }
-                        try { context.Database.ExecuteSqlRaw("ALTER TABLE Mangas ADD COLUMN ResponseLastModified TEXT;"); } catch { }
                         System.Diagnostics.Debug.WriteLine($"[App] Database migrated & WAL mode applied successfully.");
                     }
                     catch (System.Exception ex)

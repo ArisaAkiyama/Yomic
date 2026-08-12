@@ -18,6 +18,49 @@ namespace Yomic.Core.Data
         public DbSet<MangaTrack> Tracks { get; set; } = null!;
 
         private static bool _hasLoggedPath = false;
+        private static bool _columnsEnsured = false;
+
+        public static void EnsureMangaColumnsExist(DbContext context)
+        {
+            if (_columnsEnsured) return;
+            try
+            {
+                using var conn = context.Database.GetDbConnection();
+                if (conn.State != System.Data.ConnectionState.Open) conn.Open();
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "PRAGMA table_info(Mangas);";
+                using var reader = cmd.ExecuteReader();
+                var cols = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+                while (reader.Read())
+                {
+                    if (reader.FieldCount > 1) cols.Add(reader.GetString(1));
+                }
+                reader.Close();
+
+                if (cols.Count > 0)
+                {
+                    if (!cols.Contains("ResponseETag"))
+                    {
+                        using var alter = conn.CreateCommand();
+                        alter.CommandText = "ALTER TABLE Mangas ADD COLUMN ResponseETag TEXT;";
+                        alter.ExecuteNonQuery();
+                        System.Diagnostics.Debug.WriteLine("[DbContext] Added column ResponseETag to Mangas.");
+                    }
+                    if (!cols.Contains("ResponseLastModified"))
+                    {
+                        using var alter = conn.CreateCommand();
+                        alter.CommandText = "ALTER TABLE Mangas ADD COLUMN ResponseLastModified TEXT;";
+                        alter.ExecuteNonQuery();
+                        System.Diagnostics.Debug.WriteLine("[DbContext] Added column ResponseLastModified to Mangas.");
+                    }
+                    _columnsEnsured = true;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DbContext] EnsureMangaColumnsExist error: {ex.Message}");
+            }
+        }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

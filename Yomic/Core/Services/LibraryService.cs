@@ -16,6 +16,7 @@ namespace Yomic.Core.Services
         public async Task<List<Manga>> GetLibraryMangaAsync()
         {
             using var context = new MangaDbContext();
+            MangaDbContext.EnsureMangaColumnsExist(context);
             return await context.Mangas
                                 .Include(m => m.Chapters)
                                 .Include(m => m.Categories)
