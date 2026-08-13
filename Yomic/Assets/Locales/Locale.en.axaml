@@ -380,11 +380,4 @@
     <sys:String x:Key="String.Interval.10Min">10 Minutes</sys:String>
     <sys:String x:Key="String.Interval.30Min">30 Minutes</sys:String>
     <sys:String x:Key="String.UpdatingLibraryProgress">Updating Library...</sys:String>
-    <!-- Extension Repositories -->
-    <sys:String x:Key="String.ExtensionRepos.Title">Extension Repositories</sys:String>
-    <sys:String x:Key="String.ExtensionRepos.Placeholder">Enter repository URL (e.g. https://.../index.min.json)</sys:String>
-    <sys:String x:Key="String.ExtensionRepos.AddBtn">Add Repo</sys:String>
-    <sys:String x:Key="String.ExtensionRepos.ResetBtn">Reset to Default</sys:String>
-    <sys:String x:Key="String.ExtensionRepos.OfficialTag">Official</sys:String>
-    <sys:String x:Key="String.ExtensionRepos.CustomTag">Custom</sys:String>
 </ResourceDictionary>

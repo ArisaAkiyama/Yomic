@@ -380,11 +380,4 @@
     <sys:String x:Key="String.Interval.10Min">10 Menit</sys:String>
     <sys:String x:Key="String.Interval.30Min">30 Menit</sys:String>
     <sys:String x:Key="String.UpdatingLibraryProgress">Memperbarui Pustaka...</sys:String>
-    <!-- Extension Repositories -->
-    <sys:String x:Key="String.ExtensionRepos.Title">Repositori Ekstensi</sys:String>
-    <sys:String x:Key="String.ExtensionRepos.Placeholder">Masukkan URL repositori (contoh: https://.../index.min.json)</sys:String>
-    <sys:String x:Key="String.ExtensionRepos.AddBtn">Tambah Repo</sys:String>
-    <sys:String x:Key="String.ExtensionRepos.ResetBtn">Reset ke Default</sys:String>
-    <sys:String x:Key="String.ExtensionRepos.OfficialTag">Resmi</sys:String>
-    <sys:String x:Key="String.ExtensionRepos.CustomTag">Kustom</sys:String>
 </ResourceDictionary>

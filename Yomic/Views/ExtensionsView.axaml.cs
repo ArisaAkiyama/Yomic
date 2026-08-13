@@ -9,25 +9,6 @@ namespace Yomic.Views
         public ExtensionsView()
         {
             InitializeComponent();
-            DataContextChanged += OnDataContextChanged;
-        }
-
-        private void OnDataContextChanged(object? sender, System.EventArgs e)
-        {
-            if (DataContext is ExtensionsViewModel vm)
-            {
-                vm.RequestManageReposDialogAsync = ShowManageReposDialogAsync;
-            }
-        }
-
-        private async Task ShowManageReposDialogAsync()
-        {
-            var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel is Window parentWindow)
-            {
-                var dialog = new ExtensionReposDialog();
-                await dialog.ShowDialog(parentWindow);
-            }
         }
     }
 }
