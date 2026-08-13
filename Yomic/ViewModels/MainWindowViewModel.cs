@@ -10,7 +10,12 @@ namespace Yomic.ViewModels
     // Model sederhana untuk satu komik
     public class MangaItem : ViewModelBase
     {
-        public string Title { get; set; } = string.Empty;
+        private string _title = string.Empty;
+        public string Title
+        {
+            get => _title;
+            set => this.RaiseAndSetIfChanged(ref _title, value);
+        }
         public string? CoverUrl { get; set; } 
         public long LastViewed { get; set; } // For "Last Read" sorting 
 

@@ -13,17 +13,69 @@ namespace Yomic.Core.Services
         // Event triggered when new chapters are found
         public event EventHandler<int>? UpdatesFound;
 
+        public static string FormatTitleFromUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return "Unknown Manga";
+            try
+            {
+                var uri = new Uri(url);
+                var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                if (segments.Length > 0)
+                {
+                    var lastSegment = segments[^1];
+                    if (lastSegment.Equals("chapters", StringComparison.OrdinalIgnoreCase) || 
+                        lastSegment.Equals("chapter", StringComparison.OrdinalIgnoreCase) || 
+                        lastSegment.Equals("komik", StringComparison.OrdinalIgnoreCase) || 
+                        lastSegment.Equals("manga", StringComparison.OrdinalIgnoreCase) || 
+                        lastSegment.Equals("series", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (segments.Length > 1) lastSegment = segments[^2];
+                    }
+                    var words = lastSegment.Replace("-", " ").Replace("_", " ").Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    if (words.Length > 0)
+                    {
+                        var textInfo = System.Globalization.CultureInfo.InvariantCulture.TextInfo;
+                        return string.Join(" ", words.Select(w => textInfo.ToTitleCase(w)));
+                    }
+                }
+            }
+            catch { }
+            return url;
+        }
+
         public async Task<List<Manga>> GetLibraryMangaAsync()
         {
             using var context = new MangaDbContext();
             MangaDbContext.EnsureMangaColumnsExist(context);
-            return await context.Mangas
+            var mangas = await context.Mangas
                                 .Include(m => m.Chapters)
                                 .Include(m => m.Categories)
                                 .Include(m => m.Tracks)
                                 .Where(m => m.Favorite)
                                 .OrderBy(m => m.Title)
                                 .ToListAsync();
+
+            bool repaired = false;
+            foreach (var m in mangas)
+            {
+                if (string.IsNullOrWhiteSpace(m.Title))
+                {
+                    m.Title = FormatTitleFromUrl(m.Url);
+                    repaired = true;
+                }
+            }
+
+            if (repaired)
+            {
+                try
+                {
+                    await context.SaveChangesAsync();
+                    LogService.Info("LibraryService", "Repaired missing titles in library database.");
+                }
+                catch { }
+            }
+
+            return mangas;
         }
 
         public async Task<List<Manga>> GetHistoryMangaAsync()
@@ -82,14 +134,14 @@ namespace Yomic.Core.Services
                 if (existing != null)
                 {
                     existing.Favorite = true;
-                    // Update other fields
-                    existing.Title = manga.Title;
-                    existing.ThumbnailUrl = manga.ThumbnailUrl;
-                    existing.Author = manga.Author;
-                    existing.Artist = manga.Artist;
-                    existing.Genre = manga.Genre;
-                    existing.Status = manga.Status;
-                    existing.Description = manga.Description;
+                    // Update other fields safely (never overwrite valid existing title with empty string)
+                    if (!string.IsNullOrWhiteSpace(manga.Title)) existing.Title = manga.Title;
+                    if (!string.IsNullOrWhiteSpace(manga.ThumbnailUrl)) existing.ThumbnailUrl = manga.ThumbnailUrl;
+                    if (!string.IsNullOrWhiteSpace(manga.Author)) existing.Author = manga.Author;
+                    if (!string.IsNullOrWhiteSpace(manga.Artist)) existing.Artist = manga.Artist;
+                    if (manga.Genre != null && manga.Genre.Count > 0) existing.Genre = manga.Genre;
+                    if (manga.Status > 0) existing.Status = manga.Status;
+                    if (!string.IsNullOrWhiteSpace(manga.Description)) existing.Description = manga.Description;
                     existing.Initialized = true;
                     
                     // Assign default category if it has no categories yet
@@ -1196,29 +1248,23 @@ namespace Yomic.Core.Services
 
                         if (chapters == null) continue;
 
-                        // 1. Update metadata if forceRefresh
-                        if (forceRefresh && freshManga != null)
+                        // 1. Update metadata if forceRefresh (safely check for non-empty title)
+                        if (forceRefresh && freshManga != null && !string.IsNullOrWhiteSpace(freshManga.Title))
                         {
                             dbManga.Title = freshManga.Title;
-                            dbManga.Author = freshManga.Author;
-                            dbManga.Description = freshManga.Description;
-                            dbManga.Genre = freshManga.Genre;
-                            dbManga.Status = freshManga.Status;
-                            if (!string.IsNullOrEmpty(freshManga.ThumbnailUrl))
-                            {
-                                dbManga.ThumbnailUrl = freshManga.ThumbnailUrl;
-                            }
+                            if (!string.IsNullOrWhiteSpace(freshManga.Author)) dbManga.Author = freshManga.Author;
+                            if (!string.IsNullOrWhiteSpace(freshManga.Description)) dbManga.Description = freshManga.Description;
+                            if (freshManga.Genre != null && freshManga.Genre.Count > 0) dbManga.Genre = freshManga.Genre;
+                            if (freshManga.Status > 0) dbManga.Status = freshManga.Status;
+                            if (!string.IsNullOrEmpty(freshManga.ThumbnailUrl)) dbManga.ThumbnailUrl = freshManga.ThumbnailUrl;
 
                             // Sync local copy properties
                             manga.Title = freshManga.Title;
-                            manga.Author = freshManga.Author;
-                            manga.Description = freshManga.Description;
-                            manga.Genre = freshManga.Genre;
-                            manga.Status = freshManga.Status;
-                            if (!string.IsNullOrEmpty(freshManga.ThumbnailUrl))
-                            {
-                                manga.ThumbnailUrl = freshManga.ThumbnailUrl;
-                            }
+                            if (!string.IsNullOrWhiteSpace(freshManga.Author)) manga.Author = freshManga.Author;
+                            if (!string.IsNullOrWhiteSpace(freshManga.Description)) manga.Description = freshManga.Description;
+                            if (freshManga.Genre != null && freshManga.Genre.Count > 0) manga.Genre = freshManga.Genre;
+                            if (freshManga.Status > 0) manga.Status = freshManga.Status;
+                            if (!string.IsNullOrEmpty(freshManga.ThumbnailUrl)) manga.ThumbnailUrl = freshManga.ThumbnailUrl;
                         }
 
                         int newCount = SyncChaptersInternal(context, dbManga, chapters, false, false, now);
