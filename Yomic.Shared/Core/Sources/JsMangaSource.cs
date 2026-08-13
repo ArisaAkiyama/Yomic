@@ -548,6 +548,8 @@ namespace Yomic.Core.Sources
             });
         }
 
+        private bool _lastFetchWasPartial = false;
+
         public override async Task<List<Chapter>> GetLatestChaptersAsync(string mangaUrl)
         {
             return await ExecuteJsAsync(engine =>
@@ -557,9 +559,14 @@ namespace Yomic.Core.Sources
                 {
                     var jsResult = engine.Invoke("__callMethod", "getLatestChapters", mangaUrl);
                     var latest = ParseChapterListFromJs(jsResult);
-                    if (latest.Count > 0) return latest;
+                    if (latest.Count > 0)
+                    {
+                        _lastFetchWasPartial = true;
+                        return latest;
+                    }
                 }
 
+                _lastFetchWasPartial = false;
                 var hasStandard = engine.Invoke("__hasMethod", "getChapterList").AsBoolean();
                 if (!hasStandard) return new List<Chapter>();
 
@@ -575,6 +582,7 @@ namespace Yomic.Core.Sources
             _lastExtractedETag = null;
             _lastExtractedLastModified = null;
             _lastFetchWas304 = false;
+            _lastFetchWasPartial = false;
 
             try
             {
@@ -588,6 +596,7 @@ namespace Yomic.Core.Sources
                 return new ChapterListCacheResult
                 {
                     IsNotModified = false,
+                    IsPartial = _lastFetchWasPartial,
                     Chapters = chapters,
                     ETag = _lastExtractedETag,
                     LastModified = _lastExtractedLastModified
@@ -600,6 +609,7 @@ namespace Yomic.Core.Sources
                 _lastExtractedETag = null;
                 _lastExtractedLastModified = null;
                 _lastFetchWas304 = false;
+                _lastFetchWasPartial = false;
             }
         }
 

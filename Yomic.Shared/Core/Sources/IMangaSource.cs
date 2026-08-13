@@ -48,6 +48,7 @@ namespace Yomic.Core.Sources
     public class ChapterListCacheResult
     {
         public bool IsNotModified { get; set; }
+        public bool IsPartial { get; set; }
         public List<Chapter>? Chapters { get; set; }
         public string? ETag { get; set; }
         public string? LastModified { get; set; }
