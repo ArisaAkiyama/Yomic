@@ -356,16 +356,6 @@ namespace Yomic.Views
             }
         }
 
-        private async void OnRefreshAnnouncementClick(object? sender, RoutedEventArgs e)
-        {
-            if (DataContext is MainWindowViewModel vm)
-            {
-                vm.IsAnnouncementLoading = true;
-                await vm.AnnouncementService.FetchAnnouncementsAsync();
-                vm.IsAnnouncementLoading = false;
-            }
-        }
-
         private void OnAnnouncementItemClick(object? sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.DataContext is Core.Models.Announcement item && DataContext is MainWindowViewModel vm)

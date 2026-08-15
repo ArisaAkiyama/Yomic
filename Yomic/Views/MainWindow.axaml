@@ -430,31 +430,16 @@
                                 <TextBlock Text="{DynamicResource String.Announcements}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
                             </StackPanel>
 
-                            <!-- Action Buttons (Refresh & Close) -->
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" Margin="0,0,12,0" VerticalAlignment="Center">
-                                <Button Click="OnRefreshAnnouncementClick"
-                                        Background="Transparent" Padding="8" CornerRadius="6" Cursor="Hand"
-                                        ToolTip.Tip="Muat ulang pengumuman"
-                                        VerticalAlignment="Center">
-                                    <Viewbox Width="14" Height="14">
-                                        <Canvas Width="24" Height="24">
-                                            <Path Data="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" 
-                                                  Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" 
-                                                  StrokeLineCap="Round" StrokeJoin="Round"/>
-                                        </Canvas>
-                                    </Viewbox>
-                                </Button>
-
-                                <Button Click="OnCloseAnnouncementPanelClick"
-                                        Background="Transparent" Padding="8" CornerRadius="6" Cursor="Hand"
-                                        VerticalAlignment="Center">
-                                    <Viewbox Width="14" Height="14">
-                                        <Canvas Width="24" Height="24">
-                                            <Path Data="M18 6l-12 12 M6 6l12 12" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
-                                        </Canvas>
-                                    </Viewbox>
-                                </Button>
-                            </StackPanel>
+                            <!-- Close Button -->
+                            <Button Grid.Column="2" Click="OnCloseAnnouncementPanelClick"
+                                    Background="Transparent" Padding="8" Margin="0,0,12,0" CornerRadius="6" Cursor="Hand"
+                                    VerticalAlignment="Center">
+                                <Viewbox Width="14" Height="14">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="M18 6l-12 12 M6 6l12 12" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                    </Canvas>
+                                </Viewbox>
+                            </Button>
                         </Grid>
                     </Border>
 
@@ -488,12 +473,6 @@
                         <!-- Right Column: Detail Content -->
                         <Border Grid.Column="1" Background="{DynamicResource PrimaryBackground}" CornerRadius="0,0,11,0" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,1,0,0" Padding="0,16,6,16">
                             <Grid>
-                                <!-- Loading State -->
-                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" IsVisible="{Binding IsAnnouncementLoading}">
-                                    <ProgressBar IsIndeterminate="True" Width="140" Height="4"/>
-                                    <TextBlock Text="Memeriksa pengumuman..." FontSize="12" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
-                                </StackPanel>
-
                                 <!-- Empty State -->
                                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8" 
                                             IsVisible="{Binding !Announcements.Count}">
