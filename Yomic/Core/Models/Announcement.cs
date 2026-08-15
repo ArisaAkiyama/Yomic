@@ -1,8 +1,9 @@
 using System;
+using ReactiveUI;
 
 namespace Yomic.Core.Models
 {
-    public class Announcement
+    public class Announcement : ReactiveObject
     {
         public string Id { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
@@ -10,6 +11,13 @@ namespace Yomic.Core.Models
         public string Date { get; set; } = string.Empty;
         public string Type { get; set; } = "info"; // "info", "warning", "error"
         public string Url { get; set; } = string.Empty;
+
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => this.RaiseAndSetIfChanged(ref _isSelected, value);
+        }
 
         // Visual helper properties
         public bool HasUrl => !string.IsNullOrWhiteSpace(Url);

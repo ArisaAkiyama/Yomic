@@ -227,6 +227,36 @@ namespace Yomic.ViewModels
         private readonly Core.Services.AnnouncementService _announcementService;
         public Core.Services.AnnouncementService AnnouncementService => _announcementService;
 
+        public System.Collections.ObjectModel.ObservableCollection<Core.Models.Announcement> Announcements { get; } = new();
+
+        private Core.Models.Announcement? _selectedAnnouncement;
+        public Core.Models.Announcement? SelectedAnnouncement
+        {
+            get => _selectedAnnouncement;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedAnnouncement, value);
+                foreach (var item in Announcements)
+                {
+                    item.IsSelected = (item == value);
+                }
+            }
+        }
+
+        private bool _isAnnouncementPanelOpen;
+        public bool IsAnnouncementPanelOpen
+        {
+            get => _isAnnouncementPanelOpen;
+            set => this.RaiseAndSetIfChanged(ref _isAnnouncementPanelOpen, value);
+        }
+
+        private bool _isAnnouncementLoading;
+        public bool IsAnnouncementLoading
+        {
+            get => _isAnnouncementLoading;
+            set => this.RaiseAndSetIfChanged(ref _isAnnouncementLoading, value);
+        }
+
         private bool _hasNewAnnouncement;
         public bool HasNewAnnouncement
         {
@@ -234,23 +264,82 @@ namespace Yomic.ViewModels
             set => this.RaiseAndSetIfChanged(ref _hasNewAnnouncement, value);
         }
 
-        public Func<Task>? ShowAnnouncementDialogAsync { get; set; }
-        private bool _isAnnouncementDialogOpen;
-
-        public async Task PromptAnnouncementDialogAsync()
+        public async Task OpenAnnouncementPanelAsync()
         {
-            if (_isAnnouncementDialogOpen) return;
-            _isAnnouncementDialogOpen = true;
-            try
+            IsAnnouncementPanelOpen = true;
+
+            // Sync from cache first
+            SyncAnnouncementsFromCache();
+
+            if (Announcements.Count == 0)
             {
-                if (ShowAnnouncementDialogAsync != null)
+                IsAnnouncementLoading = true;
+                var list = await _announcementService.FetchAnnouncementsAsync();
+                IsAnnouncementLoading = false;
+                SyncAnnouncementsFromCache();
+            }
+
+            if (Announcements.Count > 0)
+            {
+                if (SelectedAnnouncement == null || !Announcements.Contains(SelectedAnnouncement))
                 {
-                    await ShowAnnouncementDialogAsync.Invoke();
+                    SelectedAnnouncement = Announcements[0];
+                }
+
+                if (!string.IsNullOrEmpty(Announcements[0].Id))
+                {
+                    MarkAnnouncementsAsRead(Announcements[0].Id);
                 }
             }
-            finally
+        }
+
+        public void CloseAnnouncementPanel()
+        {
+            IsAnnouncementPanelOpen = false;
+        }
+
+        public async Task ToggleAnnouncementPanelAsync()
+        {
+            if (IsAnnouncementPanelOpen)
             {
-                _isAnnouncementDialogOpen = false;
+                CloseAnnouncementPanel();
+            }
+            else
+            {
+                await OpenAnnouncementPanelAsync();
+            }
+        }
+
+        public void SelectAnnouncement(Core.Models.Announcement item)
+        {
+            SelectedAnnouncement = item;
+        }
+
+        private void SyncAnnouncementsFromCache()
+        {
+            var cached = _announcementService.CachedAnnouncements;
+            if (cached != null)
+            {
+                Announcements.Clear();
+                foreach (var item in cached)
+                {
+                    Announcements.Add(item);
+                }
+
+                if (Announcements.Count > 0)
+                {
+                    if (SelectedAnnouncement == null || !Announcements.Contains(SelectedAnnouncement))
+                    {
+                        SelectedAnnouncement = Announcements[0];
+                    }
+                    else
+                    {
+                        foreach (var item in Announcements)
+                        {
+                            item.IsSelected = (item == SelectedAnnouncement);
+                        }
+                    }
+                }
             }
         }
 
@@ -261,7 +350,8 @@ namespace Yomic.ViewModels
                 Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
                 {
                     HasNewAnnouncement = true;
-                    await PromptAnnouncementDialogAsync();
+                    SyncAnnouncementsFromCache();
+                    await OpenAnnouncementPanelAsync();
                 });
             };
 
@@ -270,6 +360,7 @@ namespace Yomic.ViewModels
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     HasNewAnnouncement = _announcementService.HasUnreadAnnouncements();
+                    SyncAnnouncementsFromCache();
                 });
             };
 

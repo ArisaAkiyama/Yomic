@@ -55,14 +55,6 @@ namespace Yomic.Views
                 {
                     return await UpdateAvailableDialog.ShowDialogAsync(this, updateInfo);
                 };
-
-                // Subscribe to Announcement Dialog Request
-                vm.ShowAnnouncementDialogAsync = async () =>
-                {
-                    vm.IsDialogOverlayVisible = true;
-                    await AnnouncementDialog.ShowDialogAsync(this, vm);
-                    vm.IsDialogOverlayVisible = false;
-                };
             }
         }
 
@@ -347,12 +339,47 @@ namespace Yomic.Views
             {
                 if (DataContext is MainWindowViewModel vm)
                 {
-                    await vm.PromptAnnouncementDialogAsync();
+                    await vm.ToggleAnnouncementPanelAsync();
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Announcement Dialog Error: {ex}");
+                Console.WriteLine($"Announcement Panel Error: {ex}");
+            }
+        }
+
+        private void OnCloseAnnouncementPanelClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                vm.CloseAnnouncementPanel();
+            }
+        }
+
+        private void OnAnnouncementItemClick(object? sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is Core.Models.Announcement item && DataContext is MainWindowViewModel vm)
+            {
+                vm.SelectAnnouncement(item);
+            }
+        }
+
+        private void OnOpenAnnouncementUrlClick(object? sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string url && !string.IsNullOrWhiteSpace(url))
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = url,
+                        UseShellExecute = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to open url: {ex.Message}");
+                }
             }
         }
 
