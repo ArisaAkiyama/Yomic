@@ -32,12 +32,12 @@ namespace Yomic.Core.Services
             _networkService = networkService;
         }
 
-        public void StartRealtimeMonitoring(int intervalMinutes = 3)
+        public void StartRealtimeMonitoring(int intervalMinutes = 1)
         {
             if (_realtimeTimer != null) return;
 
             var period = TimeSpan.FromMinutes(Math.Max(1, intervalMinutes));
-            // Trigger first check almost immediately (500ms), then periodically
+            // Trigger first check almost immediately (500ms), then periodically every minute
             _realtimeTimer = new System.Threading.Timer(async _ => await PerformPeriodicCheckAsync(), null, TimeSpan.FromMilliseconds(500), period);
         }
 

@@ -268,15 +268,28 @@ namespace Yomic.ViewModels
         {
             IsAnnouncementPanelOpen = true;
 
-            // Sync from cache first
+            // 1. Sync and display from cache immediately for 0ms UI delay
             SyncAnnouncementsFromCache();
 
+            // 2. Fetch fresh announcements in background to keep list perfectly up to date
             if (Announcements.Count == 0)
             {
                 IsAnnouncementLoading = true;
-                var list = await _announcementService.FetchAnnouncementsAsync();
+                await _announcementService.FetchAnnouncementsAsync();
                 IsAnnouncementLoading = false;
                 SyncAnnouncementsFromCache();
+            }
+            else
+            {
+                // Silent background refresh
+                _ = Task.Run(async () =>
+                {
+                    await _announcementService.FetchAnnouncementsAsync();
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        SyncAnnouncementsFromCache();
+                    });
+                });
             }
 
             if (Announcements.Count > 0)
@@ -318,8 +331,10 @@ namespace Yomic.ViewModels
         private void SyncAnnouncementsFromCache()
         {
             var cached = _announcementService.CachedAnnouncements;
-            if (cached != null)
+            if (cached != null && cached.Count > 0)
             {
+                // Rebuild list while preserving selection if possible
+                var currentSelectedId = SelectedAnnouncement?.Id;
                 Announcements.Clear();
                 foreach (var item in cached)
                 {
@@ -328,17 +343,8 @@ namespace Yomic.ViewModels
 
                 if (Announcements.Count > 0)
                 {
-                    if (SelectedAnnouncement == null || !Announcements.Contains(SelectedAnnouncement))
-                    {
-                        SelectedAnnouncement = Announcements[0];
-                    }
-                    else
-                    {
-                        foreach (var item in Announcements)
-                        {
-                            item.IsSelected = (item == SelectedAnnouncement);
-                        }
-                    }
+                    var matching = Announcements.FirstOrDefault(x => x.Id == currentSelectedId);
+                    SelectedAnnouncement = matching ?? Announcements[0];
                 }
             }
         }
@@ -347,11 +353,14 @@ namespace Yomic.ViewModels
         {
             _announcementService.NewAnnouncementDetected += (s, announcements) =>
             {
-                Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     HasNewAnnouncement = true;
                     SyncAnnouncementsFromCache();
-                    await OpenAnnouncementPanelAsync();
+                    if (announcements.Count > 0)
+                    {
+                        NotificationVM.Show($"Pengumuman Baru: {announcements[0].Title}", NotificationType.Info);
+                    }
                 });
             };
 
@@ -364,7 +373,7 @@ namespace Yomic.ViewModels
                 });
             };
 
-            _announcementService.StartRealtimeMonitoring(3);
+            _announcementService.StartRealtimeMonitoring(1);
         }
 
         public void MarkAnnouncementsAsRead(string latestId)
@@ -836,6 +845,19 @@ namespace Yomic.ViewModels
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"[Startup] Extension preload error: {ex.Message}");
+                }
+            });
+
+            // Immediate Announcement Check on Startup
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _announcementService.CheckForNewAsync();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Announcement] Startup check error: {ex.Message}");
                 }
             });
 
