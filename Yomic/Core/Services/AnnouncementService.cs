@@ -15,6 +15,7 @@ namespace Yomic.Core.Services
         private const string ANNOUNCEMENTS_RAW_URL = "https://raw.githubusercontent.com/ArisaAkiyama/yomic/master/announcements.json";
 
         private readonly SettingsService _settingsService;
+        private readonly NetworkService? _networkService;
         private System.Threading.Timer? _realtimeTimer;
         private string? _lastFetchedId;
         private bool _isChecking;
@@ -25,9 +26,10 @@ namespace Yomic.Core.Services
         public event EventHandler<List<Announcement>>? NewAnnouncementDetected;
         public event EventHandler<List<Announcement>>? AnnouncementsUpdated;
 
-        public AnnouncementService(SettingsService settingsService)
+        public AnnouncementService(SettingsService settingsService, NetworkService? networkService = null)
         {
             _settingsService = settingsService;
+            _networkService = networkService;
         }
 
         public void StartRealtimeMonitoring(int intervalMinutes = 3)
@@ -68,7 +70,11 @@ namespace Yomic.Core.Services
         {
             try
             {
-                using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+                using var client = _networkService != null 
+                    ? _networkService.CreateOptimizedHttpClient() 
+                    : new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
+                
+                client.Timeout = TimeSpan.FromSeconds(8);
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Yomic-Desktop-App");
                 client.DefaultRequestHeaders.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue
                 {

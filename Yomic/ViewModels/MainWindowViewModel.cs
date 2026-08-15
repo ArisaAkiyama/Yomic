@@ -422,7 +422,7 @@ namespace Yomic.ViewModels
             _imageCacheService = imageCacheService;
             _secureImageService = secureImageService;
             _sourceStatusService = sourceStatusService;
-            _announcementService = new Core.Services.AnnouncementService(_settingsService);
+            _announcementService = new Core.Services.AnnouncementService(_settingsService, _networkService);
             
             // Subscribe to Network Status
             _networkService.StatusChanged += (s, isOnline) =>
@@ -453,7 +453,7 @@ namespace Yomic.ViewModels
             _downloadService = new Core.Services.DownloadService(_sourceManager, _libraryService, _networkService);
             _imageCacheService = new Core.Services.ImageCacheService();
             _secureImageService = new Core.Services.SecureImageService(_networkService, _imageCacheService);
-            _announcementService = new Core.Services.AnnouncementService(_settingsService);
+            _announcementService = new Core.Services.AnnouncementService(_settingsService, _networkService);
             TogglePaneCommand = ReactiveCommand.Create(() => { IsPaneOpen = !IsPaneOpen; });
             CheckFirstRun();
             SetupAnnouncementService();

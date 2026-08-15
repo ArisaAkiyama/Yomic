@@ -19,6 +19,15 @@ namespace Yomic.Views
         public AnnouncementDialog()
         {
             InitializeComponent();
+            Opened += OnDialogOpened;
+        }
+
+        private async void OnDialogOpened(object? sender, EventArgs e)
+        {
+            if (_viewModel != null && _viewModel.AnnouncementService.CachedAnnouncements.Count == 0)
+            {
+                await LoadAndPopulateAnnouncementsAsync();
+            }
         }
 
         public static async Task ShowDialogAsync(Window owner, MainWindowViewModel viewModel)
@@ -28,7 +37,27 @@ namespace Yomic.Views
                 _viewModel = viewModel
             };
 
-            await dialog.LoadAndPopulateAnnouncementsAsync();
+            // If we already have cached announcements, render them immediately before showing window (0ms delay)
+            if (viewModel.AnnouncementService.CachedAnnouncements.Count > 0)
+            {
+                dialog.PopulateAnnouncements(viewModel.AnnouncementService.CachedAnnouncements);
+                dialog.AnnouncementsScrollViewer.IsVisible = true;
+                dialog.LoadingContainer.IsVisible = false;
+                dialog.EmptyContainer.IsVisible = false;
+
+                var latest = viewModel.AnnouncementService.CachedAnnouncements[0];
+                if (!string.IsNullOrEmpty(latest.Id))
+                {
+                    viewModel.MarkAnnouncementsAsRead(latest.Id);
+                }
+            }
+            else
+            {
+                dialog.LoadingContainer.IsVisible = true;
+                dialog.AnnouncementsScrollViewer.IsVisible = false;
+                dialog.EmptyContainer.IsVisible = false;
+            }
+
             await dialog.ShowDialog(owner);
         }
 
