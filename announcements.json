@@ -1,5 +1,13 @@
 [
   {
+    "id": "2026-08-15-komikcast-shutdown",
+    "title": "Pemberitahuan Penutupan Resmi Server Komikcast",
+    "body": "Halo pembaca setia Yomic,\n\nKami ingin menyampaikan informasi bahwa sumber komik Komikcast telah resmi menghentikan operasional server dan situs web mereka secara permanen karena kendala kritis yang tidak dapat dipulihkan.\n\nPesan dari Pendiri Komikcast:\n\"Setiap perjalanan pasti akan menemui akhir, dan perjalanan Komikcast telah resmi berakhir hari ini. Terima kasih yang sebesar-besarnya atas segala dukungan dari para pembaca, staf, dan admin selama bertahun-tahun menemani masa jaya Komikcast.\"\n\nInformasi Penting:\n• Ekstensi dan chapter dari sumber Komikcast tidak lagi dapat diakses melalui aplikasi.\n• Proyek terjemahan yang belum selesai dikabarkan akan dilanjutkan melalui Voratoon.\n• Silakan gunakan menu Jelajah / Ekstensi untuk menemukan sumber alternatif lainnya yang tersedia di Yomic.\n\nTerima kasih atas pengertian dan kesetiaan Anda menggunakan Yomic.",
+    "date": "2026-08-15",
+    "type": "warning",
+    "url": "https://github.com/ArisaAkiyama/yomic"
+  },
+  {
     "id": "2026-08-15-welcome",
     "title": "Selamat Datang di Papan Pengumuman Yomic!",
     "body": "Sekarang kamu bisa menerima informasi terbaru seputar update, maintenance, dan fitur baru langsung di dalam aplikasi Yomic.",
