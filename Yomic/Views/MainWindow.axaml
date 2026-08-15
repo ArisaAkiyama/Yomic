@@ -484,7 +484,7 @@
                         </Border>
 
                         <!-- Right Column: Detail Content -->
-                        <Border Grid.Column="1" Background="{DynamicResource PrimaryBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,1,0,0" Padding="20,16">
+                        <Border Grid.Column="1" Background="{DynamicResource PrimaryBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,1,0,0" Padding="0,16,6,16">
                             <Grid>
                                 <!-- Loading State -->
                                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" IsVisible="{Binding IsAnnouncementLoading}">
@@ -507,7 +507,7 @@
 
                                 <!-- Announcement Details -->
                                 <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding !!Announcements.Count}">
-                                    <StackPanel Spacing="12" DataContext="{Binding SelectedAnnouncement}">
+                                    <StackPanel Spacing="12" Margin="20,0,18,0" DataContext="{Binding SelectedAnnouncement}">
                                         <!-- Meta row: Type pill and Date -->
                                         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                             <Border Background="{Binding BadgeBackground}" CornerRadius="4" Padding="6,2">
