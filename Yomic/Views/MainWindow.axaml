@@ -394,144 +394,144 @@
                      <components:NotificationOverlay DataContext="{Binding NotificationVM}"
                                                  HorizontalAlignment="Right" VerticalAlignment="Top"
                                                  Margin="0,20,20,0"/>
-
-                     <!-- Announcement Flyout Panel (Sidebar Attached Pop Up) -->
-                     <Grid IsVisible="{Binding IsAnnouncementPanelOpen}" ZIndex="500">
-                         <!-- Light Dismiss Click-away backdrop -->
-                         <Border Background="#01000000" PointerPressed="OnCloseAnnouncementPanelClick"/>
-
-                         <!-- Flyout Dialog Card -->
-                         <Border HorizontalAlignment="Left" VerticalAlignment="Center"
-                                 Margin="16, 20, 20, 20"
-                                 Width="640" Height="460"
-                                 Background="{DynamicResource PrimaryBackground}"
-                                 BorderBrush="{DynamicResource SeparatorBrush}"
-                                 BorderThickness="1"
-                                 CornerRadius="12"
-                                 BoxShadow="0 10 32 0 #50000000"
-                                 ClipToBounds="True">
-                             <Grid RowDefinitions="Auto, *">
-                                 <!-- Top Bar / Header -->
-                                 <Grid Grid.Row="0" Height="48" Background="{DynamicResource SidebarBackground}" ColumnDefinitions="Auto, *, Auto">
-                                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" Margin="16,0,0,0" VerticalAlignment="Center">
-                                         <Border Background="#1A0078D4" CornerRadius="8" Width="30" Height="30" VerticalAlignment="Center">
-                                             <Viewbox Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                                 <Canvas Width="24" Height="24">
-                                                     <Path Data="M10 5a2 2 0 0 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6 M9 17v1a3 3 0 0 0 6 0v-1" 
-                                                           Stroke="#0078D4" StrokeThickness="2" Fill="Transparent" 
-                                                           StrokeLineCap="Round" StrokeJoin="Round"/>
-                                                 </Canvas>
-                                             </Viewbox>
-                                         </Border>
-                                         <TextBlock Text="{DynamicResource String.Announcements}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
-                                     </StackPanel>
-
-                                     <!-- Action Buttons (Refresh & Close) -->
-                                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" Margin="0,0,12,0" VerticalAlignment="Center">
-                                         <Button Click="OnRefreshAnnouncementClick"
-                                                 Background="Transparent" Padding="8" CornerRadius="6" Cursor="Hand"
-                                                 ToolTip.Tip="Muat ulang pengumuman"
-                                                 VerticalAlignment="Center">
-                                             <Viewbox Width="14" Height="14">
-                                                 <Canvas Width="24" Height="24">
-                                                     <Path Data="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" 
-                                                           Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" 
-                                                           StrokeLineCap="Round" StrokeJoin="Round"/>
-                                                 </Canvas>
-                                             </Viewbox>
-                                         </Button>
-
-                                         <Button Click="OnCloseAnnouncementPanelClick"
-                                                 Background="Transparent" Padding="8" CornerRadius="6" Cursor="Hand"
-                                                 VerticalAlignment="Center">
-                                             <Viewbox Width="14" Height="14">
-                                                 <Canvas Width="24" Height="24">
-                                                     <Path Data="M18 6l-12 12 M6 6l12 12" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
-                                                 </Canvas>
-                                             </Viewbox>
-                                         </Button>
-                                     </StackPanel>
-                                 </Grid>
-
-                                 <!-- Body: 2 Columns (Left: Pill List, Right: Content Details) -->
-                                 <Grid Grid.Row="1" ColumnDefinitions="220, *">
-                                     
-                                     <!-- Left Column: List of Announcement Pills -->
-                                     <Border Grid.Column="0" Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,1,1,0" Padding="12,12,8,12">
-                                         <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                             <ItemsControl ItemsSource="{Binding Announcements}">
-                                                 <ItemsControl.ItemTemplate>
-                                                     <DataTemplate>
-                                                         <Button Classes="AnnouncementPill"
-                                                                 Classes.selected="{Binding IsSelected}"
-                                                                 Click="OnAnnouncementItemClick"
-                                                                 Margin="0,0,0,8"
-                                                                 HorizontalAlignment="Stretch">
-                                                             <TextBlock Text="{Binding Title}" 
-                                                                        TextWrapping="Wrap" 
-                                                                        MaxLines="2" 
-                                                                        FontSize="12" 
-                                                                        FontWeight="SemiBold" 
-                                                                        VerticalAlignment="Center"/>
-                                                         </Button>
-                                                     </DataTemplate>
-                                                 </ItemsControl.ItemTemplate>
-                                             </ItemsControl>
-                                         </ScrollViewer>
-                                     </Border>
-
-                                     <!-- Right Column: Detail Content -->
-                                     <Border Grid.Column="1" Background="{DynamicResource PrimaryBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,1,0,0" Padding="20,16">
-                                         <Grid>
-                                             <!-- Loading State -->
-                                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" IsVisible="{Binding IsAnnouncementLoading}">
-                                                 <ProgressBar IsIndeterminate="True" Width="140" Height="4"/>
-                                                 <TextBlock Text="Memeriksa pengumuman..." FontSize="12" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
-                                             </StackPanel>
-
-                                             <!-- Empty State -->
-                                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8" 
-                                                         IsVisible="{Binding !Announcements.Count}">
-                                                 <Viewbox Width="32" Height="32" Opacity="0.5">
-                                                     <Canvas Width="24" Height="24">
-                                                         <Path Data="M10 5a2 2 0 0 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6 M9 17v1a3 3 0 0 0 6 0v-1" 
-                                                               Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" 
-                                                               StrokeLineCap="Round" StrokeJoin="Round"/>
-                                                     </Canvas>
-                                                 </Viewbox>
-                                                 <TextBlock Text="Belum ada pengumuman saat ini." FontSize="12" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
-                                             </StackPanel>
-
-                                             <!-- Announcement Details -->
-                                             <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding !!Announcements.Count}">
-                                                 <StackPanel Spacing="12" DataContext="{Binding SelectedAnnouncement}">
-                                                     <!-- Meta row: Type pill and Date -->
-                                                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                                         <Border Background="{Binding BadgeBackground}" CornerRadius="4" Padding="6,2">
-                                                             <TextBlock Text="{Binding TypeDisplay}" Foreground="White" FontSize="10" FontWeight="Bold"/>
-                                                         </Border>
-                                                         <TextBlock Text="{Binding Date}" FontSize="12" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center"/>
-                                                     </StackPanel>
-
-                                                     <!-- Title -->
-                                                     <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" TextWrapping="Wrap"/>
-
-                                                     <!-- Separator line -->
-                                                     <Rectangle Fill="{DynamicResource SeparatorBrush}" Height="1" Margin="0,2,0,4"/>
-
-                                                     <!-- Body Text -->
-                                                     <TextBlock Text="{Binding Body}" FontSize="13" Foreground="{DynamicResource PrimaryText}" TextWrapping="Wrap" LineHeight="20"/>
-                                                 </StackPanel>
-                                             </ScrollViewer>
-                                         </Grid>
-                                     </Border>
-                                 </Grid>
-                             </Grid>
-                         </Border>
-                     </Grid>
                 </Grid>
             </SplitView.Content>
         </SplitView>
+
+        <!-- Announcement Modal Pop Up (Centered) -->
+        <Grid IsVisible="{Binding IsAnnouncementPanelOpen}" ZIndex="800">
+            <!-- Light Dismiss Click-away backdrop -->
+            <Border Background="#50000000" PointerPressed="OnCloseAnnouncementPanelClick"/>
+
+            <!-- Centered Dialog Card -->
+            <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Margin="24"
+                    Width="650" Height="460"
+                    Background="{DynamicResource PrimaryBackground}"
+                    BorderBrush="{DynamicResource SeparatorBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    BoxShadow="0 16 48 0 #70000000"
+                    ClipToBounds="True">
+                <Grid RowDefinitions="Auto, *">
+                    <!-- Top Bar / Header -->
+                    <Grid Grid.Row="0" Height="48" Background="{DynamicResource SidebarBackground}" ColumnDefinitions="Auto, *, Auto">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" Margin="16,0,0,0" VerticalAlignment="Center">
+                            <Border Background="#1A0078D4" CornerRadius="8" Width="30" Height="30" VerticalAlignment="Center">
+                                <Viewbox Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="M10 5a2 2 0 0 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6 M9 17v1a3 3 0 0 0 6 0v-1" 
+                                              Stroke="#0078D4" StrokeThickness="2" Fill="Transparent" 
+                                              StrokeLineCap="Round" StrokeJoin="Round"/>
+                                    </Canvas>
+                                </Viewbox>
+                            </Border>
+                            <TextBlock Text="{DynamicResource String.Announcements}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Action Buttons (Refresh & Close) -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" Margin="0,0,12,0" VerticalAlignment="Center">
+                            <Button Click="OnRefreshAnnouncementClick"
+                                    Background="Transparent" Padding="8" CornerRadius="6" Cursor="Hand"
+                                    ToolTip.Tip="Muat ulang pengumuman"
+                                    VerticalAlignment="Center">
+                                <Viewbox Width="14" Height="14">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" 
+                                              Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" 
+                                              StrokeLineCap="Round" StrokeJoin="Round"/>
+                                    </Canvas>
+                                </Viewbox>
+                            </Button>
+
+                            <Button Click="OnCloseAnnouncementPanelClick"
+                                    Background="Transparent" Padding="8" CornerRadius="6" Cursor="Hand"
+                                    VerticalAlignment="Center">
+                                <Viewbox Width="14" Height="14">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="M18 6l-12 12 M6 6l12 12" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                    </Canvas>
+                                </Viewbox>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Body: 2 Columns (Left: Pill List, Right: Content Details) -->
+                    <Grid Grid.Row="1" ColumnDefinitions="220, *">
+                        
+                        <!-- Left Column: List of Announcement Pills -->
+                        <Border Grid.Column="0" Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,1,1,0" Padding="12,12,8,12">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding Announcements}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Classes="AnnouncementPill"
+                                                    Classes.selected="{Binding IsSelected}"
+                                                    Click="OnAnnouncementItemClick"
+                                                    Margin="0,0,0,8"
+                                                    HorizontalAlignment="Stretch">
+                                                <TextBlock Text="{Binding Title}" 
+                                                           TextWrapping="Wrap" 
+                                                           MaxLines="2" 
+                                                           FontSize="12" 
+                                                           FontWeight="SemiBold" 
+                                                           VerticalAlignment="Center"/>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Border>
+
+                        <!-- Right Column: Detail Content -->
+                        <Border Grid.Column="1" Background="{DynamicResource PrimaryBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,1,0,0" Padding="20,16">
+                            <Grid>
+                                <!-- Loading State -->
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" IsVisible="{Binding IsAnnouncementLoading}">
+                                    <ProgressBar IsIndeterminate="True" Width="140" Height="4"/>
+                                    <TextBlock Text="Memeriksa pengumuman..." FontSize="12" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                                </StackPanel>
+
+                                <!-- Empty State -->
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8" 
+                                            IsVisible="{Binding !Announcements.Count}">
+                                    <Viewbox Width="32" Height="32" Opacity="0.5">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="M10 5a2 2 0 0 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6 M9 17v1a3 3 0 0 0 6 0v-1" 
+                                                  Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" 
+                                                  StrokeLineCap="Round" StrokeJoin="Round"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <TextBlock Text="Belum ada pengumuman saat ini." FontSize="12" Foreground="{DynamicResource SecondaryText}" HorizontalAlignment="Center"/>
+                                </StackPanel>
+
+                                <!-- Announcement Details -->
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding !!Announcements.Count}">
+                                    <StackPanel Spacing="12" DataContext="{Binding SelectedAnnouncement}">
+                                        <!-- Meta row: Type pill and Date -->
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <Border Background="{Binding BadgeBackground}" CornerRadius="4" Padding="6,2">
+                                                <TextBlock Text="{Binding TypeDisplay}" Foreground="White" FontSize="10" FontWeight="Bold"/>
+                                            </Border>
+                                            <TextBlock Text="{Binding Date}" FontSize="12" Foreground="{DynamicResource SecondaryText}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <!-- Title -->
+                                        <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" TextWrapping="Wrap"/>
+
+                                        <!-- Separator line -->
+                                        <Rectangle Fill="{DynamicResource SeparatorBrush}" Height="1" Margin="0,2,0,4"/>
+
+                                        <!-- Body Text -->
+                                        <TextBlock Text="{Binding Body}" FontSize="13" Foreground="{DynamicResource PrimaryText}" TextWrapping="Wrap" LineHeight="20"/>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
         
         <!-- Fullscreen Content: No Sidebar, No Title Bar -->
         <Grid IsVisible="{Binding IsFullscreen}" Background="Black">
