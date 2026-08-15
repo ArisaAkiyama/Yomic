@@ -414,53 +414,55 @@
                     BoxShadow="0 16 48 0 #70000000"
                     ClipToBounds="True">
                 <Grid RowDefinitions="Auto, *">
-                    <!-- Top Bar / Header -->
-                    <Grid Grid.Row="0" Height="48" Background="{DynamicResource SidebarBackground}" ColumnDefinitions="Auto, *, Auto">
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" Margin="16,0,0,0" VerticalAlignment="Center">
-                            <Border Background="#1A0078D4" CornerRadius="8" Width="30" Height="30" VerticalAlignment="Center">
-                                <Viewbox Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                    <Canvas Width="24" Height="24">
-                                        <Path Data="M10 5a2 2 0 0 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6 M9 17v1a3 3 0 0 0 6 0v-1" 
-                                              Stroke="#0078D4" StrokeThickness="2" Fill="Transparent" 
-                                              StrokeLineCap="Round" StrokeJoin="Round"/>
-                                    </Canvas>
-                                </Viewbox>
-                            </Border>
-                            <TextBlock Text="{DynamicResource String.Announcements}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
-                        </StackPanel>
+                    <!-- Top Bar / Header with rounded top corners -->
+                    <Border Grid.Row="0" Height="48" Background="{DynamicResource SidebarBackground}" CornerRadius="11,11,0,0">
+                        <Grid ColumnDefinitions="Auto, *, Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" Margin="16,0,0,0" VerticalAlignment="Center">
+                                <Border Background="#1A0078D4" CornerRadius="8" Width="30" Height="30" VerticalAlignment="Center">
+                                    <Viewbox Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="M10 5a2 2 0 0 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6 M9 17v1a3 3 0 0 0 6 0v-1" 
+                                                  Stroke="#0078D4" StrokeThickness="2" Fill="Transparent" 
+                                                  StrokeLineCap="Round" StrokeJoin="Round"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Border>
+                                <TextBlock Text="{DynamicResource String.Announcements}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
+                            </StackPanel>
 
-                        <!-- Action Buttons (Refresh & Close) -->
-                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" Margin="0,0,12,0" VerticalAlignment="Center">
-                            <Button Click="OnRefreshAnnouncementClick"
-                                    Background="Transparent" Padding="8" CornerRadius="6" Cursor="Hand"
-                                    ToolTip.Tip="Muat ulang pengumuman"
-                                    VerticalAlignment="Center">
-                                <Viewbox Width="14" Height="14">
-                                    <Canvas Width="24" Height="24">
-                                        <Path Data="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" 
-                                              Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" 
-                                              StrokeLineCap="Round" StrokeJoin="Round"/>
-                                    </Canvas>
-                                </Viewbox>
-                            </Button>
+                            <!-- Action Buttons (Refresh & Close) -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" Margin="0,0,12,0" VerticalAlignment="Center">
+                                <Button Click="OnRefreshAnnouncementClick"
+                                        Background="Transparent" Padding="8" CornerRadius="6" Cursor="Hand"
+                                        ToolTip.Tip="Muat ulang pengumuman"
+                                        VerticalAlignment="Center">
+                                    <Viewbox Width="14" Height="14">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" 
+                                                  Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" 
+                                                  StrokeLineCap="Round" StrokeJoin="Round"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Button>
 
-                            <Button Click="OnCloseAnnouncementPanelClick"
-                                    Background="Transparent" Padding="8" CornerRadius="6" Cursor="Hand"
-                                    VerticalAlignment="Center">
-                                <Viewbox Width="14" Height="14">
-                                    <Canvas Width="24" Height="24">
-                                        <Path Data="M18 6l-12 12 M6 6l12 12" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
-                                    </Canvas>
-                                </Viewbox>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
+                                <Button Click="OnCloseAnnouncementPanelClick"
+                                        Background="Transparent" Padding="8" CornerRadius="6" Cursor="Hand"
+                                        VerticalAlignment="Center">
+                                    <Viewbox Width="14" Height="14">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="M18 6l-12 12 M6 6l12 12" Stroke="{DynamicResource SecondaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
 
                     <!-- Body: 2 Columns (Left: Pill List, Right: Content Details) -->
                     <Grid Grid.Row="1" ColumnDefinitions="220, *">
                         
                         <!-- Left Column: List of Announcement Pills -->
-                        <Border Grid.Column="0" Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,1,1,0" Padding="12,12,8,12">
+                        <Border Grid.Column="0" Background="{DynamicResource SidebarBackground}" CornerRadius="0,0,0,11" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,1,1,0" Padding="12,12,8,12">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <ItemsControl ItemsSource="{Binding Announcements}">
                                     <ItemsControl.ItemTemplate>
@@ -484,7 +486,7 @@
                         </Border>
 
                         <!-- Right Column: Detail Content -->
-                        <Border Grid.Column="1" Background="{DynamicResource PrimaryBackground}" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,1,0,0" Padding="0,16,6,16">
+                        <Border Grid.Column="1" Background="{DynamicResource PrimaryBackground}" CornerRadius="0,0,11,0" BorderBrush="{DynamicResource SeparatorBrush}" BorderThickness="0,1,0,0" Padding="0,16,6,16">
                             <Grid>
                                 <!-- Loading State -->
                                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" IsVisible="{Binding IsAnnouncementLoading}">
