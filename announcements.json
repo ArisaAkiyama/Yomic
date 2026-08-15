@@ -8,9 +8,9 @@
     "url": ""
   },
   {
-    "id": "2026-08-15-welcome",
+    "id": "2026-08-15-welcome-v2",
     "title": "Selamat Datang di Papan Pengumuman Yomic!",
-    "body": "Sekarang kamu bisa menerima informasi terbaru seputar update, maintenance, dan fitur baru langsung di dalam aplikasi Yomic.",
+    "body": "Halo Teman-teman Pembaca & Komunitas Yomic,\n\nSelamat datang di Papan Pengumuman resmi Yomic!\n\nFitur ini kami hadirkan sebagai jalur komunikasi langsung dari tim pengembang kepada seluruh pengguna. Melalui papan ini, Anda akan mendapatkan informasi berkala mengenai:\n\n• Catatan Rilis & Pembaruan Aplikasi (Changelog & Fitur Baru)\n• Status Server, Pemeliharaan (Maintenance), dan Ekstensi Komik\n• Berita, Tips, dan Pengumuman Penting Seputar Ekosistem Yomic\n\nSistem ini terhubung langsung secara realtime dengan repository resmi kami di GitHub, sehingga Anda akan selalu menerima kabar terkini tanpa perlu mengecek secara manual.\n\nTerima kasih atas dukungan, masukan, dan antusiasme Anda dalam membangun Yomic menjadi lebih baik. Selamat membaca!",
     "date": "2026-08-15",
     "type": "info",
     "url": ""
