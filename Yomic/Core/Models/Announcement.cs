@@ -31,5 +31,12 @@ namespace Yomic.Core.Models
             "error" => "#EF4444",
             _ => "#0078D4"
         };
+
+        public string TypeDisplay => Type?.ToLowerInvariant() switch
+        {
+            "warning" => "Warning",
+            "error" => "Error",
+            _ => "Info"
+        };
     }
 }
