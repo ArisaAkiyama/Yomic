@@ -31,13 +31,13 @@ namespace Yomic.Core.Services
             _settingsService = settingsService;
         }
 
-        public void StartRealtimeMonitoring(int intervalMinutes = 10)
+        public void StartRealtimeMonitoring(int intervalMinutes = 3)
         {
             if (_realtimeTimer != null) return;
 
             var period = TimeSpan.FromMinutes(Math.Max(1, intervalMinutes));
-            // Trigger first check after 5 seconds, then periodically
-            _realtimeTimer = new System.Threading.Timer(async _ => await PerformPeriodicCheckAsync(), null, TimeSpan.FromSeconds(5), period);
+            // Trigger first check after 2 seconds, then periodically
+            _realtimeTimer = new System.Threading.Timer(async _ => await PerformPeriodicCheckAsync(), null, TimeSpan.FromSeconds(2), period);
         }
 
         public void StopRealtimeMonitoring()
@@ -57,7 +57,7 @@ namespace Yomic.Core.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[AnnouncementService] Polling check error: {ex.Message}");
+                LogService.Error("AnnouncementService", $"Polling check error: {ex.Message}", ex);
             }
             finally
             {
@@ -101,12 +101,13 @@ namespace Yomic.Core.Services
                 }
 
                 CachedAnnouncements = list;
+                LogService.Info("AnnouncementService", $"Successfully fetched {list.Count} announcements from GitHub.");
                 AnnouncementsUpdated?.Invoke(this, list);
                 return list;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[AnnouncementService] Fetch announcements error: {ex.Message}");
+                LogService.Error("AnnouncementService", $"Fetch announcements error: {ex.Message}", ex);
                 return CachedAnnouncements;
             }
         }
@@ -127,7 +128,7 @@ namespace Yomic.Core.Services
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[AnnouncementService] Commit SHA check error: {ex.Message}");
+                    LogService.Warning("AnnouncementService", $"Commit SHA check error: {ex.Message}");
                 }
 
                 // If SHA hasn't changed and we already have cache, skip download
@@ -146,13 +147,14 @@ namespace Yomic.Core.Services
 
                     if (!string.IsNullOrEmpty(latest.Id) && !string.Equals(latest.Id, lastReadId, StringComparison.OrdinalIgnoreCase))
                     {
+                        LogService.Info("AnnouncementService", $"New announcement detected: {latest.Title} (ID: {latest.Id})");
                         NewAnnouncementDetected?.Invoke(this, announcements);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[AnnouncementService] CheckForNew error: {ex.Message}");
+                LogService.Error("AnnouncementService", $"CheckForNew error: {ex.Message}", ex);
             }
         }
 

@@ -55,6 +55,14 @@ namespace Yomic.Views
                 {
                     return await UpdateAvailableDialog.ShowDialogAsync(this, updateInfo);
                 };
+
+                // Subscribe to Announcement Dialog Request
+                vm.ShowAnnouncementDialogAsync = async () =>
+                {
+                    vm.IsDialogOverlayVisible = true;
+                    await AnnouncementDialog.ShowDialogAsync(this, vm);
+                    vm.IsDialogOverlayVisible = false;
+                };
             }
         }
 
@@ -339,9 +347,7 @@ namespace Yomic.Views
             {
                 if (DataContext is MainWindowViewModel vm)
                 {
-                    vm.IsDialogOverlayVisible = true;
-                    await AnnouncementDialog.ShowDialogAsync(this, vm);
-                    vm.IsDialogOverlayVisible = false;
+                    await vm.PromptAnnouncementDialogAsync();
                 }
             }
             catch (Exception ex)

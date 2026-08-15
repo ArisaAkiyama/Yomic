@@ -234,13 +234,34 @@ namespace Yomic.ViewModels
             set => this.RaiseAndSetIfChanged(ref _hasNewAnnouncement, value);
         }
 
+        public Func<Task>? ShowAnnouncementDialogAsync { get; set; }
+        private bool _isAnnouncementDialogOpen;
+
+        public async Task PromptAnnouncementDialogAsync()
+        {
+            if (_isAnnouncementDialogOpen) return;
+            _isAnnouncementDialogOpen = true;
+            try
+            {
+                if (ShowAnnouncementDialogAsync != null)
+                {
+                    await ShowAnnouncementDialogAsync.Invoke();
+                }
+            }
+            finally
+            {
+                _isAnnouncementDialogOpen = false;
+            }
+        }
+
         private void SetupAnnouncementService()
         {
             _announcementService.NewAnnouncementDetected += (s, announcements) =>
             {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
                 {
                     HasNewAnnouncement = true;
+                    await PromptAnnouncementDialogAsync();
                 });
             };
 
@@ -252,7 +273,7 @@ namespace Yomic.ViewModels
                 });
             };
 
-            _announcementService.StartRealtimeMonitoring(10);
+            _announcementService.StartRealtimeMonitoring(3);
         }
 
         public void MarkAnnouncementsAsRead(string latestId)
