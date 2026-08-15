@@ -280,8 +280,35 @@
                             </StackPanel>
                         </ScrollViewer>
                         
-                        <!-- Bottom Actions (Feedback & Settings) -->
+                        <!-- Bottom Actions (Announcements, Feedback & Settings) -->
                         <StackPanel Grid.Row="2" Spacing="4" VerticalAlignment="Bottom" Margin="0,0,0,5">
+                            <Button Classes="SidebarBtn" Click="OnAnnouncementClick" ToolTip.Tip="{DynamicResource String.Announcements}">
+                                <StackPanel Orientation="Horizontal" Spacing="16">
+                                    <Panel Width="20" Height="20" VerticalAlignment="Center">
+                                        <Viewbox Width="20" Height="20">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Data="M10 5a2 2 0 0 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6 M9 17v1a3 3 0 0 0 6 0v-1" 
+                                                      Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" 
+                                                      StrokeLineCap="Round" StrokeJoin="Round"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <Border IsVisible="{Binding HasNewAnnouncement}"
+                                                Background="#EF4444" CornerRadius="4"
+                                                Width="8" Height="8"
+                                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                Margin="0,-2,-2,0"/>
+                                    </Panel>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <TextBlock Text="{DynamicResource String.Announcements}" Classes="NavLabel" VerticalAlignment="Center" FontWeight="Medium"/>
+                                        <Border IsVisible="{Binding HasNewAnnouncement}"
+                                                Background="#EF4444" CornerRadius="4" Padding="5,1"
+                                                VerticalAlignment="Center" Classes="NavLabel">
+                                            <TextBlock Text="New" FontSize="10" Foreground="White" FontWeight="Bold"/>
+                                        </Border>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Button>
+
                             <Button Classes="SidebarBtn" Click="OnFeedbackClick" ToolTip.Tip="{DynamicResource String.SendFeedback}">
                                 <StackPanel Orientation="Horizontal" Spacing="16">
                                     <Viewbox Width="20" Height="20" VerticalAlignment="Center">

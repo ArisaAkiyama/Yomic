@@ -10,6 +10,7 @@
     <sys:String x:Key="String.BrowseSources">Browse Sources</sys:String>
     <sys:String x:Key="String.Extensions">Extensions</sys:String>
     <sys:String x:Key="String.SendFeedback">Send Feedback</sys:String>
+    <sys:String x:Key="String.Announcements">Announcements</sys:String>
     <sys:String x:Key="String.Settings">Settings</sys:String>
 
     <!-- Settings Titles & Descriptions -->

@@ -88,6 +88,8 @@ namespace Yomic.Core.Services
         public string MalRefreshToken { get; set; } = "";
         public long MalTokenExpiresAt { get; set; } = 0;
 
+        public string LastReadAnnouncementId { get; set; } = "";
+
         public SettingsService()
         {
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -137,6 +139,7 @@ namespace Yomic.Core.Services
                         MalAccessToken = settings.MalAccessToken ?? "";
                         MalRefreshToken = settings.MalRefreshToken ?? "";
                         MalTokenExpiresAt = settings.MalTokenExpiresAt;
+                        LastReadAnnouncementId = settings.LastReadAnnouncementId ?? "";
                         if (settings.SourceStatusRefreshIntervalMinutes > 0)
                         {
                             SourceStatusRefreshIntervalMinutes = settings.SourceStatusRefreshIntervalMinutes;
@@ -196,6 +199,7 @@ namespace Yomic.Core.Services
                     MalAccessToken = MalAccessToken,
                     MalRefreshToken = MalRefreshToken,
                     MalTokenExpiresAt = MalTokenExpiresAt,
+                    LastReadAnnouncementId = LastReadAnnouncementId,
                     SourceStatusRefreshIntervalMinutes = SourceStatusRefreshIntervalMinutes
                 };
 
@@ -243,6 +247,7 @@ namespace Yomic.Core.Services
                 MalAccessToken = "";
                 MalRefreshToken = "";
                 MalTokenExpiresAt = 0;
+                LastReadAnnouncementId = "";
             }
             catch (Exception ex)
             {
@@ -281,6 +286,8 @@ namespace Yomic.Core.Services
             public string MalAccessToken { get; set; } = "";
             public string MalRefreshToken { get; set; } = "";
             public long MalTokenExpiresAt { get; set; } = 0;
+
+            public string LastReadAnnouncementId { get; set; } = "";
         }
     }
 }

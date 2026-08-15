@@ -10,6 +10,7 @@
     <sys:String x:Key="String.BrowseSources">Jelajahi Sumber</sys:String>
     <sys:String x:Key="String.Extensions">Ekstensi</sys:String>
     <sys:String x:Key="String.SendFeedback">Kirim Masukan</sys:String>
+    <sys:String x:Key="String.Announcements">Pengumuman</sys:String>
     <sys:String x:Key="String.Settings">Pengaturan</sys:String>
 
     <!-- Settings Titles & Descriptions -->

@@ -10,12 +10,7 @@ namespace Yomic.ViewModels
     // Model sederhana untuk satu komik
     public class MangaItem : ViewModelBase
     {
-        private string _title = string.Empty;
-        public string Title
-        {
-            get => _title;
-            set => this.RaiseAndSetIfChanged(ref _title, value);
-        }
+        public string Title { get; set; } = string.Empty;
         public string? CoverUrl { get; set; } 
         public long LastViewed { get; set; } // For "Last Read" sorting 
 
@@ -229,6 +224,43 @@ namespace Yomic.ViewModels
         public Func<Core.Services.UpdateService.UpdateInfo, Task<bool>>? ShowUpdateDialogAsync { get; set; }
         public Core.Services.UpdateService UpdateService => _updateService;
 
+        private readonly Core.Services.AnnouncementService _announcementService;
+        public Core.Services.AnnouncementService AnnouncementService => _announcementService;
+
+        private bool _hasNewAnnouncement;
+        public bool HasNewAnnouncement
+        {
+            get => _hasNewAnnouncement;
+            set => this.RaiseAndSetIfChanged(ref _hasNewAnnouncement, value);
+        }
+
+        private void SetupAnnouncementService()
+        {
+            _announcementService.NewAnnouncementDetected += (s, announcements) =>
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    HasNewAnnouncement = true;
+                });
+            };
+
+            _announcementService.AnnouncementsUpdated += (s, announcements) =>
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    HasNewAnnouncement = _announcementService.HasUnreadAnnouncements();
+                });
+            };
+
+            _announcementService.StartRealtimeMonitoring(10);
+        }
+
+        public void MarkAnnouncementsAsRead(string latestId)
+        {
+            _announcementService.MarkAsRead(latestId);
+            HasNewAnnouncement = false;
+        }
+
         private void SetupUpdateService()
         {
             _updateService.UpdateAvailableDetected += (s, info) =>
@@ -369,6 +401,7 @@ namespace Yomic.ViewModels
             _imageCacheService = imageCacheService;
             _secureImageService = secureImageService;
             _sourceStatusService = sourceStatusService;
+            _announcementService = new Core.Services.AnnouncementService(_settingsService);
             
             // Subscribe to Network Status
             _networkService.StatusChanged += (s, isOnline) =>
@@ -385,6 +418,7 @@ namespace Yomic.ViewModels
             TogglePaneCommand = ReactiveCommand.Create(() => { IsPaneOpen = !IsPaneOpen; });
             CheckFirstRun();
             SetupUpdateService();
+            SetupAnnouncementService();
         }
 
         // Default constructor for Designer Preview (Optional, but good practice)
@@ -398,8 +432,10 @@ namespace Yomic.ViewModels
             _downloadService = new Core.Services.DownloadService(_sourceManager, _libraryService, _networkService);
             _imageCacheService = new Core.Services.ImageCacheService();
             _secureImageService = new Core.Services.SecureImageService(_networkService, _imageCacheService);
+            _announcementService = new Core.Services.AnnouncementService(_settingsService);
             TogglePaneCommand = ReactiveCommand.Create(() => { IsPaneOpen = !IsPaneOpen; });
             CheckFirstRun();
+            SetupAnnouncementService();
         }
 
         // Navigation History

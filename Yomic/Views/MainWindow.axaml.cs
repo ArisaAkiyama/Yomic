@@ -333,6 +333,23 @@ namespace Yomic.Views
             }
         }
 
+        private async void OnAnnouncementClick(object? sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (DataContext is MainWindowViewModel vm)
+                {
+                    vm.IsDialogOverlayVisible = true;
+                    await AnnouncementDialog.ShowDialogAsync(this, vm);
+                    vm.IsDialogOverlayVisible = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Announcement Dialog Error: {ex}");
+            }
+        }
+
         private void OnFeedbackClick(object? sender, RoutedEventArgs e)
         {
             try
