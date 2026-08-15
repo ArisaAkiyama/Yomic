@@ -521,23 +521,6 @@
 
                                                      <!-- Body Text -->
                                                      <TextBlock Text="{Binding Body}" FontSize="13" Foreground="{DynamicResource PrimaryText}" TextWrapping="Wrap" LineHeight="20"/>
-
-                                                     <!-- Link button if URL exists -->
-                                                     <Button Classes="ActionLinkBtn"
-                                                             Tag="{Binding Url}"
-                                                             Click="OnOpenAnnouncementUrlClick"
-                                                             IsVisible="{Binding HasUrl}"
-                                                             HorizontalAlignment="Left"
-                                                             Margin="0,8,0,0">
-                                                         <StackPanel Orientation="Horizontal" Spacing="6">
-                                                             <TextBlock Text="Kunjungi Tautan" FontSize="12" FontWeight="SemiBold"/>
-                                                             <Viewbox Width="12" Height="12" VerticalAlignment="Center">
-                                                                 <Canvas Width="24" Height="24">
-                                                                     <Path Data="M11 7h-5a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-5 M10 14l10 -10 M15 4l5 0l0 5" Stroke="{DynamicResource PrimaryText}" StrokeThickness="2" Fill="Transparent" StrokeLineCap="Round" StrokeJoin="Round"/>
-                                                                 </Canvas>
-                                                             </Viewbox>
-                                                         </StackPanel>
-                                                     </Button>
                                                  </StackPanel>
                                              </ScrollViewer>
                                          </Grid>

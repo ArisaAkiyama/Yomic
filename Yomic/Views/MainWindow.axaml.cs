@@ -374,25 +374,6 @@ namespace Yomic.Views
             }
         }
 
-        private void OnOpenAnnouncementUrlClick(object? sender, RoutedEventArgs e)
-        {
-            if (sender is Button btn && btn.Tag is string url && !string.IsNullOrWhiteSpace(url))
-            {
-                try
-                {
-                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                    {
-                        FileName = url,
-                        UseShellExecute = true
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to open url: {ex.Message}");
-                }
-            }
-        }
-
         private void OnFeedbackClick(object? sender, RoutedEventArgs e)
         {
             try
