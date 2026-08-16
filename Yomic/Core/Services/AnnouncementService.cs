@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -12,13 +13,15 @@ namespace Yomic.Core.Services
 {
     public class AnnouncementService : IDisposable
     {
-        private const string GITHUB_API_CONTENTS_URL = "https://api.github.com/repos/ArisaAkiyama/yomic/contents/announcements.json?ref=master";
-        private const string ANNOUNCEMENTS_RAW_URL = "https://raw.githubusercontent.com/ArisaAkiyama/yomic/master/announcements.json";
+        private const string COMMITS_ATOM_URL = "https://github.com/ArisaAkiyama/yomic/commits/master.atom";
+        private const string ANNOUNCEMENTS_RAW_FALLBACK_URL = "https://raw.githubusercontent.com/ArisaAkiyama/yomic/master/announcements.json";
+        private const string ANNOUNCEMENTS_RAW_COMMIT_TEMPLATE = "https://raw.githubusercontent.com/ArisaAkiyama/yomic/{0}/announcements.json";
 
         private readonly SettingsService _settingsService;
         private readonly NetworkService? _networkService;
         private System.Threading.Timer? _realtimeTimer;
         private string? _lastFetchedId;
+        private string? _lastFetchedCommitSha;
         private bool _isChecking;
         private bool _disposed;
 
@@ -67,7 +70,39 @@ namespace Yomic.Core.Services
             }
         }
 
-        public async Task<List<Announcement>> FetchAnnouncementsAsync()
+        private async Task<string?> GetLatestCommitShaAsync(HttpClient client)
+        {
+            try
+            {
+                // Atom feed is updated instantly upon git push and has NO rate limits unlike GitHub REST API
+                string atomUrl = $"{COMMITS_ATOM_URL}?t={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+                var atomXml = await client.GetStringAsync(atomUrl);
+
+                if (!string.IsNullOrWhiteSpace(atomXml))
+                {
+                    // Match either <id>tag:github.com,2008:Grit::Commit/SHA</id> or href=".../commit/SHA"
+                    var match = Regex.Match(atomXml, @"Commit/([a-f0-9]{40})", RegexOptions.IgnoreCase);
+                    if (match.Success)
+                    {
+                        return match.Groups[1].Value;
+                    }
+
+                    match = Regex.Match(atomXml, @"/commit/([a-f0-9]{40})", RegexOptions.IgnoreCase);
+                    if (match.Success)
+                    {
+                        return match.Groups[1].Value;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.Warning("AnnouncementService", $"Could not fetch commit atom feed: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        public async Task<List<Announcement>> FetchAnnouncementsAsync(bool force = false)
         {
             try
             {
@@ -86,33 +121,32 @@ namespace Yomic.Core.Services
                 };
                 client.DefaultRequestHeaders.TryAddWithoutValidation("Pragma", "no-cache");
 
-                string rawJson = string.Empty;
+                // Step 1: Query Git Atom Feed to get latest commit SHA (0-delay, No REST API rate limits)
+                string? latestCommitSha = await GetLatestCommitShaAsync(client);
 
-                // 1. Primary: Use GitHub Contents API (Instant 0-delay, bypasses Fastly Raw CDN 5-minute cache)
-                try
+                // If commit SHA is unchanged and we already have cached announcements, no need to re-download json
+                if (!force && !string.IsNullOrEmpty(latestCommitSha) && string.Equals(latestCommitSha, _lastFetchedCommitSha, StringComparison.OrdinalIgnoreCase) && CachedAnnouncements.Count > 0)
                 {
-                    var apiResponse = await client.GetStringAsync(GITHUB_API_CONTENTS_URL);
-                    var apiObj = JObject.Parse(apiResponse);
-                    var base64Content = apiObj["content"]?.ToString();
-                    if (!string.IsNullOrEmpty(base64Content))
-                    {
-                        var bytes = Convert.FromBase64String(base64Content.Replace("\n", "").Replace("\r", ""));
-                        rawJson = System.Text.Encoding.UTF8.GetString(bytes);
-                    }
-                }
-                catch (Exception apiEx)
-                {
-                    LogService.Debug("AnnouncementService", $"GitHub API contents fetch failed, falling back to raw: {apiEx.Message}");
+                    LogService.Info("AnnouncementService", $"Commit SHA unchanged ({latestCommitSha.Substring(0, 7)}). Announcements are up-to-date ({CachedAnnouncements.Count} items).");
+                    return CachedAnnouncements;
                 }
 
-                // 2. Fallback: Raw URL if GitHub API was unavailable
-                if (string.IsNullOrEmpty(rawJson))
+                // Step 2: Fetch raw JSON using Commit SHA (Bypasses Fastly 5-minute CDN cache completely because SHA is unique)
+                string targetUrl;
+                if (!string.IsNullOrEmpty(latestCommitSha))
                 {
-                    string urlWithTimestamp = $"{ANNOUNCEMENTS_RAW_URL}?t={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}_{Guid.NewGuid():N}";
-                    rawJson = await client.GetStringAsync(urlWithTimestamp);
+                    targetUrl = string.Format(ANNOUNCEMENTS_RAW_COMMIT_TEMPLATE, latestCommitSha);
+                    _lastFetchedCommitSha = latestCommitSha;
+                }
+                else
+                {
+                    targetUrl = $"{ANNOUNCEMENTS_RAW_FALLBACK_URL}?t={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
                 }
 
-                var jArray = JArray.Parse(rawJson);
+                LogService.Info("AnnouncementService", $"Fetching announcements from: {targetUrl}");
+                var response = await client.GetStringAsync(targetUrl);
+                var jArray = JArray.Parse(response);
+
                 var list = new List<Announcement>();
                 foreach (var item in jArray)
                 {
@@ -133,7 +167,7 @@ namespace Yomic.Core.Services
                 }
 
                 CachedAnnouncements = list;
-                LogService.Info("AnnouncementService", $"Successfully fetched {list.Count} announcements from GitHub.");
+                LogService.Info("AnnouncementService", $"Successfully fetched {list.Count} announcements from GitHub (Commit: {(latestCommitSha != null && latestCommitSha.Length >= 7 ? latestCommitSha.Substring(0, 7) : "fallback")}).");
                 AnnouncementsUpdated?.Invoke(this, list);
                 return list;
             }
