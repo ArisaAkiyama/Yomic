@@ -12,7 +12,6 @@ namespace Yomic.Core.Services
 {
     public class AnnouncementService : IDisposable
     {
-        private const string ANNOUNCEMENTS_API_URL = "https://api.github.com/repos/ArisaAkiyama/yomic/contents/announcements.json";
         private const string ANNOUNCEMENTS_RAW_URL = "https://raw.githubusercontent.com/ArisaAkiyama/yomic/master/announcements.json";
 
         private readonly SettingsService _settingsService;
@@ -77,28 +76,18 @@ namespace Yomic.Core.Services
                 
                 client.Timeout = TimeSpan.FromSeconds(8);
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Yomic-Desktop-App");
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github.v3.raw");
                 client.DefaultRequestHeaders.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue
                 {
                     NoCache = true,
                     NoStore = true,
-                    MustRevalidate = true
+                    MustRevalidate = true,
+                    MaxAge = TimeSpan.Zero
                 };
+                client.DefaultRequestHeaders.TryAddWithoutValidation("Pragma", "no-cache");
 
-                string response;
-                try
-                {
-                    // Primary: GitHub Contents API (Instant 0s latency after git push, no Fastly edge cache)
-                    response = await client.GetStringAsync(ANNOUNCEMENTS_API_URL);
-                }
-                catch
-                {
-                    // Fallback: GitHub Raw URL with timestamp
-                    string urlWithTimestamp = $"{ANNOUNCEMENTS_RAW_URL}?t={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
-                    response = await client.GetStringAsync(urlWithTimestamp);
-                }
-
+                // Append timestamp and random GUID to completely bypass GitHub Fastly CDN edge caching
+                string urlWithTimestamp = $"{ANNOUNCEMENTS_RAW_URL}?t={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}_{Guid.NewGuid():N}";
+                var response = await client.GetStringAsync(urlWithTimestamp);
                 var jArray = JArray.Parse(response);
 
                 var list = new List<Announcement>();
@@ -166,13 +155,16 @@ namespace Yomic.Core.Services
 
             _settingsService.LastReadAnnouncementId = latestId;
             _settingsService.Save();
+            LogService.Info("AnnouncementService", $"Marked announcement as read: {latestId}");
         }
 
         public bool HasUnreadAnnouncements()
         {
             if (CachedAnnouncements.Count == 0) return false;
             var latestId = CachedAnnouncements[0].Id;
-            return !string.IsNullOrEmpty(latestId) && !string.Equals(latestId, _settingsService.LastReadAnnouncementId, StringComparison.OrdinalIgnoreCase);
+            var isUnread = !string.IsNullOrEmpty(latestId) && !string.Equals(latestId, _settingsService.LastReadAnnouncementId, StringComparison.OrdinalIgnoreCase);
+            LogService.Info("AnnouncementService", $"Unread check: Latest ID='{latestId}', Last Read ID='{_settingsService.LastReadAnnouncementId}', HasUnread={isUnread}");
+            return isUnread;
         }
 
         public void Dispose()
