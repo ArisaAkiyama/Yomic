@@ -12,6 +12,7 @@ namespace Yomic.Core.Services
 {
     public class AnnouncementService : IDisposable
     {
+        private const string GITHUB_API_CONTENTS_URL = "https://api.github.com/repos/ArisaAkiyama/yomic/contents/announcements.json?ref=master";
         private const string ANNOUNCEMENTS_RAW_URL = "https://raw.githubusercontent.com/ArisaAkiyama/yomic/master/announcements.json";
 
         private readonly SettingsService _settingsService;
@@ -85,11 +86,33 @@ namespace Yomic.Core.Services
                 };
                 client.DefaultRequestHeaders.TryAddWithoutValidation("Pragma", "no-cache");
 
-                // Append timestamp and random GUID to completely bypass GitHub Fastly CDN edge caching
-                string urlWithTimestamp = $"{ANNOUNCEMENTS_RAW_URL}?t={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}_{Guid.NewGuid():N}";
-                var response = await client.GetStringAsync(urlWithTimestamp);
-                var jArray = JArray.Parse(response);
+                string rawJson = string.Empty;
 
+                // 1. Primary: Use GitHub Contents API (Instant 0-delay, bypasses Fastly Raw CDN 5-minute cache)
+                try
+                {
+                    var apiResponse = await client.GetStringAsync(GITHUB_API_CONTENTS_URL);
+                    var apiObj = JObject.Parse(apiResponse);
+                    var base64Content = apiObj["content"]?.ToString();
+                    if (!string.IsNullOrEmpty(base64Content))
+                    {
+                        var bytes = Convert.FromBase64String(base64Content.Replace("\n", "").Replace("\r", ""));
+                        rawJson = System.Text.Encoding.UTF8.GetString(bytes);
+                    }
+                }
+                catch (Exception apiEx)
+                {
+                    LogService.Debug("AnnouncementService", $"GitHub API contents fetch failed, falling back to raw: {apiEx.Message}");
+                }
+
+                // 2. Fallback: Raw URL if GitHub API was unavailable
+                if (string.IsNullOrEmpty(rawJson))
+                {
+                    string urlWithTimestamp = $"{ANNOUNCEMENTS_RAW_URL}?t={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}_{Guid.NewGuid():N}";
+                    rawJson = await client.GetStringAsync(urlWithTimestamp);
+                }
+
+                var jArray = JArray.Parse(rawJson);
                 var list = new List<Announcement>();
                 foreach (var item in jArray)
                 {
