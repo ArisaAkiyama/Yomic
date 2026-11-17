@@ -1,51 +1,35 @@
-# Excluded Folders (User Request)
-docs/reference/mihon-main/
-tests/scratch/
-
-# Build Results
+# Build results
 [Bb]in/
 [Oo]bj/
+dist/
+build/
+*.zip
+*.exe
+*.msi
+
+# Visual Studio / IDE
 .vs/
 .vscode/
-
-# User Specific
 *.user
 *.suo
-*.userprefs
+*.userosscache
+*.sln.docstates
 
-# OS Generated
-Thumbs.db
-Desktop.ini
-.DS_Store
+# Node / Web
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Temporary
-debug_*.html
-*.log
+# Temporary files & agent scratchpad
+scratch/
+ui_verification_capture/
 *.tmp
-Debug*/
+*.log
 
-# Binaries & Artifacts
-Output/
-MyMangaApp/Plugins/
-MyMangaApp/bin_tool/
-*.db
-PackedExtensions/
-Extensions.zip
-
-# Submodules & Extensions
-sources/
-extension-yomic/
-Yomic/Extensions/
-
-# Dev Scripts and Build Configs
-*.ps1
-rename_content.py
-run_app.bat
-setup.iss
-
-# Temporary Debug Files
-api_pustaka_*.html
-dump.html
-komikcast.js
-komikcast_bundle.js
-komikcast_*.js
+# OS generated
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store

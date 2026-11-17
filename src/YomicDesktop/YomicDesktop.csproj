@@ -1,0 +1,111 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <RollForward>Major</RollForward>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <AssemblyName>Yomic</AssemblyName>
+    <RootNamespace>YomicDesktop</RootNamespace>
+    <Version>2.0.0</Version>
+    <FileVersion>2.0.0.0</FileVersion>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <Title>Yomic v2</Title>
+    <Company>ArisaAkiyama</Company>
+    <Product>Yomic Desktop v2</Product>
+    <Copyright>Copyright © 2026 ArisaAkiyama</Copyright>
+    <Description>Yomic v2 — Modern Desktop Manga, Manhwa &amp; Webtoon Reader (WebView2 + TypeScript)</Description>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <TypeScriptCompileBlocked>false</TypeScriptCompileBlocked>
+    <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
+    <TypeScriptTarget>ES2022</TypeScriptTarget>
+    <TypeScriptModuleKind>ES2022</TypeScriptModuleKind>
+    <TypeScriptLib>es2022,dom,dom.iterable</TypeScriptLib>
+    <TypeScriptOutDir>$(MSBuildProjectDirectory)\WebUI\dist</TypeScriptOutDir>
+    <TypeScriptRootDir>$(MSBuildProjectDirectory)\WebUI\ts</TypeScriptRootDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
+    <PackageReference Include="System.IO.Hashing" Version="9.0.2" />
+    <PackageReference Include="System.Net.Http.WinHttpHandler" Version="8.0.0" />
+    <PackageReference Include="Jint" Version="4.5.0" />
+    <PackageReference Include="AngleSharp" Version="1.10.1" />
+    <PackageReference Include="SkiaSharp" Version="2.88.9" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="2.88.9" />
+    <PackageReference Include="Polly" Version="8.6.5" />
+    <PackageReference Include="PuppeteerSharp" Version="21.1.1" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.7.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Remove="Plugins\**\*.js" />
+    <Content Include="Plugins\**\*.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\**\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\**\*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
+    <Content Include="WebUI\tsconfig.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="WebUI\index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="WebUI\app-logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="WebUI\styles\**\*.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="WebUI\assets\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <Target Name="CopyCompiledTypeScriptToOutput" AfterTargets="CompileTypeScript;Build;Publish">
+    <ItemGroup>
+      <CompiledWebUiJs Include="$(MSBuildProjectDirectory)\WebUI\dist\**\*.js" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CompiledWebUiJs)"
+          DestinationFiles="@(CompiledWebUiJs->'$(TargetDir)WebUI\dist\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(CompiledWebUiJs)"
+          DestinationFiles="@(CompiledWebUiJs->'$(PublishDir)WebUI\dist\%(RecursiveDir)%(Filename)%(Extension)')"
+          Condition="'$(PublishDir)' != ''"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="SyncToDistYomicV2" AfterTargets="CopyCompiledTypeScriptToOutput" Condition="Exists('$(MSBuildProjectDirectory)\..\..\dist\Yomic_v2')">
+    <ItemGroup>
+      <DistWebUiFiles Include="$(MSBuildProjectDirectory)\WebUI\**\*.*" Exclude="$(MSBuildProjectDirectory)\WebUI\ts\**\*.*" />
+      <AllOutputFiles Include="$(TargetDir)**\*.*" Exclude="$(TargetDir)WebUI\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DistWebUiFiles)"
+          DestinationFiles="@(DistWebUiFiles->'$(MSBuildProjectDirectory)\..\..\dist\Yomic_v2\WebUI\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(AllOutputFiles)"
+          DestinationFiles="@(AllOutputFiles->'$(MSBuildProjectDirectory)\..\..\dist\Yomic_v2\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true"
+          ContinueOnError="true"
+          Retries="0" />
+  </Target>
+</Project>

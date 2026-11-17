@@ -2,6 +2,17 @@
 
 All notable changes to **Yomic** will be documented in this file.
 
+## [2.0.0] - 2026-11-17
+
+### Added
+- **Complete Hybrid Architecture Rewrite**: Migrated from Avalonia UI to **.NET 8 WPF + Microsoft Edge WebView2 + Modular TypeScript**.
+- **SkiaSharp Image Processing Engine**: Auto-crop borders, smart downscaling, optional sharpening, and WebP compression via `WebResourceImageProxy`.
+- **Reading Insights Dashboard**: 14-day activity chart, top genres, completion rate, estimated reading time, and **Daily Streak** tracking across Library and History.
+- **MangaDex Language Flag Switcher (`ID` / `EN`)**: Direct header switcher for Indonesian and English MangaDex catalogs and chapters.
+- **102+ Extension Catalog**: Integrated offline catalog merge with [ArisaAkiyama/extension-yomic](https://github.com/ArisaAkiyama/extension-yomic) (`src/en` & `src/id`).
+- **Enhanced Security & Stability**: Single-instance `Mutex`, headless `--background-update`, DPAPI-encrypted MyAnimeList OAuth2 tokens, SQLite WAL checkpointing in `.yomicbackup`, and local proxy path validation.
+- **Clean v1 → v2 Installer Upgrade**: Automated legacy v1 cleanup in `Installer/Yomic.iss` while preserving user data and installed `.js` extensions.
+
 ## [1.8.0] - 2026-08-10
 
 ### Added

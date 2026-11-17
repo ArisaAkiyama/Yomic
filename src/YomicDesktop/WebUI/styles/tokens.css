@@ -1,0 +1,125 @@
+:root {
+  /* =========================================================================
+   * YOMIC V2 — OCEANIC EDITORIAL DESIGN TOKENS (ZERO SLOP / SOLID FLAT)
+   * ========================================================================= */
+
+  /* Core Surfaces (Crisp White & Soft Ice Blue) */
+  --bg-sidebar: #F4F8FB;
+  --bg-canvas: #FFFFFF;
+  --bg-surface: #F4F8FB;
+  --bg-surface-alt: #EAF2F8;
+  --bg-elevated: #E1EDF7;
+
+  /* Ocean Blue Accent (Single Primary Accent per View) */
+  --ocean-primary: #0066CC;
+  --ocean-primary-hover: #0052A3;
+  --ocean-vivid: #0284C7;
+  --ocean-tint: #E6F2FC;
+  --ocean-tint-strong: #C5E2FA;
+
+  /* Abyssal Navy Ink Typography */
+  --ink-primary: #0B192C;
+  --ink-secondary: #47607A;
+  --ink-muted: #758CA3;
+  --ink-on-ocean: #FFFFFF;
+  --text-primary: var(--ink-primary);
+  --text-secondary: var(--ink-secondary);
+
+  /* Hairline Borders */
+  --border-subtle: #DCE8F2;
+  --border-strong: #C2D7EA;
+  --border-focus: #47607A;
+
+  /* Semantic Status Colors */
+  --status-emerald: #059669;
+  --status-emerald-bg: #E6F7F0;
+  --status-amber: #D97706;
+  --status-amber-bg: #FEF3C7;
+  --status-rose: #E11D48;
+  --status-rose-bg: #FFE4E6;
+
+  /* Auto Deep-Ocean Dark Reader Palette (Neutral Carbon Black) */
+  --reader-bg: #0A0A0A;
+  --reader-surface: #141414;
+  --reader-surface-hover: #1E1E1E;
+  --reader-border: #242424;
+  --reader-hud: #121212;
+  --reader-ink: #F4F4F5;
+  --reader-ink-muted: #A1A1AA;
+  --reader-accent: #3B82F6;
+
+  /* Typography */
+  --font-display: 'Plus Jakarta Sans', 'Segoe UI Variable Display', 'Segoe UI', -apple-system, sans-serif;
+  --font-sans: 'Inter', 'Segoe UI Variable Text', 'Segoe UI', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+
+  /* Layout Dimensions & Disciplined Radii */
+  --sidebar-rail-width: 60px;
+  --sidebar-expanded-width: 216px;
+  --topbar-height: 52px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+
+  /* Fixed Z-Index Scale (Baseline UI Compliant) */
+  --z-topbar: 10;
+  --z-reader: 100;
+  --z-hud: 110;
+  --z-modal: 200;
+  --z-toast: 300;
+}
+
+/* =========================================================================
+ * ANTIGRAVITY CARBON-DARK THEME PALETTE (UI/UX DARK MODE)
+ * ========================================================================= */
+:root[data-theme="dark"],
+body.dark-mode {
+  color-scheme: dark;
+
+  /* Core Surfaces (Antigravity Carbon & Pitch Black) */
+  --bg-sidebar: #0A0A0A;
+  --bg-canvas: #101010;
+  --bg-surface: #161616;
+  --bg-surface-alt: #1C1C1C;
+  --bg-elevated: #2C2C2C;
+  --bg-surface-elevated: #2C2C2C;
+
+  /* Blue Accent (Antigravity Sleek Blue) */
+  --ocean-primary: #3B82F6;
+  --ocean-primary-hover: #2563EB;
+  --ocean-vivid: #60A5FA;
+  --ocean-tint: rgba(59, 130, 246, 0.15);
+  --ocean-tint-strong: rgba(59, 130, 246, 0.26);
+
+  /* Crisp Carbon Ink Typography */
+  --ink-primary: #F4F4F5;
+  --ink-secondary: #A1A1AA;
+  --ink-muted: #71717A;
+  --ink-on-ocean: #FFFFFF;
+  --text-primary: var(--ink-primary);
+  --text-secondary: var(--ink-secondary);
+
+  /* Hairline Dark Borders */
+  --border-subtle: #222222;
+  --border-strong: #303030;
+  --border-focus: #52525B;
+
+  /* Semantic Status Colors (Dark Adapted) */
+  --status-emerald: #10B981;
+  --status-emerald-bg: rgba(16, 185, 129, 0.14);
+  --status-amber: #F59E0B;
+  --status-amber-bg: rgba(245, 158, 11, 0.14);
+  --status-rose: #F43F5E;
+  --status-rose-bg: rgba(244, 63, 94, 0.14);
+
+  /* Reader Palette (Carbon Dark) */
+  --reader-bg: #0A0A0A;
+  --reader-surface: #141414;
+  --reader-surface-hover: #1E1E1E;
+  --reader-border: #242424;
+  --reader-hud: #121212;
+  --reader-ink: #F4F4F5;
+  --reader-ink-muted: #A1A1AA;
+  --reader-accent: #3B82F6;
+}
