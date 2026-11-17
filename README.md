@@ -56,6 +56,7 @@
 ## 📖 Table of Contents
 
 - [Overview](#-overview)
+- [Screenshots](#-screenshots)
 - [Key Features](#-key-features)
 - [Architecture](#-architecture)
 - [Installation & Upgrading from v1](#-installation--upgrading-from-v1)
@@ -70,6 +71,53 @@
 ## 🔍 Overview
 
 **Yomic v2** unifies comic discovery, library management, offline reading, and tracking inside a fast, distraction-free desktop experience. Instead of juggling browser tabs and intrusive ads, Yomic connects to 102+ comic repositories through lightweight JavaScript extensions (`Jint` + `AngleSharp`) and renders pages with hardware-accelerated **WebView2** and **SkiaSharp** image processing.
+
+---
+
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <b>Library</b><br/><br/>
+      <img src="./docs/screenshots/library.png" alt="Yomic v2 Library" width="100%"/>
+    </td>
+    <td align="center" width="50%">
+      <b>Manga Detail &amp; Chapters</b><br/><br/>
+      <img src="./docs/screenshots/manga-detail.png" alt="Yomic v2 Manga Detail" width="100%"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <b>Immersive Reader</b><br/><br/>
+      <img src="./docs/screenshots/reader.png" alt="Yomic v2 Reader" width="100%"/>
+    </td>
+    <td align="center" width="50%">
+      <b>Browse Sources</b><br/><br/>
+      <img src="./docs/screenshots/browse-sources.png" alt="Yomic v2 Browse Sources" width="100%"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <b>Source Catalog Feed</b><br/><br/>
+      <img src="./docs/screenshots/source-catalog.png" alt="Yomic v2 Source Catalog" width="100%"/>
+    </td>
+    <td align="center" width="50%">
+      <b>Reading History</b><br/><br/>
+      <img src="./docs/screenshots/history.png" alt="Yomic v2 Reading History" width="100%"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <b>Extensions Manager</b><br/><br/>
+      <img src="./docs/screenshots/extensions.png" alt="Yomic v2 Extensions Manager" width="100%"/>
+    </td>
+    <td align="center" width="50%">
+      <b>Settings</b><br/><br/>
+      <img src="./docs/screenshots/settings.png" alt="Yomic v2 Settings" width="100%"/>
+    </td>
+  </tr>
+</table>
 
 ---
 
