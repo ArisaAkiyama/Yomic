@@ -192,6 +192,7 @@ export interface ReaderPagesResult {
   lastPageRead: number;
   scrollPercent?: number;
   pages: string[];
+  requiresVerification?: boolean;
 }
 
 export interface GenreStatItem {

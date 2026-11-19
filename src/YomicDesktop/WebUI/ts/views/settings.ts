@@ -641,7 +641,7 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
               <span class="v1-setting-desc">${this.t('settings.about.updateDesc')}</span>
             </div>
             <div style="display: flex; align-items: center; gap: 12px;">
-              <span style="font-size: 13px; font-weight: 700; color: var(--ink-primary); font-family: var(--font-mono, monospace);">2.0.0</span>
+              <span style="font-size: 13px; font-weight: 700; color: var(--ink-primary); font-family: var(--font-mono, monospace);">2.1.0</span>
               <button id="btnAboutCheckUpdate" class="v1-setting-btn primary" style="white-space:nowrap; display: inline-flex; align-items: center; gap: 6px;">
                 ${getIconSvg('refresh', { size: 14 })}
                 <span>${this.t('settings.about.checkUpdate')}</span>
@@ -1550,7 +1550,7 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
               btn.disabled = false;
               btn.innerHTML = `${getIconSvg('refresh', { size: 14 })}<span>${this.l('Periksa Pembaruan', 'Check for Updates')}</span>`;
             }
-            this.showToast(this.l(`Anda sudah menggunakan Yomic versi terbaru (v${info?.currentVersion || '2.0.0'}).`, `You are already using the latest version of Yomic (v${info?.currentVersion || '2.0.0'}).`));
+            this.showToast(this.l(`Anda sudah menggunakan Yomic versi terbaru (v${info?.currentVersion || '2.1.0'}).`, `You are already using the latest version of Yomic (v${info?.currentVersion || '2.1.0'}).`));
           }
         })
         .catch(() => {
@@ -1558,11 +1558,11 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
             btn.disabled = false;
             btn.innerHTML = `${getIconSvg('refresh', { size: 14 })}<span>${this.l('Periksa Pembaruan', 'Check for Updates')}</span>`;
           }
-          this.showToast(this.l('Anda sudah menggunakan Yomic versi terbaru (v2.0.0).', 'You are already using the latest version of Yomic (v2.0.0).'));
+          this.showToast(this.l('Anda sudah menggunakan Yomic versi terbaru (v2.1.0).', 'You are already using the latest version of Yomic (v2.1.0).'));
         });
       return;
     }
-    this.showToast(this.l('Anda sudah menggunakan Yomic versi terbaru (v2.0.0).', 'You are already using the latest version of Yomic (v2.0.0).'));
+    this.showToast(this.l('Anda sudah menggunakan Yomic versi terbaru (v2.1.0).', 'You are already using the latest version of Yomic (v2.1.0).'));
   });
   document.getElementById('btnAboutTrakteer')?.addEventListener('click', () => {
     this.bridge.openExternalUrl('https://trakteer.id/Arisa-Akiyama');

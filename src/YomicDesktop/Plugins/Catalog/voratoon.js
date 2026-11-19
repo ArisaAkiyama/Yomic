@@ -4,7 +4,7 @@ var source = {
     apiUrl: "https://13.voratoon.com",
     iconUrl: "https://13.voratoon.com/logo/voratoon-icon-512.png",
     language: "id",
-    version: "1.2.0",
+    version: "1.2.1",
     description: "Baca Komik Online Bahasa Indonesia - Manga, Manhwa, Manhua Terbaru",
     author: "DesktopKomik",
     iconBackground: "#ea580c",
@@ -13,6 +13,9 @@ var source = {
     isHasMorePages: true,
     pageSize: 30,
     lastRequiresVerification: false,
+    chapterReadySelector: "img[data-chapter-page], [data-reader-chapter-id] img",
+    pageWebViewExtractScript: "(() => { const imgs = Array.from(document.querySelectorAll('img[data-chapter-page], [data-reader-chapter-id] img')).map(img => img.getAttribute('data-chapter-page') || img.src).filter(src => src && (src.startsWith('http://') || src.startsWith('https://'))); return imgs.length > 0 ? Array.from(new Set(imgs)) : null; })()",
+    _unlockActionId: null,
 
     genres: [
         "Action", "Adult", "Adventure", "Comedy", "Cooking", "Crime", "Demons", "Drama", "Ecchi",
@@ -62,32 +65,32 @@ var source = {
 
         let depth = 0;
         let inString = false;
-        let i = valStart;
+        let re = isEscaped ? /[{}\[\]\\]/g : /[{}\[\]"\\]/g;
+        re.lastIndex = valStart;
+        let m;
 
-        while (i < text.length) {
-            let ch = text[i];
+        while ((m = re.exec(text)) !== null) {
+            let ch = m[0];
+            let pos = m.index;
+
             if (isEscaped) {
-                // Inside escaped RSC JSON string: \" marks string boundaries, \\\" is escaped quote inside string
-                if (ch === '\\' && i + 1 < text.length) {
-                    let next = text[i + 1];
+                if (ch === '\\') {
+                    let next = text[pos + 1];
                     if (next === '"') {
                         inString = !inString;
-                        i += 2;
-                        continue;
                     }
-                    if (next === '\\') {
-                        i += 2;
-                        continue;
-                    }
+                    re.lastIndex = pos + 2;
+                    continue;
                 }
             } else {
-                if (ch === '\\' && inString) {
-                    i += 2;
+                if (ch === '\\') {
+                    if (inString) {
+                        re.lastIndex = pos + 2;
+                    }
                     continue;
                 }
                 if (ch === '"') {
                     inString = !inString;
-                    i++;
                     continue;
                 }
             }
@@ -97,19 +100,18 @@ var source = {
                 else if (ch === closeChar) {
                     depth--;
                     if (depth === 0) {
-                        let raw = text.substring(valStart, i + 1);
+                        let raw = text.substring(valStart, pos + 1);
                         if (isEscaped) {
                             raw = raw.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
                         }
                         try {
-                            return { value: JSON.parse(raw), endIndex: i + 1 };
+                            return { value: JSON.parse(raw), endIndex: pos + 1 };
                         } catch (e) {
                             return null;
                         }
                     }
                 }
             }
-            i++;
         }
         return null;
     },
@@ -473,6 +475,30 @@ var source = {
         return chapters;
     },
 
+    resolveUnlockActionId: function(chapterUrl) {
+        if (this._unlockActionId) return this._unlockActionId;
+        const fallbackId = "603e8cd8a82ce1bd958c99197d5816de779f853c41";
+        try {
+            let htmlRes = this.fetchApi(chapterUrl, "GET");
+            if (htmlRes && htmlRes.status === 200 && htmlRes.body) {
+                let chunkRe = /\/_next\/static\/chunks\/app\/series\/[^"']+\.js[^"']*/gi;
+                let chunks = htmlRes.body.match(chunkRe) || [];
+                for (let i = 0; i < chunks.length; i++) {
+                    let chunkUrl = chunks[i].startsWith("http") ? chunks[i] : (this.baseUrl + chunks[i]);
+                    let jsRes = this.fetchApi(chunkUrl, "GET");
+                    if (jsRes && jsRes.status === 200 && jsRes.body) {
+                        let m = jsRes.body.match(/createServerReference\)\("([a-f0-9]{32,})"[^)]*"unlockChapterPages"/);
+                        if (m && m[1]) {
+                            this._unlockActionId = m[1];
+                            return this._unlockActionId;
+                        }
+                    }
+                }
+            }
+        } catch (e) {}
+        return fallbackId;
+    },
+
     getPageList: function(chapterUrl) {
         this.lastRequiresVerification = false;
         let absUrl = chapterUrl.startsWith("http") ? chapterUrl : (this.baseUrl + (chapterUrl.startsWith("/") ? "" : "/") + chapterUrl);
@@ -483,6 +509,7 @@ var source = {
         if (!res || res.status !== 200) return [];
 
         let body = res.body || "";
+        let hadPagesTicket = false;
 
         // 1. Try RSC "chapter" object
         let chRes = this.extractJsonValue(body, "chapter");
@@ -495,12 +522,26 @@ var source = {
 
             // 2. If images[] is empty and pagesTicket is present, call unlockChapterPages Server Action
             if (ch.pagesTicket) {
+                hadPagesTicket = true;
                 let ticket = this.extractRscChunk(body, ch.pagesTicket);
                 if (ticket) {
+                    let actionId = this.resolveUnlockActionId(absUrl);
                     let unlockRes = this.fetchApi(absUrl, "POST", {
                         "Accept": "text/x-component",
-                        "Next-Action": "60d1bbcd5ae753b54be8a4ecf238a7ed44beb27311"
+                        "Content-Type": "text/plain;charset=UTF-8",
+                        "Next-Action": actionId
                     }, JSON.stringify([ticket]));
+
+                    if (unlockRes && unlockRes.status === 404 && this._unlockActionId) {
+                        // Invalidate cached Next-Action id and retry once after refreshing chunk id
+                        this._unlockActionId = null;
+                        actionId = this.resolveUnlockActionId(absUrl);
+                        unlockRes = this.fetchApi(absUrl, "POST", {
+                            "Accept": "text/x-component",
+                            "Content-Type": "text/plain;charset=UTF-8",
+                            "Next-Action": actionId
+                        }, JSON.stringify([ticket]));
+                    }
 
                     if (unlockRes && unlockRes.status === 200 && unlockRes.body) {
                         let uBody = unlockRes.body;
@@ -544,6 +585,10 @@ var source = {
                 seen[u] = true;
                 pages.push(u + "|Referer=" + this.baseUrl + "/");
             }
+        }
+
+        if (pages.length === 0 && (hadPagesTicket || body.indexOf("pagesTicket") !== -1 || body.indexOf("turnstile") !== -1)) {
+            this.lastRequiresVerification = true;
         }
 
         return pages;

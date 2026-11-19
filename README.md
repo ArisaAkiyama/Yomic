@@ -33,7 +33,7 @@
     <td align="center" width="260">
       <b>📥 Download Installer</b><br/><br/>
       <a href="https://github.com/ArisaAkiyama/yomic/releases/latest">
-        <img src="https://img.shields.io/badge/Download-Yomic_Setup_v2.0.0.exe-0066CC?style=for-the-badge&logo=windows&logoColor=white" alt="Download Yomic v2 for Windows"/>
+        <img src="https://img.shields.io/badge/Download-Yomic_Setup_v2.1.0.exe-0066CC?style=for-the-badge&logo=windows&logoColor=white" alt="Download Yomic v2 for Windows"/>
       </a>
     </td>
     <td align="center" width="260">
@@ -172,7 +172,7 @@
 
 ## 📦 Installation & Upgrading from v1
 
-1. Download **`Yomic_Setup_v2.0.0.exe`** from [GitHub Releases](https://github.com/ArisaAkiyama/yomic/releases/latest).
+1. Download **`Yomic_Setup_v2.1.0.exe`** from [GitHub Releases](https://github.com/ArisaAkiyama/yomic/releases/latest).
 2. Run the installer — it automatically:
    - Stops any running Yomic v1/v2 processes and cleanly replaces legacy v1 binaries.
    - Installs **Microsoft Edge WebView2 Runtime** silently if missing.

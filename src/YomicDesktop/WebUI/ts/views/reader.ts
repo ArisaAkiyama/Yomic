@@ -27,7 +27,7 @@ import {
  * 6. READER OVERLAY ENGINE (AUTO DEEP-OCEAN DARK #07111E)
  * ========================================================================= */
 
-export function openReader(this: YomicApp, mangaId: string, chapterNumber: number, forceRefresh = false): void {
+export function openReader(this: YomicApp, mangaId: string, chapterNumber: number, forceRefresh = false, manualVerify = false): void {
   this.saveWorkspaceScroll();
   let manga: MangaItem;
   const found = this.mangaList.find((m) => m.id === mangaId);
@@ -185,6 +185,7 @@ export function openReader(this: YomicApp, mangaId: string, chapterNumber: numbe
   }
   if (this.bridge.isWebViewHost) {
     this.isReaderLoadingPages = true;
+    this.readerRequiresVerification = false;
     this.setReaderMode(this.readerMode);
     this.updateReaderPageIndicator();
     void this.bridge
@@ -199,15 +200,17 @@ export function openReader(this: YomicApp, mangaId: string, chapterNumber: numbe
           chapterId: chObj?.dbId,
           chapterNumber,
           chapterUrl: chObj?.url || '',
-          forceRefresh
+          forceRefresh,
+          manualVerify
         },
-        60000
+        120000
       )
       .then((res) => {
         if (!this.isReaderOpen || this.readerMangaId !== manga.id || this.readerChapterNumber !== chapterNumber) {
           return;
         }
         if (res && Array.isArray(res.pages) && res.pages.length > 0) {
+          this.readerRequiresVerification = false;
           this.chapterPagesCache?.set(cacheKey, res.pages);
           this.readerPages = res.pages;
           this.readerTotalPages = res.pages.length;
@@ -227,6 +230,7 @@ export function openReader(this: YomicApp, mangaId: string, chapterNumber: numbe
             this.readerCurrentPage = Math.max(1, Math.min(this.readerTotalPages, initialSavedPage));
           }
         } else {
+          this.readerRequiresVerification = Boolean(res?.requiresVerification);
           this.readerPages = [];
           this.readerTotalPages = 1;
           this.readerCurrentPage = 1;
@@ -401,7 +405,10 @@ export function renderReaderPages(this: YomicApp): void {
       }
     }
     if ((ev.target as HTMLElement).closest('#btnRetryReaderPages')) {
-      this.openReader(this.readerMangaId, this.readerChapterNumber, true);
+      this.openReader(this.readerMangaId, this.readerChapterNumber, true, false);
+    }
+    if ((ev.target as HTMLElement).closest('#btnVerifyReaderPages')) {
+      this.openReader(this.readerMangaId, this.readerChapterNumber, true, true);
     }
   };
   if (this.isReaderLoadingPages) {
@@ -409,21 +416,35 @@ export function renderReaderPages(this: YomicApp): void {
       <div class="reader-loading-wrap" style="padding:120px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;">
         <div class="reader-spinner" style="width:40px;height:40px;border:3px solid rgba(56,189,248,0.2);border-top-color:#38BDF8;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
         <div style="font-size:15px;font-weight:600;color:#F8FAFC;">${this.l(`Memuat Halaman Chapter ${this.readerChapterNumber}...`, `Loading Chapter ${this.readerChapterNumber} Pages...`)}</div>
-        <div style="font-size:12px;color:#94A3B8;">${this.l('Mengambil gambar komik dari sumber ekstensi', 'Fetching comic images from source extension')}</div>
+        <div style="font-size:12px;color:#94A3B8;">${this.l('Mengambil & memeriksa akses gambar komik dari sumber', 'Fetching & verifying comic image access from source')}</div>
       </div>
     `;
     return;
   }
   if (!this.readerPages || this.readerPages.length === 0) {
+    const errorMsg = this.readerRequiresVerification
+      ? this.l(
+          `Selesaikan verifikasi di WebView untuk Chapter ${this.readerChapterNumber} lalu coba lagi.`,
+          `Complete verification in WebView for Chapter ${this.readerChapterNumber} then try again.`
+        )
+      : this.l(
+          `Halaman untuk Chapter ${this.readerChapterNumber} tidak dapat diambil dari sumber. Sumber mungkin sedang offline, memerlukan verifikasi Cloudflare, atau belum merilis gambar untuk bab ini.`,
+          `Pages for Chapter ${this.readerChapterNumber} could not be fetched from the source. The source may be offline, require Cloudflare verification, or has not released images for this chapter yet.`
+        );
     pagesContainer.innerHTML = `
       <div class="reader-error-wrap" style="min-height:calc(100vh - 140px);padding:48px 24px;text-align:center;max-width:480px;margin:0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
         <img src="assets/reader/no-data-rafiki.svg" alt="${escapeXml(this.l('Gambar Bab Belum Tersedia', 'Chapter Images Unavailable'))}" draggable="false" style="width:200px;height:auto;max-height:200px;object-fit:contain;user-select:none;margin-bottom:4px;" />
-        <h3 style="font-size:18px;font-weight:600;color:#F8FAFC;margin:0;">${this.l('Gambar Bab Belum Tersedia', 'Chapter Images Unavailable')}</h3>
-        <p style="font-size:13px;color:#94A3B8;margin:0;line-height:1.5;">${this.l(
-          `Halaman untuk Chapter ${this.readerChapterNumber} tidak dapat diambil dari sumber. Sumber mungkin sedang offline, memerlukan verifikasi Cloudflare, atau belum merilis gambar untuk bab ini.`,
-          `Pages for Chapter ${this.readerChapterNumber} could not be fetched from the source. The source may be offline, require Cloudflare verification, or has not released images for this chapter yet.`
-        )}</p>
+        <h3 style="font-size:18px;font-weight:600;color:#F8FAFC;margin:0;">${this.l(
+          this.readerRequiresVerification ? 'Verifikasi Keamanan Diperlukan' : 'Gambar Bab Belum Tersedia',
+          this.readerRequiresVerification ? 'Security Verification Required' : 'Chapter Images Unavailable'
+        )}</h3>
+        <p style="font-size:13px;color:#94A3B8;margin:0;line-height:1.5;">${errorMsg}</p>
         <div style="display:flex;gap:10px;margin-top:8px;">
+          ${
+            this.readerRequiresVerification
+              ? `<button id="btnVerifyReaderPages" class="reader-action-btn" style="background:#EA580C;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;">${this.l('Verifikasi di WebView', 'Verify in WebView')}</button>`
+              : ''
+          }
           <button id="btnRetryReaderPages" class="reader-action-btn" style="background:#0066CC;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;">${this.l('Muat Ulang', 'Reload')}</button>
         </div>
       </div>

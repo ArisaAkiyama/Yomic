@@ -182,6 +182,7 @@ export class YomicApp {
   public readerChapterNumber = 0;
   public readerChapterUrl = '';
   public readerPages: string[] = [];
+  public readerRequiresVerification = false;
   public chapterPagesCache: Map<string, string[]> = new Map();
   public isReaderLoadingPages = false;
   public readerMode: ReaderMode = 'webtoon';

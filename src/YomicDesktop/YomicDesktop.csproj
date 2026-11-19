@@ -13,9 +13,9 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <AssemblyName>Yomic</AssemblyName>
     <RootNamespace>YomicDesktop</RootNamespace>
-    <Version>2.0.0</Version>
-    <FileVersion>2.0.0.0</FileVersion>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <Version>2.1.0</Version>
+    <FileVersion>2.1.0.0</FileVersion>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
     <Title>Yomic v2</Title>
     <Company>ArisaAkiyama</Company>
     <Product>Yomic Desktop v2</Product>
@@ -90,6 +90,20 @@
           SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(CompiledWebUiJs)"
           DestinationFiles="@(CompiledWebUiJs->'$(PublishDir)WebUI\dist\%(RecursiveDir)%(Filename)%(Extension)')"
+          Condition="'$(PublishDir)' != ''"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\Assets\app.ico"
+          DestinationFiles="$(TargetDir)app.ico"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\Assets\app.ico"
+          DestinationFiles="$(TargetDir)Assets\app.ico"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\Assets\app.ico"
+          DestinationFiles="$(PublishDir)app.ico"
+          Condition="'$(PublishDir)' != ''"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\Assets\app.ico"
+          DestinationFiles="$(PublishDir)Assets\app.ico"
           Condition="'$(PublishDir)' != ''"
           SkipUnchangedFiles="true" />
   </Target>

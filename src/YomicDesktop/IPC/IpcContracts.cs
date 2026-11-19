@@ -469,6 +469,9 @@ namespace YomicDesktop.IPC
 
         [JsonPropertyName("pages")]
         public List<string> Pages { get; set; } = new();
+
+        [JsonPropertyName("requiresVerification")]
+        public bool RequiresVerification { get; set; }
     }
 
     public class GenreStatDto

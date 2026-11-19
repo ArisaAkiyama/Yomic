@@ -31,11 +31,13 @@ namespace Yomic.Core.Sources
         private bool _isHasMorePages = true;
         private bool _requiresProxy = false;
         private bool _isCloudflareProtected = false;
-        private string _chapterReadySelector = "img[data-chapter-page]";
+        private string _chapterReadySelector = "img[data-chapter-page], [data-reader-chapter-id] img";
+        private string? _pageWebViewExtractScript = null;
         private string? _userAgent = null;
 
         public bool IsCloudflareProtected => _isCloudflareProtected;
         public string ChapterReadySelector => _chapterReadySelector;
+        public string? PageWebViewExtractScript => _pageWebViewExtractScript;
 
         private static readonly SemaphoreSlim _globalExecutionLimit = new(14, 14);
         private readonly ConcurrentQueue<Engine> _enginePool = new();
@@ -153,6 +155,12 @@ namespace Yomic.Core.Sources
                     var sel = obj.Get("chapterReadySelector");
                     if (sel.IsString() && !string.IsNullOrWhiteSpace(sel.AsString()))
                         _chapterReadySelector = sel.AsString();
+                }
+                if (obj.HasProperty("pageWebViewExtractScript"))
+                {
+                    var scr = obj.Get("pageWebViewExtractScript");
+                    if (scr.IsString() && !string.IsNullOrWhiteSpace(scr.AsString()))
+                        _pageWebViewExtractScript = scr.AsString();
                 }
                 if (obj.HasProperty("userAgent")) _userAgent = obj.Get("userAgent").AsString();
 

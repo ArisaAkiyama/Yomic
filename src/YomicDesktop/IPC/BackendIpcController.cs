@@ -2301,6 +2301,7 @@ namespace YomicDesktop.IPC
             string sourceName = GetString(payload, "sourceName");
 
             bool forceRefresh = GetBool(payload, "forceRefresh", false);
+            bool manualVerify = GetBool(payload, "manualVerify", false);
 
             var manga = await ResolveMangaAsync(mangaId, mangaUrl, sourceId);
 
@@ -2492,6 +2493,7 @@ namespace YomicDesktop.IPC
             }
 
             // 2. Fetch Online from IMangaSource
+            bool requiresVerification = false;
 
             if (!SettingsService.IsOfflineMode)
 
@@ -2535,7 +2537,43 @@ namespace YomicDesktop.IPC
 
                     {
 
-                        var rawPages = await source.GetPageListAsync(targetChUrl);
+                        List<string> rawPages;
+                        if (source is JsMangaSource jsSource)
+                        {
+                            var statusRes = await jsSource.GetPageListWithStatusAsync(targetChUrl);
+                            rawPages = statusRes.Pages;
+                            requiresVerification = statusRes.RequiresVerification;
+
+                            if (rawPages.Count == 0 && requiresVerification)
+                            {
+                                string fullChapterUrl = targetChUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                                    ? targetChUrl
+                                    : $"{jsSource.BaseUrl.TrimEnd('/')}/{targetChUrl.TrimStart('/')}";
+
+                                var extracted = await Views.WebViewPageExtractorWindow.ExtractPagesAsync(
+                                    _ownerWindow,
+                                    _dispatcher,
+                                    fullChapterUrl,
+                                    jsSource.Name,
+                                    jsSource.ChapterReadySelector,
+                                    jsSource.PageWebViewExtractScript,
+                                    L,
+                                    startHidden: !manualVerify);
+
+                                if (extracted.Count > 0)
+                                {
+                                    string refererSuffix = $"|Referer={jsSource.BaseUrl.TrimEnd('/')}/";
+                                    rawPages = extracted
+                                        .Select(u => u.Contains("|Referer=", StringComparison.OrdinalIgnoreCase) ? u : u + refererSuffix)
+                                        .ToList();
+                                    requiresVerification = false;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            rawPages = await source.GetPageListAsync(targetChUrl);
+                        }
 
                         var proxiedPages = rawPages
 
@@ -2610,7 +2648,8 @@ namespace YomicDesktop.IPC
                 IsOffline = SettingsService.IsOfflineMode,
                 LastPageRead = savedPage,
                 ScrollPercent = savedScrollPercent,
-                Pages = new List<string>()
+                Pages = new List<string>(),
+                RequiresVerification = requiresVerification
             };
 
         }
