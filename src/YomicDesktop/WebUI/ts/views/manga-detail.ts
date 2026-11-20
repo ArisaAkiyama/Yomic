@@ -45,14 +45,13 @@ export function buildMangaDetailHtml(this: YomicApp, manga: MangaItem): string {
     chapters.reverse();
   }
 
-  // Status color from StatusToColorConverter.cs: Ongoing/Berjalan -> #E53935 (Red), Completed/Selesai -> #0078D7 (Blue)
   const isOngoing = manga.status === 'Ongoing';
-  const statusColor = isOngoing ? '#E53935' : '#0078D7';
+  const statusColor = isOngoing ? '#E53935' : 'var(--ink-secondary)';
   const statusText = isOngoing ? 'Berjalan' : 'Tamat Terbit';
 
   // Bookmark / Saved Icon for Library Toggle: Solar Bold when in library, Linear outline when not
   const librarySvg = manga.inLibrary
-    ? getIconSvg('bookmark-bold', { size: 26, color: '#0066CC' })
+    ? getIconSvg('bookmark-bold', { size: 26, color: 'var(--ocean-primary)' })
     : getIconSvg('bookmark', { size: 26 });
   return `
     <div class="v1-detail-wrap">
@@ -193,17 +192,36 @@ export function buildMangaDetailHtml(this: YomicApp, manga: MangaItem): string {
       </div>
       <!-- UNIFIED CHAPTER LIST TABLE GROUP (Clean Desktop List) -->
       <div class="v1-chapters-list">
-        ${chapters
+        ${
+          this.isDetailLoading && chapters.length === 0
+            ? Array.from({ length: 8 })
+                .map(
+                  () => `
+                  <div class="v1-skeleton-chapter-row" aria-hidden="true">
+                    <div class="v1-skeleton-chapter-left">
+                      <div class="v1-skeleton-line v1-skeleton-shimmer" style="width: 42%; height: 13px;"></div>
+                      <div class="v1-skeleton-line v1-skeleton-shimmer" style="width: 22%; height: 10px;"></div>
+                    </div>
+                    <div class="v1-skeleton-chapter-right">
+                      <div class="v1-skeleton-dot v1-skeleton-shimmer"></div>
+                      <div class="v1-skeleton-dot v1-skeleton-shimmer"></div>
+                    </div>
+                  </div>`
+                )
+                .join('')
+            : chapters
           .map((ch: ChapterItem) => {
             const isNewRelease =
               latestChapter != null &&
               (ch.id != null ? ch.id === latestChapter.id : ch.number === latestChapter.number) &&
               !ch.isRead;
+            const isLastRead = manga.lastReadChapter > 0 && ch.number === manga.lastReadChapter;
             return `
-              <div class="v1-chapter-row ${ch.isRead ? 'is-read' : ''}" data-read-ch="${ch.number}">
+              <div class="v1-chapter-row ${ch.isRead ? 'is-read' : ''} ${isLastRead ? 'is-last-read' : ''}" data-read-ch="${ch.number}">
                 <div class="v1-chapter-main">
                   <div class="v1-chapter-title-row">
                     <span class="v1-chapter-title">Chapter ${ch.number}${ch.title ? ` — ${ch.title}` : ''}</span>
+                    ${isLastRead ? `<span class="v1-ch-lastread-pill">${this.l('Terakhir dibaca', 'Last read')}</span>` : ''}
                     ${isNewRelease ? `<span class="v1-ch-new-pill">${this.l('Baru', 'New')}</span>` : ''}
                   </div>
                   <div class="v1-chapter-meta-sub">
@@ -214,7 +232,7 @@ export function buildMangaDetailHtml(this: YomicApp, manga: MangaItem): string {
                 <div class="v1-chapter-actions">
                   <!-- Bookmark Toggle Star -->
                   <button class="v1-ch-icon-btn ${ch.isBookmarked ? 'bookmarked' : ''}" data-toggle-bookmark="${ch.number}" title="${ch.isBookmarked ? this.l('Hapus Penanda', 'Remove Bookmark') : this.l('Tandai Chapter', 'Bookmark Chapter')}" aria-label="${this.l('Alihkan Penanda', 'Toggle Bookmark')}">
-                    ${getIconSvg(ch.isBookmarked ? 'bookmark-bold' : 'bookmark', { size: 18, color: ch.isBookmarked ? '#0066CC' : 'currentColor' })}
+                    ${getIconSvg(ch.isBookmarked ? 'bookmark-bold' : 'bookmark', { size: 18, color: ch.isBookmarked ? 'var(--ocean-primary)' : 'currentColor' })}
                   </button>
                   <!-- Download / Offline Saved Indicator -->
                   ${
@@ -552,7 +570,7 @@ export function bindMangaDetailEvents(this: YomicApp, manga: MangaItem): void {
     const libBtn = document.getElementById('btnToggleInLibrary');
     if (libBtn) {
       const svg = manga.inLibrary
-        ? getIconSvg('bookmark-bold', { size: 26, color: '#0066CC' })
+        ? getIconSvg('bookmark-bold', { size: 26, color: 'var(--ocean-primary)' })
         : getIconSvg('bookmark', { size: 26 });
       libBtn.innerHTML = `${svg}<span>${manga.inLibrary ? this.l('Dalam Pustaka', 'In Library') : this.l('Tambah ke Pustaka', 'Add to Library')}</span>`;
       this.persistLocalCache();
@@ -991,7 +1009,7 @@ export function bindMangaDetailEvents(this: YomicApp, manga: MangaItem): void {
         btn.title = found.isBookmarked ? this.l('Hapus Penanda', 'Remove Bookmark') : this.l('Tandai Chapter', 'Bookmark Chapter');
         btn.innerHTML = getIconSvg(found.isBookmarked ? 'bookmark-bold' : 'bookmark', {
           size: 18,
-          color: found.isBookmarked ? '#0066CC' : 'currentColor'
+          color: found.isBookmarked ? 'var(--ocean-primary)' : 'currentColor'
         });
       }
     });

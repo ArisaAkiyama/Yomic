@@ -445,7 +445,7 @@ export function renderReaderPages(this: YomicApp): void {
               ? `<button id="btnVerifyReaderPages" class="reader-action-btn" style="background:#EA580C;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;">${this.l('Verifikasi di WebView', 'Verify in WebView')}</button>`
               : ''
           }
-          <button id="btnRetryReaderPages" class="reader-action-btn" style="background:#0066CC;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;">${this.l('Muat Ulang', 'Reload')}</button>
+          <button id="btnRetryReaderPages" class="reader-action-btn" style="background:var(--ocean-primary);color:var(--ink-on-ocean);border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">${this.l('Muat Ulang', 'Reload')}</button>
         </div>
       </div>
     `;

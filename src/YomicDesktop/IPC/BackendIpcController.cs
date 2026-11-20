@@ -145,7 +145,7 @@ namespace YomicDesktop.IPC
 
             LibraryService = new LibraryService();
 
-            DownloadService = new DownloadService(SourceManager, LibraryService, NetworkService);
+            DownloadService = new DownloadService(SourceManager, LibraryService, NetworkService, SettingsService);
 
             BackupService = new BackupService();
 
@@ -714,6 +714,10 @@ namespace YomicDesktop.IPC
                 ["autoDownloadNextChapter"] = SettingsService.AutoDownloadNextChapter,
 
                 ["skipFilteredChapters"] = SettingsService.SkipFilteredChapters,
+
+                ["saveDownloadsAsCbz"] = SettingsService.SaveDownloadsAsCbz,
+
+                ["autoDeleteAfterRead"] = SettingsService.AutoDeleteAfterRead,
 
                 ["maxReaderCacheSize"] = SettingsService.MaxCacheSizeMb switch
                 {
@@ -2458,6 +2462,14 @@ namespace YomicDesktop.IPC
             {
 
                 var localDir = DownloadPathService.FindCompletedChapterDirectory(manga, chapter);
+                if (string.IsNullOrEmpty(localDir))
+                {
+                    var localCbz = DownloadPathService.FindCompletedChapterCbz(manga, chapter);
+                    if (!string.IsNullOrEmpty(localCbz))
+                    {
+                        localDir = DownloadPathService.ExtractCbzToCacheDirectory(localCbz);
+                    }
+                }
 
                 if (!string.IsNullOrEmpty(localDir))
 
@@ -2726,6 +2738,25 @@ namespace YomicDesktop.IPC
 
                     // Auto-mark previous chapters as read in database
                     await LibraryService.MarkChaptersBeforeAsReadAsync(manga, chapterNumber);
+
+                    // Auto-delete downloaded chapter files after reading if enabled in Settings
+                    if (SettingsService.AutoDeleteAfterRead)
+                    {
+                        var finishedChapter = manga.Chapters?.FirstOrDefault(c =>
+                            (!string.IsNullOrEmpty(chapterUrl) && string.Equals(c.Url, chapterUrl, StringComparison.OrdinalIgnoreCase)) ||
+                            Math.Abs(c.ChapterNumber - chapterNumber) < 0.01f);
+                        if (finishedChapter != null && DownloadPathService.IsChapterDownloaded(manga, finishedChapter))
+                        {
+                            if (DownloadPathService.DeleteDownloadedChapter(manga, finishedChapter))
+                            {
+                                finishedChapter.IsDownloaded = false;
+                                if (!string.IsNullOrEmpty(finishedChapter.Url))
+                                {
+                                    await LibraryService.UpdateChapterDownloadStatusByUrlAsync(finishedChapter.Url, false);
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // Update Manga.LastViewed & History entry + Auto-sync MAL Tracker when chapter completed
@@ -3268,6 +3299,18 @@ namespace YomicDesktop.IPC
          * 8. UNDUHAN (DOWNLOADS)
          * ========================================================================= */
 
+        private static string FormatBytes(long bytes)
+        {
+            if (bytes <= 0) return "Tersimpan";
+            if (bytes < 1024 * 1024)
+            {
+                double kb = bytes / 1024.0;
+                return $"{kb:0.0} KB";
+            }
+            double mb = bytes / (1024.0 * 1024.0);
+            return $"{mb:0.1} MB";
+        }
+
         private static string FormatDirectorySize(string dirPath)
         {
             try
@@ -3321,10 +3364,8 @@ namespace YomicDesktop.IPC
                 string sizeText;
                 if (mappedStatus == "completed")
                 {
-                    var dir = DownloadPathService.FindCompletedChapterDirectory(req.Manga, req.Chapter);
-                    sizeText = !string.IsNullOrEmpty(dir) && Directory.Exists(dir)
-                        ? FormatDirectorySize(dir)
-                        : "Tersimpan";
+                    long bytes = DownloadPathService.GetDownloadedChapterSizeBytes(req.Manga, req.Chapter);
+                    sizeText = bytes > 0 ? FormatBytes(bytes) : "Tersimpan";
                 }
                 else
                 {
@@ -3500,10 +3541,9 @@ namespace YomicDesktop.IPC
                 {
                     try
                     {
-                        var dir = DownloadPathService.FindCompletedChapterDirectory(req.Manga, req.Chapter);
-                        if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                        if (req.Manga != null && req.Chapter != null)
                         {
-                            Directory.Delete(dir, true);
+                            DownloadPathService.DeleteDownloadedChapter(req.Manga, req.Chapter);
                         }
                     }
                     catch { }
@@ -3545,11 +3585,7 @@ namespace YomicDesktop.IPC
 
                 if (ch != null)
                 {
-                    var dir = DownloadPathService.FindCompletedChapterDirectory(manga, ch);
-                    if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
-                    {
-                        try { Directory.Delete(dir, true); } catch { }
-                    }
+                    DownloadPathService.DeleteDownloadedChapter(manga, ch);
                     ch.IsDownloaded = false;
                     await LibraryService.UpdateChapterDownloadStatusByUrlAsync(ch.Url, false);
 
@@ -3794,6 +3830,26 @@ namespace YomicDesktop.IPC
                 {
 
                     SettingsService.SkipFilteredChapters = valElem.GetBoolean();
+
+                    break;
+
+                }
+
+                case "saveDownloadsAsCbz":
+
+                {
+
+                    SettingsService.SaveDownloadsAsCbz = valElem.GetBoolean();
+
+                    break;
+
+                }
+
+                case "autoDeleteAfterRead":
+
+                {
+
+                    SettingsService.AutoDeleteAfterRead = valElem.GetBoolean();
 
                     break;
 

@@ -123,27 +123,174 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
     `;
   };
 
-  container.innerHTML = `
-    <div class="v1-settings-page">
-      <!-- Header: Settings Icon + Title -->
-      <div class="v1-lib-top" style="margin-bottom:4px;">
-        <div class="v1-lib-title-row">
-          ${getIconSvg('settings-3-line', { size: 24 })}
-          <span class="v1-lib-title-text">${this.t('settings.title')}</span>
+  const activeSub = !this.activeSettingsTab || this.activeSettingsTab === 'all' ? 'hub' : this.activeSettingsTab;
+  const subTitleMap: Record<string, string> = {
+    appearance: this.l('Tampilan & Pembaca', 'Appearance & Reader'),
+    library: this.l('Pustaka & Pembaruan', 'Library & Updates'),
+    downloads: this.l('Unduhan', 'Downloads'),
+    storage: this.l('Data & Penyimpanan', 'Data & Storage'),
+    network: this.l('Jaringan & Sumber', 'Network & Sources'),
+    tracker: this.l('Pelacak', 'Tracking'),
+    hotkeys: this.l('Pintasan Keyboard', 'Keyboard Shortcuts'),
+    about: this.l('Tentang', 'About')
+  };
+
+  const hubHtml = `
+    <div class="v1-settings-hub">
+      <!-- Quick Toggles Section (Ala Mobile Top Toggles) -->
+      <div class="v1-settings-hub-list">
+        <div class="v1-settings-hub-row is-toggle" data-toggle-setting="isDarkMode" role="switch" aria-checked="${this.settings.isDarkMode}">
+          <div class="v1-settings-hub-icon">${getIconSvg('moon-linear', { size: 20 })}</div>
+          <div class="v1-settings-hub-info">
+            <span class="v1-settings-hub-title">${this.l('Mode Gelap', 'Dark Mode')}</span>
+            <span class="v1-settings-hub-desc">${this.l('Tema gelap Carbon Dark untuk kenyamanan membaca di malam hari', 'Carbon Dark theme for comfortable night reading')}</span>
+          </div>
+          <div class="toggle-switch ${this.settings.isDarkMode ? 'on' : ''}">
+            <div class="toggle-thumb"></div>
+          </div>
+        </div>
+        <div class="v1-settings-hub-row is-toggle" data-toggle-setting="isOfflineMode" role="switch" aria-checked="${this.settings.isOfflineMode}">
+          <div class="v1-settings-hub-icon">${getIconSvg('wifi-off', { size: 20 })}</div>
+          <div class="v1-settings-hub-info">
+            <span class="v1-settings-hub-title">${this.l('Mode Luring', 'Offline Mode')}</span>
+            <span class="v1-settings-hub-desc">${this.l('Hanya tampilkan dan baca komik yang telah diunduh', 'Only display and read downloaded comics')}</span>
+          </div>
+          <div class="toggle-switch ${this.settings.isOfflineMode ? 'on' : ''}">
+            <div class="toggle-thumb"></div>
+          </div>
         </div>
       </div>
-      <!-- 1. TAMPILAN & PEMBACA -->
-      <section class="v1-settings-section">
+
+      <div class="v1-settings-hub-divider"></div>
+
+      <!-- Category Navigation List (Ala Mobile Menu) -->
+      <div class="v1-settings-hub-list">
+        <button type="button" class="v1-settings-hub-row" data-open-settings-sub="appearance">
+          <div class="v1-settings-hub-icon">${getIconSvg('palette-linear', { size: 20 })}</div>
+          <div class="v1-settings-hub-info">
+            <span class="v1-settings-hub-title">${this.l('Tampilan & Pembaca', 'Appearance & Reader')}</span>
+            <span class="v1-settings-hub-desc">${this.l('Tema, bahasa, mode baca, arah halaman & kualitas gambar', 'Theme, language, reader mode, direction & image quality')}</span>
+          </div>
+          <span class="v1-settings-hub-chevron">${getIconSvg('arrow-right-s-line', { size: 18 })}</span>
+        </button>
+
+        <button type="button" class="v1-settings-hub-row" data-open-settings-sub="library">
+          <div class="v1-settings-hub-icon">${getIconSvg('book-open-line', { size: 20 })}</div>
+          <div class="v1-settings-hub-info">
+            <span class="v1-settings-hub-title">${this.l('Pustaka & Pembaruan', 'Library & Updates')}</span>
+            <span class="v1-settings-hub-desc">${this.l('Sinkronisasi otomatis, pembaruan cerdas & jadwal latar belakang', 'Auto-sync, smart updates & background schedule')}</span>
+          </div>
+          <span class="v1-settings-hub-chevron">${getIconSvg('arrow-right-s-line', { size: 18 })}</span>
+        </button>
+
+        <button type="button" class="v1-settings-hub-row" data-open-settings-sub="downloads">
+          <div class="v1-settings-hub-icon">${getIconSvg('download-2-line', { size: 20 })}</div>
+          <div class="v1-settings-hub-info">
+            <span class="v1-settings-hub-title">${this.l('Unduhan', 'Downloads')}</span>
+            <span class="v1-settings-hub-desc">${this.l('Lokasi folder, arsip CBZ, hapus otomatis & otomatisasi bab', 'Folder location, CBZ archives, auto-delete & chapter automation')}</span>
+          </div>
+          <span class="v1-settings-hub-chevron">${getIconSvg('arrow-right-s-line', { size: 18 })}</span>
+        </button>
+
+        <button type="button" class="v1-settings-hub-row" data-open-settings-sub="storage">
+          <div class="v1-settings-hub-icon">${getIconSvg('database-2-line', { size: 20 })}</div>
+          <div class="v1-settings-hub-info">
+            <span class="v1-settings-hub-title">${this.l('Data & Penyimpanan', 'Data & Storage')}</span>
+            <span class="v1-settings-hub-desc">${escapeXml(this.settings.dbSizeText || '0 MB')} · ${this.l('Cadangan, cache, riwayat & folder unduhan', 'Backup, cache, history & downloads folder')}</span>
+          </div>
+          <span class="v1-settings-hub-chevron">${getIconSvg('arrow-right-s-line', { size: 18 })}</span>
+        </button>
+
+        <button type="button" class="v1-settings-hub-row" data-open-settings-sub="network">
+          <div class="v1-settings-hub-icon">${getIconSvg('global-linear', { size: 20 })}</div>
+          <div class="v1-settings-hub-info">
+            <span class="v1-settings-hub-title">${this.l('Jaringan & Sumber', 'Network & Sources')}</span>
+            <span class="v1-settings-hub-desc">${this.l('DNS-over-HTTPS, mode luring & pemeriksaan status server', 'DNS-over-HTTPS, offline mode & server status checks')}</span>
+          </div>
+          <span class="v1-settings-hub-chevron">${getIconSvg('arrow-right-s-line', { size: 18 })}</span>
+        </button>
+
+        <button type="button" class="v1-settings-hub-row" data-open-settings-sub="tracker">
+          <div class="v1-settings-hub-icon">${getIconSvg('link', { size: 20 })}</div>
+          <div class="v1-settings-hub-info">
+            <span class="v1-settings-hub-title">${this.l('Pelacak', 'Tracking')}</span>
+            <span class="v1-settings-hub-desc">${
+              this.settings.isMalConnected
+                ? this.l(`Terhubung ke MyAnimeList (${escapeXml(this.settings.malConnectedUser)})`, `Connected to MyAnimeList (${escapeXml(this.settings.malConnectedUser)})`)
+                : this.l('Sinkronisasi otomatis progres baca dengan MyAnimeList', 'Auto-sync reading progress with MyAnimeList')
+            }</span>
+          </div>
+          <span class="v1-settings-hub-chevron">${getIconSvg('arrow-right-s-line', { size: 18 })}</span>
+        </button>
+
+        <button type="button" class="v1-settings-hub-row" data-open-settings-sub="hotkeys">
+          <div class="v1-settings-hub-icon">${getIconSvg('command-linear', { size: 20 })}</div>
+          <div class="v1-settings-hub-info">
+            <span class="v1-settings-hub-title">${this.l('Pintasan Keyboard', 'Keyboard Shortcuts')}</span>
+            <span class="v1-settings-hub-desc">${this.l('Atur tombol pintas pembaca komik & navigasi aplikasi', 'Configure reader & application navigation shortcuts')}</span>
+          </div>
+          <span class="v1-settings-hub-chevron">${getIconSvg('arrow-right-s-line', { size: 18 })}</span>
+        </button>
+
+        <button type="button" class="v1-settings-hub-row" data-open-settings-sub="about">
+          <div class="v1-settings-hub-icon">${getIconSvg('info-circle-linear', { size: 20 })}</div>
+          <div class="v1-settings-hub-info">
+            <span class="v1-settings-hub-title">${this.l('Tentang', 'About')}</span>
+            <span class="v1-settings-hub-desc">${this.l('Informasi versi, pembaruan sistem, catatan rilis & reset aplikasi', 'Version info, system updates, release notes & app reset')}</span>
+          </div>
+          <span class="v1-settings-hub-chevron">${getIconSvg('arrow-right-s-line', { size: 18 })}</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = `
+    <div class="v1-settings-page">
+      <!-- Header: Settings Icon + Title (or Sub-Page Back Button) -->
+      <div class="v1-lib-top" style="margin-bottom:4px;">
+        <div class="v1-lib-title-row">
+          ${
+            activeSub === 'hub'
+              ? `${getIconSvg('settings-3-line', { size: 24 })}
+                 <span class="v1-lib-title-text">${this.t('settings.title')}</span>`
+              : `<button type="button" id="btnBackToSettingsHub" class="v1-settings-back-btn" title="${escapeXml(this.l('Kembali ke Pengaturan', 'Back to Settings'))}" aria-label="${escapeXml(this.l('Kembali ke Pengaturan', 'Back to Settings'))}">
+                   ${getIconSvg('arrow-left-line', { size: 22 })}
+                 </button>
+                 <span class="v1-lib-title-text">${escapeXml(subTitleMap[activeSub] || this.t('settings.title'))}</span>`
+          }
+        </div>
+      </div>
+      ${activeSub === 'hub' ? hubHtml : ''}
+      <!-- 1A. TEMA (Ala Mobile Gambar 1) -->
+      <section class="v1-settings-section" style="${activeSub === 'appearance' ? '' : 'display:none;'}">
         <div class="v1-settings-sec-head">
-          <h2 class="v1-settings-sec-title">${this.t('settings.tab.appearance')}</h2>
+          <h2 class="v1-settings-sec-title">${this.l('Tema', 'Theme')}</h2>
         </div>
         <div class="v1-settings-group">
           <div class="v1-setting-row">
             <div class="v1-setting-info">
               <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.t('settings.appearance.languageTitle')}</span>
+                <span class="v1-setting-title">${this.l('Mode Gelap', 'Dark Mode')}</span>
               </div>
-              <span class="v1-setting-desc">${this.t('settings.appearance.languageDesc')}</span>
+              <span class="v1-setting-desc">${this.l('Beralih antara Carbon Dark dan Oceanic Light', 'Switch between Carbon Dark and Oceanic Light')}</span>
+            </div>
+            <div class="toggle-switch ${this.settings.isDarkMode ? 'on' : ''}" data-toggle-setting="isDarkMode" role="switch" aria-checked="${this.settings.isDarkMode}">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- 1B. TAMPILAN & BAHASA (Ala Mobile Gambar 1) -->
+      <section class="v1-settings-section has-top-divider" style="${activeSub === 'appearance' ? '' : 'display:none;'}">
+        <div class="v1-settings-sec-head">
+          <h2 class="v1-settings-sec-title">${this.l('Tampilan &amp; Bahasa', 'Display &amp; Language')}</h2>
+        </div>
+        <div class="v1-settings-group">
+          <div class="v1-setting-row is-select-row">
+            <div class="v1-setting-info">
+              <div class="v1-setting-title-row">
+                <span class="v1-setting-title">${this.l('Bahasa Antarmuka', 'Interface Language')}</span>
+              </div>
             </div>
             ${renderSettingDropdown(
               'selAppLanguage',
@@ -158,130 +305,9 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
           <div class="v1-setting-row">
             <div class="v1-setting-info">
               <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.t('settings.appearance.readerModeTitle')}</span>
+                <span class="v1-setting-title">${this.l('Lencana bab belum dibaca', 'Unread chapter badges')}</span>
               </div>
-              <span class="v1-setting-desc">${this.t('settings.appearance.readerModeDesc')}</span>
-            </div>
-            ${renderSettingDropdown(
-              'selDefaultReaderMode',
-              [
-                { value: 'webtoon', label: this.t('settings.appearance.readerModeWebtoon') },
-                { value: 'single', label: this.t('settings.appearance.readerModeSingle') },
-                { value: 'dual', label: this.t('settings.appearance.readerModeDual') }
-              ],
-              this.settings.defaultReaderMode || 'webtoon',
-              this.t('settings.appearance.readerModeTitle')
-            )}
-          </div>
-          <div class="v1-setting-row">
-            <div class="v1-setting-info">
-              <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.t('settings.appearance.directionTitle')}</span>
-              </div>
-              <span class="v1-setting-desc">${this.t('settings.appearance.directionDesc')}</span>
-            </div>
-            ${renderSettingDropdown(
-              'selReadingDirection',
-              [
-                { value: 'ltr', label: this.t('settings.appearance.directionLtr') },
-                { value: 'rtl', label: this.t('settings.appearance.directionRtl') }
-              ],
-              this.settings.readingDirection || 'ltr',
-              this.t('settings.appearance.directionTitle')
-            )}
-          </div>
-          <div class="v1-setting-row">
-            <div class="v1-setting-info">
-              <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.t('settings.appearance.fitModeTitle')}</span>
-              </div>
-              <span class="v1-setting-desc">${this.t('settings.appearance.fitModeDesc')}</span>
-            </div>
-            ${renderSettingDropdown(
-              'selReaderFitMode',
-              [
-                { value: 'fit-width', label: this.t('settings.appearance.fitWidth') },
-                { value: 'fit-height', label: this.t('settings.appearance.fitHeight') },
-                { value: 'original', label: this.t('settings.appearance.fitOriginal') }
-              ],
-              this.settings.readerFitMode || 'fit-width',
-              this.t('settings.appearance.fitModeTitle')
-            )}
-          </div>
-          <div class="v1-setting-row">
-            <div class="v1-setting-info">
-              <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.t('settings.appearance.darkModeTitle')}</span>
-              </div>
-              <span class="v1-setting-desc">${this.t('settings.appearance.darkModeDesc')}</span>
-            </div>
-            <div class="toggle-switch ${this.settings.isDarkMode ? 'on' : ''}" data-toggle-setting="isDarkMode" role="switch" aria-checked="${this.settings.isDarkMode}">
-              <div class="toggle-thumb"></div>
-            </div>
-          </div>
-          <!-- Fitur Asli Yomic v1: Preload Next Chapter -->
-          <div class="v1-setting-row">
-            <div class="v1-setting-info">
-              <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.t('settings.appearance.preloadTitle')}</span>
-              </div>
-              <span class="v1-setting-desc">${this.t('settings.appearance.preloadDesc')}</span>
-            </div>
-            <div class="toggle-switch ${this.settings.preloadNextChapter ? 'on' : ''}" data-toggle-setting="preloadNextChapter" role="switch" aria-checked="${this.settings.preloadNextChapter}">
-              <div class="toggle-thumb"></div>
-            </div>
-          </div>
-          <!-- Fitur Asli Yomic v1: Auto Download Next Chapter -->
-          <div class="v1-setting-row">
-            <div class="v1-setting-info">
-              <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.t('settings.appearance.autoDownloadTitle')}</span>
-              </div>
-              <span class="v1-setting-desc">${this.t('settings.appearance.autoDownloadDesc')}</span>
-            </div>
-            <div class="toggle-switch ${this.settings.autoDownloadNextChapter ? 'on' : ''}" data-toggle-setting="autoDownloadNextChapter" role="switch" aria-checked="${this.settings.autoDownloadNextChapter}">
-              <div class="toggle-thumb"></div>
-            </div>
-          </div>
-          <!-- Fitur Asli Yomic v1: Skip Filtered Chapters -->
-          <div class="v1-setting-row">
-            <div class="v1-setting-info">
-              <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.t('settings.library.skipFilteredTitle')}</span>
-              </div>
-              <span class="v1-setting-desc">${this.t('settings.library.skipFilteredDesc')}</span>
-            </div>
-            <div class="toggle-switch ${this.settings.skipFilteredChapters ? 'on' : ''}" data-toggle-setting="skipFilteredChapters" role="switch" aria-checked="${this.settings.skipFilteredChapters}">
-              <div class="toggle-thumb"></div>
-            </div>
-          </div>
-          <!-- Fitur Asli Yomic v1: Max Reader Cache Size -->
-          <div class="v1-setting-row">
-            <div class="v1-setting-info">
-              <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.t('settings.storage.maxCacheTitle')}</span>
-              </div>
-              <span class="v1-setting-desc">${this.t('settings.storage.maxCacheDesc')}</span>
-            </div>
-            ${renderSettingDropdown(
-              'selMaxReaderCacheSize',
-              [
-                { value: '250MB', label: '250 MB' },
-                { value: '500MB', label: '500 MB' },
-                { value: '1GB', label: '1 GB' },
-                { value: '2GB', label: '2 GB' }
-              ],
-              this.settings.maxReaderCacheSize || '500MB',
-              this.t('settings.storage.maxCacheTitle')
-            )}
-          </div>
-          <!-- Fitur Asli Yomic v1: Show Unread Badges -->
-          <div class="v1-setting-row">
-            <div class="v1-setting-info">
-              <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.t('settings.library.unreadBadgeTitle')}</span>
-              </div>
-              <span class="v1-setting-desc">${this.t('settings.library.unreadBadgeDesc')}</span>
+              <span class="v1-setting-desc">${this.l('Tampilkan jumlah bab baru pada sampul pustaka', 'Show unread chapter count on library covers')}</span>
             </div>
             <div class="toggle-switch ${this.settings.showUnreadBadges ? 'on' : ''}" data-toggle-setting="showUnreadBadges" role="switch" aria-checked="${this.settings.showUnreadBadges}">
               <div class="toggle-thumb"></div>
@@ -320,8 +346,145 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
           </div>
         </div>
       </section>
+      <!-- 1C. PEMBACA -->
+      <section class="v1-settings-section has-top-divider" style="${activeSub === 'appearance' ? '' : 'display:none;'}">
+        <div class="v1-settings-sec-head">
+          <h2 class="v1-settings-sec-title">${this.l('Pembaca', 'Reader')}</h2>
+        </div>
+        <div class="v1-settings-group">
+          <div class="v1-setting-row is-select-row">
+            <div class="v1-setting-info">
+              <div class="v1-setting-title-row">
+                <span class="v1-setting-title">${this.t('settings.appearance.readerModeTitle')}</span>
+              </div>
+            </div>
+            ${renderSettingDropdown(
+              'selDefaultReaderMode',
+              [
+                { value: 'webtoon', label: this.t('settings.appearance.readerModeWebtoon') },
+                { value: 'single', label: this.t('settings.appearance.readerModeSingle') },
+                { value: 'dual', label: this.t('settings.appearance.readerModeDual') }
+              ],
+              this.settings.defaultReaderMode || 'webtoon',
+              this.t('settings.appearance.readerModeTitle')
+            )}
+          </div>
+          <div class="v1-setting-row is-select-row">
+            <div class="v1-setting-info">
+              <div class="v1-setting-title-row">
+                <span class="v1-setting-title">${this.t('settings.appearance.directionTitle')}</span>
+              </div>
+            </div>
+            ${renderSettingDropdown(
+              'selReadingDirection',
+              [
+                { value: 'ltr', label: this.t('settings.appearance.directionLtr') },
+                { value: 'rtl', label: this.t('settings.appearance.directionRtl') }
+              ],
+              this.settings.readingDirection || 'ltr',
+              this.t('settings.appearance.directionTitle')
+            )}
+          </div>
+          <div class="v1-setting-row is-select-row">
+            <div class="v1-setting-info">
+              <div class="v1-setting-title-row">
+                <span class="v1-setting-title">${this.t('settings.appearance.fitModeTitle')}</span>
+              </div>
+            </div>
+            ${renderSettingDropdown(
+              'selReaderFitMode',
+              [
+                { value: 'fit-width', label: this.t('settings.appearance.fitWidth') },
+                { value: 'fit-height', label: this.t('settings.appearance.fitHeight') },
+                { value: 'original', label: this.t('settings.appearance.fitOriginal') }
+              ],
+              this.settings.readerFitMode || 'fit-width',
+              this.t('settings.appearance.fitModeTitle')
+            )}
+          </div>
+        </div>
+      </section>
+      <!-- 1D. UNDUHAN — PERILAKU UNDUHAN (Ala Mobile Gambar 1) -->
+      <section class="v1-settings-section" style="${activeSub === 'downloads' ? '' : 'display:none;'}">
+        <div class="v1-settings-sec-head">
+          <h2 class="v1-settings-sec-title">${this.l('Perilaku unduhan', 'Download behavior')}</h2>
+        </div>
+        <div class="v1-settings-group">
+          <button type="button" id="btnOpenDownloadsFolderFromDl" class="v1-setting-row is-action-row">
+            <div class="v1-setting-info">
+              <div class="v1-setting-title-row">
+                <span class="v1-setting-title">${this.l('Folder Penyimpanan Unduhan', 'Downloads Storage Folder')}</span>
+              </div>
+              <span class="v1-setting-desc">${escapeXml(this.settings.downloadsFolder)}</span>
+            </div>
+          </button>
+          <div class="v1-setting-row">
+            <div class="v1-setting-info">
+              <div class="v1-setting-title-row">
+                <span class="v1-setting-title">${this.l('Simpan bab sebagai arsip CBZ', 'Save chapters as CBZ archives')}</span>
+              </div>
+              <span class="v1-setting-desc">${this.l('Gabungkan halaman unduhan menjadi satu file .cbz', 'Combine downloaded pages into a single .cbz file')}</span>
+            </div>
+            <div class="toggle-switch ${this.settings.saveDownloadsAsCbz ? 'on' : ''}" data-toggle-setting="saveDownloadsAsCbz" role="switch" aria-checked="${this.settings.saveDownloadsAsCbz}">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- 1E. UNDUHAN — OTOMATISASI (Ala Mobile Gambar 1) -->
+      <section class="v1-settings-section has-top-divider" style="${activeSub === 'downloads' ? '' : 'display:none;'}">
+        <div class="v1-settings-sec-head">
+          <h2 class="v1-settings-sec-title">${this.l('Otomatisasi', 'Automation')}</h2>
+        </div>
+        <div class="v1-settings-group">
+          <div class="v1-setting-row">
+            <div class="v1-setting-info">
+              <div class="v1-setting-title-row">
+                <span class="v1-setting-title">${this.l('Hapus otomatis setelah dibaca', 'Auto-delete after reading')}</span>
+              </div>
+              <span class="v1-setting-desc">${this.l('Hapus file bab unduhan otomatis setelah selesai dibaca', 'Automatically delete downloaded chapter files after reading')}</span>
+            </div>
+            <div class="toggle-switch ${this.settings.autoDeleteAfterRead ? 'on' : ''}" data-toggle-setting="autoDeleteAfterRead" role="switch" aria-checked="${this.settings.autoDeleteAfterRead}">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+          <div class="v1-setting-row">
+            <div class="v1-setting-info">
+              <div class="v1-setting-title-row">
+                <span class="v1-setting-title">${this.l('Unduh otomatis bab berikutnya', 'Auto-download next chapter')}</span>
+              </div>
+              <span class="v1-setting-desc">${this.l('Otomatis antrekan bab berikutnya saat membaca', 'Automatically queue the next chapter while reading')}</span>
+            </div>
+            <div class="toggle-switch ${this.settings.autoDownloadNextChapter ? 'on' : ''}" data-toggle-setting="autoDownloadNextChapter" role="switch" aria-checked="${this.settings.autoDownloadNextChapter}">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+          <div class="v1-setting-row">
+            <div class="v1-setting-info">
+              <div class="v1-setting-title-row">
+                <span class="v1-setting-title">${this.l('Pra-muat bab berikutnya', 'Preload next chapter')}</span>
+              </div>
+              <span class="v1-setting-desc">${this.l('Muat halaman berikutnya lebih awal agar gulir mulus', 'Preload upcoming pages early for smooth scrolling')}</span>
+            </div>
+            <div class="toggle-switch ${this.settings.preloadNextChapter ? 'on' : ''}" data-toggle-setting="preloadNextChapter" role="switch" aria-checked="${this.settings.preloadNextChapter}">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+          <div class="v1-setting-row">
+            <div class="v1-setting-info">
+              <div class="v1-setting-title-row">
+                <span class="v1-setting-title">${this.l('Lewati bab yang difilter', 'Skip filtered chapters')}</span>
+              </div>
+              <span class="v1-setting-desc">${this.l('Lewati bab terfilter saat berpindah bab', 'Skip filtered chapters when navigating between chapters')}</span>
+            </div>
+            <div class="toggle-switch ${this.settings.skipFilteredChapters ? 'on' : ''}" data-toggle-setting="skipFilteredChapters" role="switch" aria-checked="${this.settings.skipFilteredChapters}">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+        </div>
+      </section>
       <!-- 2. PEMROSESAN & KUALITAS GAMBAR (SKIASHARP) -->
-      <section class="v1-settings-section">
+      <section class="v1-settings-section has-top-divider" style="${activeSub === 'appearance' ? '' : 'display:none;'}">
         <div class="v1-settings-sec-head">
           <h2 class="v1-settings-sec-title">${this.t('settings.appearance.imageHeaderTitle')}</h2>
         </div>
@@ -361,7 +524,7 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
         </div>
       </section>
       <!-- 2. PINTASAN KEYBOARD (HOTKEYS) -->
-      <section class="v1-settings-section">
+      <section class="v1-settings-section" style="${activeSub === 'hotkeys' ? '' : 'display:none;'}">
         <div class="v1-settings-sec-head" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
           <div style="display:flex; align-items:center; gap:8px;">
             <h2 class="v1-settings-sec-title">${this.t('settings.hotkeys.headerTitle')}</h2>
@@ -386,7 +549,7 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
         </div>
       </section>
       <!-- 3. PUSTAKA & PEMBARUAN (Fitur Asli Yomic v1 LibraryHeader) -->
-      <section class="v1-settings-section">
+      <section class="v1-settings-section" style="${activeSub === 'library' ? '' : 'display:none;'}">
         <div class="v1-settings-sec-head">
           <h2 class="v1-settings-sec-title">${this.t('settings.library.headerTitle')}</h2>
         </div>
@@ -435,7 +598,7 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
         </div>
       </section>
       <!-- 3. JARINGAN & DNS -->
-      <section class="v1-settings-section">
+      <section class="v1-settings-section" style="${activeSub === 'network' ? '' : 'display:none;'}">
         <div class="v1-settings-sec-head">
           <h2 class="v1-settings-sec-title">${this.t('settings.tab.network')}</h2>
         </div>
@@ -493,116 +656,108 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
           </div>
         </div>
       </section>
-      <!-- 4. UNDUHAN & PENYIMPANAN -->
-      <section class="v1-settings-section">
+      <!-- 4A. CADANGAN DAN PEMULIHAN (Ala Mobile Gambar 2) -->
+      <section class="v1-settings-section" style="${activeSub === 'storage' ? '' : 'display:none;'}">
         <div class="v1-settings-sec-head">
-          <h2 class="v1-settings-sec-title">${this.l('Unduhan &amp; Penyimpanan', 'Downloads &amp; Storage')}</h2>
+          <h2 class="v1-settings-sec-title">${this.l('Cadangan dan pemulihan', 'Backup and restore')}</h2>
         </div>
         <div class="v1-settings-group">
-          <div class="v1-setting-row">
+          <button type="button" id="btnCreateBackup" class="v1-setting-row is-action-row">
             <div class="v1-setting-info">
               <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.l('Folder Penyimpanan Unduhan', 'Downloads Storage Folder')}</span>
+                <span class="v1-setting-title">${this.l('Buat Cadangan', 'Create Backup')}</span>
               </div>
-              <span class="v1-setting-desc">${this.l('Lokasi berkas bab komik yang disimpan untuk dibaca saat offline di komputer Anda.', 'Location of comic chapter files saved for offline reading on your computer.')}</span>
-              <span class="v1-setting-meta" style="font-family:ui-monospace, monospace; font-size:11.5px; background:var(--bg-canvas); padding:2px 8px; border-radius:4px; border:1px solid var(--border-subtle); display:inline-block; margin-top:5px; color:var(--ink-secondary);">
-                ${escapeXml(this.settings.downloadsFolder)}
-              </span>
+              <span id="createBackupDesc" class="v1-setting-desc">${escapeXml(this.settings.lastBackupText || this.l('Siap dicadangkan (.yomicbackup)', 'Ready to back up (.yomicbackup)'))}</span>
             </div>
-            <button id="btnOpenDownloadsFolder" class="v1-setting-btn primary" style="display:inline-flex; align-items:center; gap:6px; white-space:nowrap;">
-              ${getIconSvg('folder-open', { size: 16 })}
-              <span>${this.l('Buka di Explorer', 'Open in Explorer')}</span>
-            </button>
-          </div>
-          <div class="v1-setting-row">
+          </button>
+          <button type="button" id="btnRestoreBackup" class="v1-setting-row is-action-row">
             <div class="v1-setting-info">
               <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.l('Bersihkan Cache Gambar', 'Clear Image Cache')}</span>
+                <span class="v1-setting-title">${this.l('Pulihkan Cadangan', 'Restore Backup')}</span>
               </div>
-              <span class="v1-setting-desc">${this.l('Hapus berkas gambar sementara dari memori penyimpanan lokal untuk menghemat ruang disk.', 'Delete temporary image files from local storage to save disk space.')}</span>
-              <span class="v1-setting-meta">${this.l('Ukuran data tersimpan:', 'Stored data size:')} ${escapeXml(this.settings.dbSizeText)}</span>
+              <span id="restoreBackupDesc" class="v1-setting-desc">${this.l('Impor pustaka, kategori, dan progres baca dari file', 'Import library, categories, and reading progress from file')}</span>
             </div>
-            <button id="btnDangerClearCache" class="v1-setting-btn" style="white-space:nowrap;">
-              ${this.l('Bersihkan Cache', 'Clear Cache')}
-            </button>
+          </button>
+        </div>
+      </section>
+      <!-- 4B. PENYIMPANAN & CACHE (Ala Mobile Gambar 2) -->
+      <section class="v1-settings-section has-top-divider" style="${activeSub === 'storage' ? '' : 'display:none;'}">
+        <div class="v1-settings-sec-head">
+          <h2 class="v1-settings-sec-title">${this.l('Penyimpanan &amp; Cache', 'Storage &amp; Cache')}</h2>
+        </div>
+        <div class="v1-settings-group">
+          <div class="v1-setting-row is-select-row">
+            <div class="v1-setting-info">
+              <div class="v1-setting-title-row">
+                <span class="v1-setting-title">${this.l('Kapasitas cache pembaca', 'Reader cache capacity')}</span>
+              </div>
+            </div>
+            ${renderSettingDropdown(
+              'selMaxReaderCacheSize',
+              [
+                { value: '250MB', label: '250 MB' },
+                { value: '500MB', label: '500 MB' },
+                { value: '1GB', label: '1 GB' },
+                { value: '2GB', label: '2 GB' }
+              ],
+              this.settings.maxReaderCacheSize || '500MB',
+              this.l('Kapasitas cache pembaca', 'Reader cache capacity')
+            )}
           </div>
-          <!-- Fitur Asli Yomic v1: Clear Non-Library Cache -->
-          <div class="v1-setting-row">
+          <button type="button" id="btnDangerClearCache" class="v1-setting-row is-action-row">
+            <div class="v1-setting-info">
+              <div class="v1-setting-title-row">
+                <span class="v1-setting-title">${this.l('Bersihkan Cache', 'Clear Cache')}</span>
+              </div>
+              <span id="clearCacheDesc" class="v1-setting-desc">${this.l('Terpakai:', 'Used:')} ${escapeXml(this.settings.dbSizeText)}</span>
+            </div>
+          </button>
+          <button type="button" id="btnClearNonLibraryCache" class="v1-setting-row is-action-row">
             <div class="v1-setting-info">
               <div class="v1-setting-title-row">
                 <span class="v1-setting-title">${this.l('Hapus Cache Non-Pustaka', 'Clear Non-Library Cache')}</span>
               </div>
-              <span class="v1-setting-desc">${this.l('Hapus seluruh berkas gambar dan metadata komik dari hasil pencarian sumber yang tidak tersimpan di Pustaka.', 'Delete all image files and comic metadata from source searches not saved in your Library.')}</span>
+              <span id="clearNonLibDesc" class="v1-setting-desc">${this.l('Hapus berkas gambar dan metadata komik yang tidak tersimpan di pustaka', 'Delete image files and comic metadata not saved in library')}</span>
             </div>
-            <button id="btnClearNonLibraryCache" class="v1-setting-btn" style="white-space:nowrap;">
-              ${this.l('Hapus Non-Pustaka', 'Clear Non-Library')}
-            </button>
-          </div>
-          <div class="v1-setting-row">
+          </button>
+          <button type="button" id="btnOpenDownloadsFolder" class="v1-setting-row is-action-row">
             <div class="v1-setting-info">
               <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.l('Hapus Riwayat Membaca', 'Clear Reading History')}</span>
+                <span class="v1-setting-title">${this.l('Folder Penyimpanan Unduhan', 'Downloads Storage Folder')}</span>
               </div>
-              <span class="v1-setting-desc">${this.l('Kosongkan seluruh daftar riwayat aktivitas membaca terakhir tanpa menghapus komik di Pustaka.', 'Empty your recent reading activity history without removing comics from your Library.')}</span>
+              <span class="v1-setting-desc">${escapeXml(this.settings.downloadsFolder)}</span>
             </div>
-            <button id="btnDangerClearHistory" class="v1-setting-btn amber-soft" style="white-space:nowrap;">
-              ${this.l('Hapus Riwayat', 'Clear History')}
-            </button>
-          </div>
-          <!-- Fitur Asli Yomic v1: Export App Logs -->
-          <div class="v1-setting-row">
+          </button>
+          <button type="button" id="btnExportAppLogs" class="v1-setting-row is-action-row">
             <div class="v1-setting-info">
               <div class="v1-setting-title-row">
                 <span class="v1-setting-title">${this.l('Ekspor Log Aplikasi', 'Export App Logs')}</span>
               </div>
-              <span class="v1-setting-desc">${this.l('Simpan berkas catatan aktivitas dan diagnostik aplikasi (.log) untuk pelaporan masalah atau troubleshooting.', 'Save application activity and diagnostic logs (.log) for issue reporting or troubleshooting.')}</span>
+              <span class="v1-setting-desc">${this.l('Simpan berkas catatan aktivitas dan diagnostik aplikasi (.log)', 'Save application activity and diagnostic log files (.log)')}</span>
             </div>
-            <button id="btnExportAppLogs" class="v1-setting-btn" style="white-space:nowrap;">
-              ${this.l('Ekspor Log', 'Export Logs')}
-            </button>
-          </div>
-        </div>
-      </section>
-      <!-- 4. CADANGAN & PEMULIHAN -->
-      <section class="v1-settings-section">
-        <div class="v1-settings-sec-head">
-          <h2 class="v1-settings-sec-title">${this.t('settings.storage.backupHeaderTitle')}</h2>
-        </div>
-        <div class="v1-settings-group">
-          <div class="v1-setting-row">
+          </button>
+          <button type="button" id="btnDangerClearHistory" class="v1-setting-row is-action-row is-danger-row">
             <div class="v1-setting-info">
               <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.t('settings.storage.backupBtn')}</span>
+                <span class="v1-setting-title">${this.l('Kosongkan riwayat baca', 'Clear reading history')}</span>
               </div>
-              <span class="v1-setting-desc">${this.t('settings.storage.backupHeaderDesc')}</span>
-              <span class="v1-setting-meta">${this.settings.lastBackupText}</span>
+              <span id="clearHistoryDesc" class="v1-setting-desc">${this.l('Hapus daftar riwayat tanpa menghapus komik dari pustaka', 'Clear history list without removing comics from library')}</span>
             </div>
-            <button id="btnCreateBackup" class="v1-setting-btn" style="white-space:nowrap;">${this.t('settings.storage.backupBtn')}</button>
-          </div>
-          <div class="v1-setting-row">
-            <div class="v1-setting-info">
-              <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.t('settings.storage.restoreBtn')}</span>
-              </div>
-              <span class="v1-setting-desc">${this.t('settings.storage.backupHeaderDesc')}</span>
-            </div>
-            <button id="btnRestoreBackup" class="v1-setting-btn" style="white-space:nowrap;">${this.t('settings.storage.restoreBtn')}</button>
-          </div>
+          </button>
         </div>
       </section>
       <!-- 5. PELACAKAN (TRACKER) -->
-      <section id="settingsTrackerSection" class="v1-settings-section">
+      <section id="settingsTrackerSection" class="v1-settings-section" style="${activeSub === 'tracker' ? '' : 'display:none;'}">
         <div class="v1-settings-sec-head">
-          <h2 class="v1-settings-sec-title">${this.t('settings.tracker.headerTitle')}</h2>
+          <h2 class="v1-settings-sec-title">${this.l('Layanan Pelacak', 'Tracking Services')}</h2>
         </div>
         <div class="v1-settings-group">
-          <div class="v1-setting-row">
+          <button type="button" id="btnToggleMalConnect" class="v1-setting-row is-action-row">
             <div class="v1-setting-info">
               <div class="v1-setting-title-row">
                 <span class="v1-setting-title">MyAnimeList</span>
-                ${this.settings.isMalConnected ? `<span style="color:#059669;display:inline-flex;align-items:center;" title="Connected" aria-label="Connected">${getIconSvg('link', { size: 16 })}</span>` : `<span class="v1-setting-badge muted">${this.settings.appLanguage === 'en' ? 'DISCONNECTED' : 'TERPUTUS'}</span>`}
               </div>
-              <span class="v1-setting-desc">
+              <span id="malConnectDesc" class="v1-setting-desc">
                 ${
                   this.settings.isMalConnected
                     ? this.t('settings.tracker.malConnectedAs', { user: escapeXml(this.settings.malConnectedUser) })
@@ -610,10 +765,7 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
                 }
               </span>
             </div>
-            <button id="btnToggleMalConnect" class="v1-setting-btn ${this.settings.isMalConnected ? 'danger-outline' : 'primary'}" style="white-space:nowrap;">
-              ${this.settings.isMalConnected ? this.t('settings.tracker.malDisconnect') : this.t('settings.tracker.malConnect')}
-            </button>
-          </div>
+          </button>
           <div class="v1-setting-row">
             <div class="v1-setting-info">
               <div class="v1-setting-title-row">
@@ -627,74 +779,76 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
           </div>
         </div>
       </section>
-      <!-- 5. VERSI APLIKASI (Pola Gambar 2) -->
-      <section class="v1-settings-section">
-        <div class="v1-settings-sec-head">
-          <h2 class="v1-settings-sec-title">${this.t('settings.about.updateTitle')}</h2>
+      <!-- 5. TENTANG (Ala Mobile Gambar 1) -->
+      <section class="v1-settings-section" style="${activeSub === 'about' ? '' : 'display:none;'}">
+        <div class="v1-about-mobile-hero">
+          <img src="assets/app-logo.png" class="v1-about-mobile-logo" alt="Yomic Logo" onerror="this.src='app-logo.png'" />
+          <span class="v1-about-mobile-title">Yomic</span>
         </div>
+
+        <div class="v1-settings-hub-divider" style="margin: 12px 0;"></div>
+
         <div class="v1-settings-group">
           <div class="v1-setting-row">
             <div class="v1-setting-info">
               <div class="v1-setting-title-row">
-                <span class="v1-setting-title">${this.t('settings.about.updateTitle')}</span>
+                <span class="v1-setting-title">${this.l('Versi', 'Version')}</span>
               </div>
-              <span class="v1-setting-desc">${this.t('settings.about.updateDesc')}</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <span style="font-size: 13px; font-weight: 700; color: var(--ink-primary); font-family: var(--font-mono, monospace);">2.1.0</span>
-              <button id="btnAboutCheckUpdate" class="v1-setting-btn primary" style="white-space:nowrap; display: inline-flex; align-items: center; gap: 6px;">
-                ${getIconSvg('refresh', { size: 14 })}
-                <span>${this.t('settings.about.checkUpdate')}</span>
-              </button>
+              <span class="v1-setting-desc">Stable 2.1.0 (Windows Desktop)</span>
             </div>
           </div>
-        </div>
-      </section>
-      <!-- 6. ZONA BAHAYA -->
-      <section class="v1-settings-section">
-        <div class="v1-settings-sec-head danger">
-          ${getIconSvg('danger-triangle-linear', { size: 18 })}
-          <h2 class="v1-settings-sec-title">${this.settings.appLanguage === 'en' ? 'Danger Zone' : 'Zona Bahaya'}</h2>
-        </div>
-        <div class="v1-danger-zone-box">
-          <div class="v1-danger-row">
+
+          <button type="button" id="btnAboutCheckUpdate" class="v1-setting-row is-action-row">
             <div class="v1-setting-info">
-              <span class="v1-setting-title danger">${this.t('settings.about.resetTitle')}</span>
-              <span class="v1-setting-desc">${this.t('settings.about.resetDesc')}</span>
+              <div class="v1-setting-title-row">
+                <span id="aboutCheckUpdateTitle" class="v1-setting-title">${this.l('Periksa Pembaruan', 'Check for Updates')}</span>
+              </div>
+              <span id="aboutCheckUpdateDesc" class="v1-setting-desc">${this.l('Periksa versi rilis terbaru dari server', 'Check latest release version from server')}</span>
             </div>
-            <button id="btnDangerResetAll" class="v1-setting-btn danger-soft" style="flex-shrink:0;justify-content:center;">
-              ${getIconSvg('restart-linear', { size: 15, style: 'flex-shrink:0;display:block;' })}
-              <span>${this.t('settings.about.resetBtn')}</span>
-            </button>
+          </button>
+
+          <button type="button" id="btnToggleReleaseNotes" class="v1-setting-row is-action-row" aria-expanded="false">
+            <div class="v1-setting-info">
+              <div class="v1-setting-title-row">
+                <span class="v1-setting-title">${this.l('Catatan rilis', 'Release notes')}</span>
+              </div>
+              <span class="v1-setting-desc">v2.1.0</span>
+            </div>
+            <span id="aboutReleaseNotesChevron" class="v1-about-release-chevron">
+              ${getIconSvg('alt-arrow-down-linear', { size: 18 })}
+            </span>
+          </button>
+          <div id="aboutReleaseNotesPanel" class="v1-about-release-notes" style="display:none;">
+            <div class="v1-about-release-head">[2.1.0] - Update</div>
+            <div class="v1-about-release-subhead">Update Details:</div>
+            <ul class="v1-about-release-list">
+              <li>Add smart WebView2 chapter page extractor window (WebViewPageExtractorWindow) that runs off-screen silently during an 8-second grace period to resolve automatic security checks without popups, and automatically reveals itself centered on screen only when interactive verification (Cloudflare Turnstile / CAPTCHA) is required.</li>
+              <li>Add custom per-source WebView page extraction hooks (chapterReadySelector &amp; pageWebViewExtractScript) and verification status reporting (GetPageListWithStatusAsync &amp; RequiresVerification) in JsMangaSource.</li>
+              <li>Add automatic &amp; manual WebView verification fallback flow in BackendIpcController (reader:pages with manualVerify &amp; requiresVerification flags) to seamlessly recover chapter image lists when HTTP scraping is gated by dynamic client-side challenges.</li>
+              <li>Add "Verify in WebView" (Verifikasi di WebView) interactive recovery button and dedicated "Security Verification Required" state in Reader view (reader.ts) when a chapter requires user verification.</li>
+              <li>Add dynamic Next.js Server Action ID resolver (resolveUnlockActionId) in VoraToon extension (voratoon.js v1.2.1) to automatically extract the active unlockChapterPages action hash from Next.js series chunks instead of relying on a static hardcoded hash.</li>
+              <li>Add automatic Next-Action cache invalidation and 404 retry logic in VoraToon extension when unlocking pagesTicket chapter images, plus automatic Turnstile/pagesTicket verification detection.</li>
+              <li>Add standard multi-resolution Windows application icon (Assets/app.ico) containing 16x16, 24x24, 32x32, 48x48, and 64x64 32-bit ARGB BMP DIB frames alongside a 256x256 high-DPI PNG frame for crisp rendering across Windows 11 Taskbar, Desktop shortcuts, and Start Menu.</li>
+              <li>Improve RSC (React Server Components) JSON chunk parser performance in voratoon.js using compiled regular expression token scanning instead of character-by-character loops.</li>
+              <li>Improve MSBuild output packaging in YomicDesktop.csproj and Inno Setup script (Installer/Yomic.iss) to deploy app.ico to both {app}\app.ico and {app}\Assets\app.ico while keeping Assets/app.ico embedded as a WPF resource.</li>
+              <li>Fix blank white document icon on Windows 11 Taskbar, Desktop shortcut, and Start Menu shortcut after installation by ensuring {app}\app.ico is always packaged and deployed by the installer.</li>
+              <li>Fix startup XamlParseException / DirectoryNotFoundException crash on MainWindow initialization by keeping Assets/app.ico as an embedded WPF Resource instead of an external AssemblyAssociatedContentFile.</li>
+              <li>Fix VoraToon chapter images failing to load when Next.js deployment updates rotate the unlockChapterPages Server Action ID or require client-side ticket verification.</li>
+            </ul>
           </div>
         </div>
-      </section>
-      <!-- 6. TENTANG & SISTEM -->
-      <section class="v1-settings-section">
-        <div class="v1-settings-sec-head">
-          <h2 class="v1-settings-sec-title">${this.t('settings.tab.about')}</h2>
-        </div>
-        <!-- Hero Brand Header & Ikon Media Sosial Asli -->
-        <div style="display: flex; align-items: flex-start; gap: 16px; padding: 4px 2px 8px 2px;">
-          <img src="app-logo.png" style="width: 48px; height: 48px; object-fit: contain; flex-shrink: 0;" alt="Yomic Logo" />
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            <div>
-              <span style="font-family: var(--font-display); font-size: 19px; font-weight: 800; color: var(--ink-primary); line-height: 1.15;">Yomic</span>
-              <div style="font-size: 12.5px; color: var(--ink-secondary); margin-top: 2px;">${this.t('settings.about.desc')}</div>
+
+        <div class="v1-settings-hub-divider" style="margin: 12px 0;"></div>
+
+        <div class="v1-settings-group">
+          <button type="button" id="btnDangerResetAll" class="v1-setting-row is-action-row is-danger-row">
+            <div class="v1-setting-info">
+              <div class="v1-setting-title-row">
+                <span class="v1-setting-title">${this.l('Reset Aplikasi', 'Reset Application')}</span>
+              </div>
+              <span class="v1-setting-desc">${this.l('Kembalikan seluruh pengaturan dan data ke bawaan', 'Restore all settings and data to factory defaults')}</span>
             </div>
-            <!-- Baris Ikon Media Sosial Asli (GitHub, Facebook, Instagram - Murni Ikon Tanpa Background) -->
-            <div class="v1-social-row">
-              <button class="v1-social-btn github" data-social-url="https://github.com/ArisaAkiyama/Yomic" title="GitHub (ArisaAkiyama/Yomic)">
-                ${getIconSvg('brand-github', { size: 20 })}
-              </button>
-              <button class="v1-social-btn facebook" data-social-url="https://web.facebook.com/febianrizaarzewiniga" title="Facebook (Febian Riza Arzewiniga)">
-                ${getIconSvg('brand-facebook', { size: 20 })}
-              </button>
-              <button class="v1-social-btn instagram" data-social-url="https://www.instagram.com/febianriza.a/" title="Instagram (@febianriza.a)">
-                ${getIconSvg('brand-instagram', { size: 20 })}
-              </button>
-            </div>
-          </div>
+          </button>
         </div>
       </section>
     </div>
@@ -710,6 +864,26 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
       });
     }
   };
+
+  // Hub Category Navigation & Sub-Page Back Button
+  container.querySelectorAll<HTMLElement>('[data-open-settings-sub]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const sub = btn.dataset.openSettingsSub;
+      if (sub) {
+        this.activeSettingsTab = sub;
+        container.scrollTop = 0;
+        if (container.parentElement) container.parentElement.scrollTop = 0;
+        this.renderSettingsView(container);
+      }
+    });
+  });
+
+  document.getElementById('btnBackToSettingsHub')?.addEventListener('click', () => {
+    this.activeSettingsTab = 'hub';
+    container.scrollTop = 0;
+    if (container.parentElement) container.parentElement.scrollTop = 0;
+    this.renderSettingsView(container);
+  });
 
   // Toggle switches
   container.querySelectorAll<HTMLElement>('[data-toggle-setting]').forEach((el) => {
@@ -826,91 +1000,126 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
               ? this.l('Optimasi gambar cerdas diaktifkan.', 'Smart image optimization enabled.')
               : this.l('Optimasi gambar cerdas dinonaktifkan.', 'Smart image optimization disabled.')
           );
+        } else if (key === 'saveDownloadsAsCbz') {
+          this.showToast(
+            this.settings.saveDownloadsAsCbz
+              ? this.l('Unduhan baru akan disimpan sebagai arsip .cbz.', 'New downloads will be saved as .cbz archives.')
+              : this.l('Unduhan baru akan disimpan sebagai folder gambar biasa.', 'New downloads will be saved as regular image folders.')
+          );
+        } else if (key === 'autoDeleteAfterRead') {
+          this.showToast(
+            this.settings.autoDeleteAfterRead
+              ? this.l('Hapus otomatis bab unduhan setelah selesai dibaca diaktifkan.', 'Auto-delete downloaded chapters after reading enabled.')
+              : this.l('Hapus otomatis bab unduhan setelah selesai dibaca dinonaktifkan.', 'Auto-delete downloaded chapters after reading disabled.')
+          );
         }
         this.renderSettingsView(container);
       }
     });
   });
 
-  // Custom dropdowns in Settings (matching Image 2 MAL dropdown style)
-  const closeAllSettingDropdowns = () => {
-    container.querySelectorAll<HTMLElement>('.v1-setting-dropdown.open').forEach((d) => {
-      d.classList.remove('open', 'open-up');
-      d.closest('.v1-setting-row')?.classList.remove('dropdown-open');
-      d.querySelector('.v1-mal-dropdown-trigger')?.setAttribute('aria-expanded', 'false');
+  // Mobile-Style Centered Selection Pop-Up Modal for all Settings Select Rows
+  const openSettingSelectModal = (
+    titleText: string,
+    options: { value: string; label: string }[],
+    currentValue: string,
+    onSelect: (val: string, label: string) => void
+  ) => {
+    document.getElementById('settingSelectModalOverlay')?.remove();
+    const checkIcon = getIconSvg('check', { size: 16, strokeWidth: 2.4 });
+    const overlay = document.createElement('div');
+    overlay.id = 'settingSelectModalOverlay';
+    overlay.className = 'v1-setting-select-modal-overlay';
+    overlay.innerHTML = `
+      <div class="v1-setting-select-modal" role="dialog" aria-modal="true" aria-label="${escapeXml(titleText)}">
+        <h3 class="v1-setting-select-title">${escapeXml(titleText)}</h3>
+        <div class="v1-setting-select-list" role="listbox">
+          ${options
+            .map((opt) => {
+              const isSelected = opt.value === currentValue;
+              return `
+                <button type="button" class="v1-setting-select-option ${isSelected ? 'selected' : ''}" data-select-value="${escapeXml(opt.value)}" role="option" aria-selected="${isSelected ? 'true' : 'false'}">
+                  <span class="v1-setting-select-check">${isSelected ? checkIcon : ''}</span>
+                  <span class="v1-setting-select-label">${escapeXml(opt.label)}</span>
+                </button>
+              `;
+            })
+            .join('')}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const closeModal = () => {
+      window.removeEventListener('keydown', onEscKey);
+      overlay.remove();
+    };
+    const onEscKey = (ev: KeyboardEvent) => {
+      if (ev.key === 'Escape') {
+        closeModal();
+      }
+    };
+    window.addEventListener('keydown', onEscKey);
+
+    overlay.addEventListener('click', (ev) => {
+      if (ev.target === overlay) {
+        closeModal();
+      }
+    });
+
+    overlay.querySelectorAll<HTMLButtonElement>('.v1-setting-select-option').forEach((btn) => {
+      btn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const val = btn.dataset.selectValue ?? '';
+        const label = btn.querySelector('.v1-setting-select-label')?.textContent ?? '';
+        closeModal();
+        onSelect(val, label);
+      });
     });
   };
 
   container.querySelectorAll<HTMLElement>('.v1-setting-dropdown').forEach((dropdown) => {
     const trigger = dropdown.querySelector<HTMLButtonElement>('.v1-mal-dropdown-trigger');
-    const options = Array.from(dropdown.querySelectorAll<HTMLButtonElement>('.v1-mal-dropdown-option'));
+    const optionBtns = Array.from(dropdown.querySelectorAll<HTMLButtonElement>('.v1-mal-dropdown-option'));
     const targetId = dropdown.dataset.dropdownFor;
+    const row = dropdown.closest<HTMLElement>('.v1-setting-row');
 
-    trigger?.addEventListener('click', (ev) => {
+    const handleOpenPopup = (ev: Event) => {
       ev.stopPropagation();
-      const willOpen = !dropdown.classList.contains('open');
-      closeAllSettingDropdowns();
-      if (willOpen) {
-        const rect = trigger.getBoundingClientRect();
-        const estimatedHeight = Math.min(240, options.length * 38 + 16);
-        if (rect.bottom + estimatedHeight > window.innerHeight - 16 && rect.top > estimatedHeight) {
-          dropdown.classList.add('open-up');
-        } else {
-          dropdown.classList.remove('open-up');
-        }
-        dropdown.classList.add('open');
-        dropdown.closest('.v1-setting-row')?.classList.add('dropdown-open');
-        trigger.setAttribute('aria-expanded', 'true');
-      }
-    });
+      const input = targetId ? (document.getElementById(targetId) as HTMLInputElement | null) : null;
+      const currentVal = input?.value ?? '';
+      const rowTitle =
+        row?.querySelector('.v1-setting-title')?.textContent?.trim() ||
+        trigger?.getAttribute('aria-label') ||
+        '';
+      const opts = optionBtns.map((btn) => ({
+        value: btn.dataset.value ?? '',
+        label: btn.querySelector('span')?.textContent ?? ''
+      }));
 
-    options.forEach((optBtn) => {
-      optBtn.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        const val = optBtn.dataset.value ?? '';
-        const input = targetId ? (document.getElementById(targetId) as HTMLInputElement | null) : null;
+      openSettingSelectModal(rowTitle, opts, currentVal, (val, labelText) => {
         const valueSpan = dropdown.querySelector<HTMLElement>('.v1-mal-dropdown-value');
-        const labelText = optBtn.querySelector('span')?.textContent ?? '';
         if (valueSpan) valueSpan.textContent = labelText;
 
-        options.forEach((opt) => {
-          const selected = opt === optBtn;
+        optionBtns.forEach((opt) => {
+          const selected = (opt.dataset.value ?? '') === val;
           opt.classList.toggle('selected', selected);
           opt.setAttribute('aria-selected', selected ? 'true' : 'false');
         });
 
-        closeAllSettingDropdowns();
         if (input && input.value !== val) {
           input.value = val;
           input.dispatchEvent(new Event('change', { bubbles: true }));
         }
       });
-    });
-  });
+    };
 
-  const winDropdown = window as unknown as {
-    _onSettingDropdownClick?: (ev: MouseEvent) => void;
-    _onSettingDropdownKey?: (ev: KeyboardEvent) => void;
-  };
-  if (winDropdown._onSettingDropdownClick) {
-    window.removeEventListener('click', winDropdown._onSettingDropdownClick);
-  }
-  if (winDropdown._onSettingDropdownKey) {
-    window.removeEventListener('keydown', winDropdown._onSettingDropdownKey);
-  }
-  winDropdown._onSettingDropdownClick = (ev: MouseEvent) => {
-    const target = ev.target as HTMLElement | null;
-    if (!target?.closest('.v1-setting-dropdown')) {
-      closeAllSettingDropdowns();
+    if (row) {
+      row.classList.add('is-select-row');
+      row.addEventListener('click', handleOpenPopup);
     }
-  };
-  winDropdown._onSettingDropdownKey = (ev: KeyboardEvent) => {
-    if (ev.key === 'Escape') {
-      closeAllSettingDropdowns();
-    }
-  };
-  window.addEventListener('click', winDropdown._onSettingDropdownClick);
-  window.addEventListener('keydown', winDropdown._onSettingDropdownKey);
+    trigger?.addEventListener('click', handleOpenPopup);
+  });
 
   // Select dropdowns
   document.getElementById('selMaxImageDimension')?.addEventListener('change', (ev) => {
@@ -959,10 +1168,9 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
   });
   document.getElementById('btnClearNonLibraryCache')?.addEventListener('click', () => {
     const btn = document.getElementById('btnClearNonLibraryCache') as HTMLButtonElement | null;
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = this.l('Menghapus...', 'Clearing...');
-    }
+    const descEl = document.getElementById('clearNonLibDesc');
+    if (btn) btn.disabled = true;
+    if (descEl) descEl.textContent = this.l('Menghapus berkas cache non-pustaka...', 'Clearing non-library cache files...');
     for (let i = this.mangaList.length - 1; i >= 0; i--) {
       if (!this.mangaList[i].inLibrary) {
         this.mangaList.splice(i, 1);
@@ -979,10 +1187,7 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
           this.showToast(this.l('Seluruh cache gambar komik non-pustaka berhasil dibersihkan.', 'All non-library comic image cache cleared.'));
         })
         .finally(() => {
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = this.l('Hapus Non-Pustaka', 'Clear Non-Library');
-          }
+          if (btn) btn.disabled = false;
         });
       return;
     }
@@ -1073,16 +1278,17 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
       btn.textContent = this.l('Segarkan', 'Refresh');
     }
   });
-  document.getElementById('btnOpenDownloadsFolder')?.addEventListener('click', () => {
+  const openDownloadsFolderAction = () => {
     this.bridge.openFolder();
     this.showToast(this.l('Membuka folder unduhan di File Explorer...', 'Opening downloads folder in File Explorer...'));
-  });
+  };
+  document.getElementById('btnOpenDownloadsFolder')?.addEventListener('click', openDownloadsFolderAction);
+  document.getElementById('btnOpenDownloadsFolderFromDl')?.addEventListener('click', openDownloadsFolderAction);
   document.getElementById('btnDangerClearCache')?.addEventListener('click', () => {
     const btn = document.getElementById('btnDangerClearCache') as HTMLButtonElement | null;
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = this.l('Membersihkan...', 'Clearing...');
-    }
+    const descEl = document.getElementById('clearCacheDesc');
+    if (btn) btn.disabled = true;
+    if (descEl) descEl.textContent = this.l('Membersihkan cache...', 'Clearing cache...');
     if (this.bridge.isWebViewHost) {
       void this.bridge
         .invoke<{ dbSizeText?: string }>('settings:clear-cache', undefined, 60000)
@@ -1092,10 +1298,7 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
           this.showToast(this.l('Seluruh berkas cache gambar berhasil dibersihkan.', 'All image cache files cleared.'));
         })
         .finally(() => {
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = this.l('Bersihkan Cache', 'Clear Cache');
-          }
+          if (btn) btn.disabled = false;
         });
       return;
     }
@@ -1105,10 +1308,9 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
   });
   document.getElementById('btnDangerClearHistory')?.addEventListener('click', () => {
     const btn = document.getElementById('btnDangerClearHistory') as HTMLButtonElement | null;
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = this.l('Menghapus...', 'Clearing...');
-    }
+    const descEl = document.getElementById('clearHistoryDesc');
+    if (btn) btn.disabled = true;
+    if (descEl) descEl.textContent = this.l('Menghapus riwayat baca...', 'Clearing reading history...');
     this.mangaList.forEach((m) => {
       this.removedHistoryIds.add(m.id);
       m.lastViewedEpoch = 0;
@@ -1134,10 +1336,7 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
           this.showToast(this.l('Seluruh riwayat baca telah dibersihkan.', 'All reading history cleared.'));
         })
         .finally(() => {
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = this.l('Hapus Riwayat', 'Clear History');
-          }
+          if (btn) btn.disabled = false;
         });
       return;
     }
@@ -1152,11 +1351,10 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
   });
   document.getElementById('btnCreateBackup')?.addEventListener('click', () => {
     const btn = document.getElementById('btnCreateBackup') as HTMLButtonElement | null;
+    const descEl = document.getElementById('createBackupDesc');
     if (this.bridge.isWebViewHost) {
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = this.l('Mencadangkan...', 'Backing up...');
-      }
+      if (btn) btn.disabled = true;
+      if (descEl) descEl.textContent = this.l('Membuat berkas cadangan...', 'Creating backup file...');
       void this.bridge
         .invoke<{ saved?: boolean; cancelled?: boolean; lastBackupText?: string }>('backup:create', undefined, 180000)
         .then((res) => {
@@ -1169,10 +1367,8 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
           }
         })
         .finally(() => {
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = this.l('Cadangkan', 'Back Up');
-          }
+          if (btn) btn.disabled = false;
+          if (descEl) descEl.textContent = this.settings.lastBackupText || this.l('Siap dicadangkan (.yomicbackup)', 'Ready to back up (.yomicbackup)');
         });
       return;
     }
@@ -1182,11 +1378,10 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
   });
   document.getElementById('btnRestoreBackup')?.addEventListener('click', () => {
     const btn = document.getElementById('btnRestoreBackup') as HTMLButtonElement | null;
+    const descEl = document.getElementById('restoreBackupDesc');
     if (this.bridge.isWebViewHost) {
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = this.l('Memulihkan...', 'Restoring...');
-      }
+      if (btn) btn.disabled = true;
+      if (descEl) descEl.textContent = this.l('Memulihkan cadangan...', 'Restoring backup...');
       this.showToast(this.l('Memilih berkas cadangan (.yomicbackup) untuk dipulihkan...', 'Selecting backup file (.yomicbackup) to restore...'));
       void this.bridge
         .invoke<{ restored?: boolean; cancelled?: boolean }>('backup:restore', undefined, 180000)
@@ -1199,10 +1394,8 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
           }
         })
         .finally(() => {
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = this.l('Pulihkan', 'Restore');
-          }
+          if (btn) btn.disabled = false;
+          if (descEl) descEl.textContent = this.l('Impor pustaka, kategori, dan progres baca dari file', 'Import library, categories, and reading progress from file');
         });
       return;
     }
@@ -1210,51 +1403,107 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
   });
   document.getElementById('btnToggleMalConnect')?.addEventListener('click', () => {
     const btn = document.getElementById('btnToggleMalConnect') as HTMLButtonElement | null;
+    const descEl = document.getElementById('malConnectDesc');
     const wasConnected = this.settings.isMalConnected;
-    if (this.bridge.isWebViewHost) {
-      if (!wasConnected) {
-        this.showToast(this.l('Membuka browser untuk login MyAnimeList...', 'Opening browser for MyAnimeList login...'));
-        if (btn) {
+
+    const executeMalToggle = () => {
+      if (this.bridge.isWebViewHost) {
+        if (!wasConnected) {
+          this.showToast(this.l('Membuka browser untuk login MyAnimeList...', 'Opening browser for MyAnimeList login...'));
+          if (btn) btn.disabled = true;
+          if (descEl) descEl.textContent = this.l('Menunggu login di browser...', 'Waiting for browser login...');
+        } else if (btn) {
           btn.disabled = true;
-          btn.textContent = this.l('Menunggu Login...', 'Waiting for Login...');
+          if (descEl) descEl.textContent = this.l('Memutuskan koneksi...', 'Disconnecting...');
         }
-      }
-      void this.bridge
-        .invoke<AppSettingsState>('mal:toggle-connect', undefined, 180000)
-        .then((updated) => {
-          if (updated) {
-            Object.assign(this.settings, updated);
-            this.renderSettingsView(container);
-            if (this.settings.isMalConnected) {
-              this.showToast(
-                this.l(`Terhubung ke MyAnimeList (@${this.settings.malConnectedUser}).`, `Connected to MyAnimeList (@${this.settings.malConnectedUser}).`)
-              );
-            } else if (wasConnected) {
-              this.showToast(
-                this.l('Koneksi akun MyAnimeList diputuskan.', 'MyAnimeList account disconnected.')
-              );
-            } else {
-              this.showToast(
-                this.l('Login MyAnimeList dibatalkan atau waktu habis.', 'MyAnimeList login cancelled or timed out.')
-              );
+        void this.bridge
+          .invoke<AppSettingsState>('mal:toggle-connect', undefined, 180000)
+          .then((updated) => {
+            if (updated) {
+              Object.assign(this.settings, updated);
+              this.renderSettingsView(container);
+              if (this.settings.isMalConnected) {
+                this.showToast(
+                  this.l(`Terhubung ke MyAnimeList (@${this.settings.malConnectedUser}).`, `Connected to MyAnimeList (@${this.settings.malConnectedUser}).`)
+                );
+              } else if (wasConnected) {
+                this.showToast(
+                  this.l('Koneksi akun MyAnimeList diputuskan.', 'MyAnimeList account disconnected.')
+                );
+              } else {
+                this.showToast(
+                  this.l('Login MyAnimeList dibatalkan atau waktu habis.', 'MyAnimeList login cancelled or timed out.')
+                );
+              }
             }
-          }
-        })
-        .finally(() => {
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = this.settings.isMalConnected ? this.t('settings.tracker.malDisconnect') : this.t('settings.tracker.malConnect');
-          }
-        });
+          })
+          .finally(() => {
+            if (btn) btn.disabled = false;
+            if (descEl) {
+              descEl.textContent = this.settings.isMalConnected
+                ? this.t('settings.tracker.malConnectedAs', { user: this.settings.malConnectedUser })
+                : this.t('settings.tracker.malNotConnected');
+            }
+          });
+        return;
+      }
+      this.settings.isMalConnected = !this.settings.isMalConnected;
+      this.renderSettingsView(container);
+      this.showToast(
+        this.settings.isMalConnected
+          ? this.l(`Terhubung kembali ke MyAnimeList (@${this.settings.malConnectedUser}).`, `Reconnected to MyAnimeList (@${this.settings.malConnectedUser}).`)
+          : this.l('Koneksi akun MyAnimeList diputuskan.', 'MyAnimeList account disconnected.')
+      );
+    };
+
+    if (wasConnected) {
+      document.getElementById('malDisconnectModalOverlay')?.remove();
+      const overlay = document.createElement('div');
+      overlay.id = 'malDisconnectModalOverlay';
+      overlay.style.cssText =
+        'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
+      overlay.innerHTML = `
+        <div role="dialog" aria-modal="true" style="width:360px;max-width:92vw;background:var(--bg-surface,#18181b);border:none;border-radius:20px;padding:24px 24px 20px;box-shadow:0 24px 48px rgba(0,0,0,0.45);color:var(--ink-primary,#f4f4f5);font-family:inherit;">
+          <h3 style="margin:0 0 10px 0;font-size:19px;font-weight:700;color:var(--ink-primary,#f4f4f5);letter-spacing:-0.01em;">
+            ${this.l('Putuskan MyAnimeList', 'Disconnect MyAnimeList')}
+          </h3>
+          <p style="margin:0 0 22px 0;font-size:13.5px;line-height:1.5;color:var(--ink-secondary,#a1a1aa);">
+            ${this.l(
+              `Putuskan koneksi akun MyAnimeList (${escapeXml(this.settings.malConnectedUser)}) dari Yomic?`,
+              `Disconnect MyAnimeList account (${escapeXml(this.settings.malConnectedUser)}) from Yomic?`
+            )}
+          </p>
+          <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;">
+            <button id="btnCancelMalDisconnect" type="button" style="height:38px;padding:0 14px;border-radius:10px;border:none;background:transparent;color:var(--ink-secondary,#a1a1aa);font-size:13.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
+              ${this.t('modal.cancel')}
+            </button>
+            <button id="btnConfirmMalDisconnect" type="button" style="height:38px;padding:0 20px;border-radius:10px;border:none;background:#f43f5e;color:#ffffff;font-size:13.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
+              <span>${this.l('Putuskan', 'Disconnect')}</span>
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      const closeModal = () => {
+        window.removeEventListener('keydown', onEsc);
+        overlay.remove();
+      };
+      const onEsc = (ev: KeyboardEvent) => {
+        if (ev.key === 'Escape') closeModal();
+      };
+      window.addEventListener('keydown', onEsc);
+      overlay.addEventListener('click', (ev) => {
+        if (ev.target === overlay) closeModal();
+      });
+      document.getElementById('btnCancelMalDisconnect')?.addEventListener('click', closeModal);
+      document.getElementById('btnConfirmMalDisconnect')?.addEventListener('click', () => {
+        closeModal();
+        executeMalToggle();
+      });
       return;
     }
-    this.settings.isMalConnected = !this.settings.isMalConnected;
-    this.renderSettingsView(container);
-    this.showToast(
-      this.settings.isMalConnected
-        ? this.l(`Terhubung kembali ke MyAnimeList (@${this.settings.malConnectedUser}).`, `Reconnected to MyAnimeList (@${this.settings.malConnectedUser}).`)
-        : this.l('Koneksi akun MyAnimeList diputuskan.', 'MyAnimeList account disconnected.')
-    );
+
+    executeMalToggle();
   });
   document.getElementById('btnDangerResetAll')?.addEventListener('click', () => {
     const existingOverlay = document.getElementById('dangerClearDataModalOverlay');
@@ -1264,28 +1513,24 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
     const overlay = document.createElement('div');
     overlay.id = 'dangerClearDataModalOverlay';
     overlay.style.cssText =
-      'position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
+      'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
     overlay.innerHTML = `
-      <div role="dialog" aria-modal="true" style="width:420px;max-width:92vw;background:var(--bg-surface,#ffffff);border:1px solid rgba(239,68,68,0.28);border-radius:16px;padding:24px;box-shadow:0 20px 45px rgba(0,0,0,0.28);color:var(--ink-primary,#0f172a);font-family:inherit;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          <span style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,0.12);color:#ef4444;flex-shrink:0;">
-            ${getIconSvg('danger-triangle-linear', { size: 20 })}
-          </span>
-          <h3 style="margin:0;font-size:18px;font-weight:700;color:#ef4444;">${this.l('Hapus Semua Data', 'Clear All Data')}</h3>
-        </div>
-        <p id="dangerClearDataModalMsg" style="margin:0 0 22px 0;font-size:13.5px;line-height:1.55;color:var(--ink-secondary,#475569);">
+      <div role="dialog" aria-modal="true" style="width:360px;max-width:92vw;background:var(--bg-surface,#18181b);border:none;border-radius:20px;padding:24px 24px 20px;box-shadow:0 24px 48px rgba(0,0,0,0.45);color:var(--ink-primary,#f4f4f5);font-family:inherit;">
+        <h3 style="margin:0 0 10px 0;font-size:19px;font-weight:700;color:var(--ink-primary,#f4f4f5);letter-spacing:-0.01em;">
+          ${this.l('Reset Aplikasi', 'Reset Application')}
+        </h3>
+        <p id="dangerClearDataModalMsg" style="margin:0 0 22px 0;font-size:13.5px;line-height:1.5;color:var(--ink-secondary,#a1a1aa);">
           ${this.l(
-            'Apakah Anda benar-benar yakin ingin mengatur ulang semua data? Tindakan ini tidak dapat dibatalkan dan akan menghapus seluruh pustaka lokal, bab terunduh, riwayat membaca, ekstensi, serta pengaturan Anda.',
-            'Are you sure you want to reset all data? This action cannot be undone and will delete your local library, downloaded chapters, reading history, extensions, and settings.'
+            'Atur ulang seluruh data dan pengaturan aplikasi ke bawaan pabrik?',
+            'Reset all application data and settings to factory defaults?'
           )}
         </p>
-        <div id="dangerClearDataModalActions" style="display:flex;justify-content:flex-end;gap:10px;">
-          <button id="btnCancelClearAllData" type="button" style="height:36px;padding:0 18px;border-radius:8px;border:1px solid var(--border-subtle,#cbd5e1);background:transparent;color:var(--ink-primary,#1e293b);font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
+        <div id="dangerClearDataModalActions" style="display:flex;justify-content:flex-end;align-items:center;gap:12px;">
+          <button id="btnCancelClearAllData" type="button" style="height:38px;padding:0 14px;border-radius:10px;border:none;background:transparent;color:var(--ink-secondary,#a1a1aa);font-size:13.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
             ${this.t('modal.cancel')}
           </button>
-          <button id="btnConfirmClearAllData" type="button" style="height:36px;padding:0 18px;border-radius:8px;border:none;background:#ef4444;color:#ffffff;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
-            ${getIconSvg('trash-bin-trash-linear', { size: 15, style: 'flex-shrink:0;display:block;' })}
-            <span>${this.l('Konfirmasi Hapus', 'Confirm Delete')}</span>
+          <button id="btnConfirmClearAllData" type="button" style="height:38px;padding:0 20px;border-radius:10px;border:none;background:#f43f5e;color:#ffffff;font-size:13.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
+            <span>${this.l('Atur Ulang', 'Reset')}</span>
           </button>
         </div>
       </div>
@@ -1473,7 +1718,7 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
     overlay.innerHTML = `
       <div role="dialog" aria-modal="true" style="width:420px;max-width:92vw;background:var(--bg-surface,#ffffff);border:1px solid var(--border-subtle);border-radius:16px;padding:24px;box-shadow:0 20px 45px rgba(0,0,0,0.28);color:var(--ink-primary,#0f172a);font-family:inherit;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          <span style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:rgba(59,130,246,0.12);color:var(--ocean-primary,#3b82f6);flex-shrink:0;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:var(--ocean-tint);color:var(--ink-primary);flex-shrink:0;">
             ${getIconSvg('restart-linear', { size: 20 })}
           </span>
           <h3 style="margin:0;font-size:18px;font-weight:700;color:var(--ink-primary);">${this.l('Atur Ulang Semua Pintasan?', 'Reset All Shortcuts?')}</h3>
@@ -1485,7 +1730,7 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
           <button id="btnCancelResetHotkeys" type="button" style="height:36px;padding:0 18px;border-radius:8px;border:1px solid var(--border-subtle);background:transparent;color:var(--ink-primary);font-size:13px;font-weight:600;cursor:pointer;">
             ${this.t('modal.cancel')}
           </button>
-          <button id="btnConfirmResetHotkeys" type="button" style="height:36px;padding:0 18px;border-radius:8px;border:none;background:var(--ocean-primary,#0066CC);color:#ffffff;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+          <button id="btnConfirmResetHotkeys" type="button" style="height:36px;padding:0 18px;border-radius:8px;border:none;background:var(--ocean-primary);color:var(--ink-on-ocean);font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
             ${getIconSvg('restart-linear', { size: 15 })}
             <span>${this.l('Kembalikan Bawaan', 'Reset Defaults')}</span>
           </button>
@@ -1510,25 +1755,42 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
   document.getElementById('btnAboutWebsite')?.addEventListener('click', () => {
     this.bridge.openExternalUrl('https://github.com/ArisaAkiyama/Yomic');
   });
+  document.getElementById('btnToggleReleaseNotes')?.addEventListener('click', () => {
+    const btn = document.getElementById('btnToggleReleaseNotes');
+    const panel = document.getElementById('aboutReleaseNotesPanel');
+    const chevron = document.getElementById('aboutReleaseNotesChevron');
+    if (!panel || !btn) return;
+    const isExpanded = panel.style.display !== 'none';
+    panel.style.display = isExpanded ? 'none' : 'block';
+    btn.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+    if (chevron) {
+      chevron.classList.toggle('is-open', !isExpanded);
+    }
+  });
   document.getElementById('btnAboutCheckUpdate')?.addEventListener('click', () => {
     const btn = document.getElementById('btnAboutCheckUpdate') as HTMLButtonElement | null;
+    const titleEl = document.getElementById('aboutCheckUpdateTitle');
+    const descEl = document.getElementById('aboutCheckUpdateDesc');
     if (this.bridge.isWebViewHost) {
       if (btn && btn.dataset.updateUrl) {
         const dlUrl = btn.dataset.updateUrl;
         btn.disabled = true;
-        btn.textContent = this.l('Mengunduh Pembaruan...', 'Downloading Update...');
+        if (descEl) descEl.textContent = this.l('Mengunduh dan memasang pembaruan...', 'Downloading and installing update...');
         this.showToast(this.l('Mengunduh dan memasang pembaruan aplikasi Yomic...', 'Downloading and installing Yomic update...'));
         void this.bridge.invoke<{ ok?: boolean }>('app:install-update', { downloadUrl: dlUrl }, 120000).then((res) => {
           if (!res?.ok && btn) {
             btn.disabled = false;
-            btn.textContent = this.l('Pasang Pembaruan', 'Install Update');
+            if (titleEl) titleEl.textContent = this.l('Pasang Pembaruan', 'Install Update');
+            if (descEl) descEl.textContent = this.l('Klik untuk mencoba memasang ulang pembaruan', 'Click to retry installing the update');
           }
         });
         return;
       }
       if (btn) {
         btn.disabled = true;
-        btn.innerHTML = `${getIconSvg('refresh', { size: 14 })}<span>${this.l('Memeriksa...', 'Checking...')}</span>`;
+      }
+      if (descEl) {
+        descEl.textContent = this.l('Memeriksa versi rilis terbaru dari server...', 'Checking latest release version from server...');
       }
       void this.bridge
         .invoke<{
@@ -1539,16 +1801,23 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
         }>('app:check-update', undefined, 15000)
         .then((info) => {
           if (info?.isUpdateAvailable) {
-            this.showToast(this.l(`Pembaruan tersedia: ${info.latestVersion}! Klik tombol lagi untuk memasang.`, `Update available: ${info.latestVersion}! Click the button again to install.`));
+            this.showToast(this.l(`Pembaruan tersedia: ${info.latestVersion}! Klik baris ini lagi untuk memasang.`, `Update available: ${info.latestVersion}! Click this row again to install.`));
             if (btn) {
               btn.disabled = false;
               btn.dataset.updateUrl = info.downloadUrl || '';
-              btn.innerHTML = `${getIconSvg('download', { size: 14 })}<span>${this.l(`Perbarui ke ${info.latestVersion}`, `Update to ${info.latestVersion}`)}</span>`;
+            }
+            if (titleEl) {
+              titleEl.textContent = this.l(`Perbarui ke ${info.latestVersion}`, `Update to ${info.latestVersion}`);
+            }
+            if (descEl) {
+              descEl.textContent = this.l('Versi baru tersedia! Klik di sini untuk mengunduh & memasang', 'New version available! Click here to download & install');
             }
           } else {
             if (btn) {
               btn.disabled = false;
-              btn.innerHTML = `${getIconSvg('refresh', { size: 14 })}<span>${this.l('Periksa Pembaruan', 'Check for Updates')}</span>`;
+            }
+            if (descEl) {
+              descEl.textContent = this.l('Periksa versi rilis terbaru dari server', 'Check latest release version from server');
             }
             this.showToast(this.l(`Anda sudah menggunakan Yomic versi terbaru (v${info?.currentVersion || '2.1.0'}).`, `You are already using the latest version of Yomic (v${info?.currentVersion || '2.1.0'}).`));
           }
@@ -1556,7 +1825,9 @@ export function renderSettingsView(this: YomicApp, container: HTMLElement): void
         .catch(() => {
           if (btn) {
             btn.disabled = false;
-            btn.innerHTML = `${getIconSvg('refresh', { size: 14 })}<span>${this.l('Periksa Pembaruan', 'Check for Updates')}</span>`;
+          }
+          if (descEl) {
+            descEl.textContent = this.l('Periksa versi rilis terbaru dari server', 'Check latest release version from server');
           }
           this.showToast(this.l('Anda sudah menggunakan Yomic versi terbaru (v2.1.0).', 'You are already using the latest version of Yomic (v2.1.0).'));
         });

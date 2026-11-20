@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -11,6 +12,7 @@ namespace Yomic.Core.Services
     public static class DownloadPathService
     {
         public const string TempSuffix = ".tmp";
+        public const string CbzExtension = ".cbz";
 
         private static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -23,6 +25,15 @@ namespace Yomic.Core.Services
             {
                 var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
                 return Path.Combine(appData, "Yomic", "Downloads");
+            }
+        }
+
+        public static string CbzExtractCacheDirectory
+        {
+            get
+            {
+                var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                return Path.Combine(appData, "Yomic", "Cache", "CbzExtracted");
             }
         }
 
@@ -41,9 +52,127 @@ namespace Yomic.Core.Services
             return Path.Combine(GetMangaDirectory(manga), GetChapterDirectoryName(chapter.Name, chapter.Url));
         }
 
+        public static string GetChapterCbzPath(Manga manga, Chapter chapter)
+        {
+            return GetChapterDirectory(manga, chapter) + CbzExtension;
+        }
+
         public static string GetChapterTempDirectory(Manga manga, Chapter chapter)
         {
             return GetChapterDirectory(manga, chapter) + TempSuffix;
+        }
+
+        public static string? FindCompletedChapterCbz(Manga manga, Chapter chapter)
+        {
+            var mangaDir = GetMangaDirectory(manga);
+            foreach (var chapterDir in GetChapterDirectoryCandidates(mangaDir, chapter.Name, chapter.Url))
+            {
+                var cbzPath = chapterDir + CbzExtension;
+                if (File.Exists(cbzPath) && new FileInfo(cbzPath).Length > 0)
+                {
+                    return cbzPath;
+                }
+            }
+
+            var fallbackMangaDir = Path.Combine(GetSourceDirectory(manga.Source), "Unknown");
+            foreach (var chapterDir in GetChapterDirectoryCandidates(fallbackMangaDir, chapter.Name, chapter.Url))
+            {
+                var cbzPath = chapterDir + CbzExtension;
+                if (File.Exists(cbzPath) && new FileInfo(cbzPath).Length > 0)
+                {
+                    return cbzPath;
+                }
+            }
+
+            return null;
+        }
+
+        public static string? ExtractCbzToCacheDirectory(string cbzPath)
+        {
+            if (string.IsNullOrWhiteSpace(cbzPath) || !File.Exists(cbzPath))
+            {
+                return null;
+            }
+
+            try
+            {
+                var info = new FileInfo(cbzPath);
+                var cacheKey = ShortHash($"{cbzPath}_{info.Length}_{info.LastWriteTimeUtc.Ticks}");
+                var extractDir = Path.Combine(CbzExtractCacheDirectory, cacheKey);
+                if (Directory.Exists(extractDir) && GetReadableFiles(extractDir).Count > 0)
+                {
+                    return extractDir;
+                }
+
+                Directory.CreateDirectory(extractDir);
+                using var archive = ZipFile.OpenRead(cbzPath);
+                int idx = 0;
+                foreach (var entry in archive.Entries.OrderBy(e => e.FullName, StringComparer.OrdinalIgnoreCase))
+                {
+                    if (string.IsNullOrEmpty(entry.Name)) continue;
+                    var ext = Path.GetExtension(entry.Name);
+                    if (!ImageExtensions.Contains(ext)) continue;
+                    var destPath = Path.Combine(extractDir, $"{idx:D4}{ext}");
+                    entry.ExtractToFile(destPath, overwrite: true);
+                    idx++;
+                }
+
+                return GetReadableFiles(extractDir).Count > 0 ? extractDir : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public static bool DeleteDownloadedChapter(Manga manga, Chapter chapter)
+        {
+            bool deleted = false;
+            var dir = FindCompletedChapterDirectory(manga, chapter);
+            if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+            {
+                try
+                {
+                    Directory.Delete(dir, true);
+                    deleted = true;
+                }
+                catch { }
+            }
+
+            var cbz = FindCompletedChapterCbz(manga, chapter);
+            if (!string.IsNullOrEmpty(cbz) && File.Exists(cbz))
+            {
+                try
+                {
+                    File.Delete(cbz);
+                    deleted = true;
+                }
+                catch { }
+            }
+
+            return deleted;
+        }
+
+        public static long GetDownloadedChapterSizeBytes(Manga manga, Chapter chapter)
+        {
+            var cbz = FindCompletedChapterCbz(manga, chapter);
+            if (!string.IsNullOrEmpty(cbz) && File.Exists(cbz))
+            {
+                try { return new FileInfo(cbz).Length; } catch { }
+            }
+
+            var dir = FindCompletedChapterDirectory(manga, chapter);
+            if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+            {
+                try
+                {
+                    return Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories)
+                        .Sum(f => new FileInfo(f).Length);
+                }
+                catch { }
+            }
+
+            return 0;
         }
 
         public static string? FindCompletedChapterDirectory(Manga manga, Chapter chapter)
@@ -109,7 +238,8 @@ namespace Yomic.Core.Services
 
         public static bool IsChapterDownloaded(Manga manga, Chapter chapter)
         {
-            return FindCompletedChapterDirectory(manga, chapter) != null;
+            return FindCompletedChapterDirectory(manga, chapter) != null
+                || FindCompletedChapterCbz(manga, chapter) != null;
         }
 
         public static bool HasAnyDownloadedChapter(Manga manga)
@@ -123,7 +253,9 @@ namespace Yomic.Core.Services
             try
             {
                 return Directory.EnumerateDirectories(mangaDir)
-                    .Any(d => !d.EndsWith(TempSuffix, StringComparison.OrdinalIgnoreCase) && IsCompletedChapterDirectory(d));
+                    .Any(d => !d.EndsWith(TempSuffix, StringComparison.OrdinalIgnoreCase) && IsCompletedChapterDirectory(d))
+                    || Directory.EnumerateFiles(mangaDir, "*" + CbzExtension)
+                    .Any(f => new FileInfo(f).Length > 0);
             }
             catch
             {
@@ -141,8 +273,11 @@ namespace Yomic.Core.Services
 
             try
             {
-                return Directory.EnumerateDirectories(mangaDir)
+                int dirCount = Directory.EnumerateDirectories(mangaDir)
                     .Count(d => !d.EndsWith(TempSuffix, StringComparison.OrdinalIgnoreCase) && IsCompletedChapterDirectory(d));
+                int cbzCount = Directory.EnumerateFiles(mangaDir, "*" + CbzExtension)
+                    .Count(f => new FileInfo(f).Length > 0);
+                return dirCount + cbzCount;
             }
             catch
             {

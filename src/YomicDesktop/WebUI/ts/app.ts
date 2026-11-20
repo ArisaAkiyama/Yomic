@@ -211,7 +211,7 @@ export class YomicApp {
   public readonly extensions: ExtensionItem[] = [];
   public readonly downloads: DownloadQueueItem[] = [];
   public readonly settings: AppSettingsState = { ...DEFAULT_APP_SETTINGS };
-  public activeSettingsTab: string = 'all';
+  public activeSettingsTab: string = 'hub';
   public readonly tutorial = new TutorialController(this);
 
   public init(): void {
@@ -221,6 +221,7 @@ export class YomicApp {
     this.applyTheme(this.settings.isDarkMode);
     this.bindShellEvents();
     this.tutorial.init();
+    this.tutorial.checkAutoTrigger(true);
     this.bindBackendEvents();
     this.updateSidebarCounters();
     this.renderCurrentWorkspace();
@@ -230,8 +231,6 @@ export class YomicApp {
       setTimeout(() => {
         if (this.bridge.isWebViewHost) {
           void this.bootstrapFromBackend();
-        } else {
-          this.tutorial.checkAutoTrigger();
         }
       }, 250);
       this.startDownloadProgressTicker();
@@ -614,6 +613,9 @@ export class YomicApp {
       this.activeBrowseSourceId = null;
       this.sourceFeedSearchQuery = '';
     }
+    if (tab === 'settings') {
+      this.activeSettingsTab = 'hub';
+    }
     document.querySelectorAll<HTMLButtonElement>('.nav-btn[data-nav]').forEach((btn) => {
       const isTarget = btn.dataset.nav === tab;
       if (isTarget) {
@@ -627,6 +629,12 @@ export class YomicApp {
     document.getElementById('btnOpenAnnouncements')?.classList.remove('active');
     document.getElementById('btnOpenFeedback')?.classList.remove('active');
     document.getElementById('btnOpenTutorialSidebar')?.classList.remove('active');
+    const viewContainer = document.getElementById('viewContainer');
+    if (viewContainer) {
+      viewContainer.classList.remove('view-transition-in');
+      void viewContainer.offsetWidth;
+      viewContainer.classList.add('view-transition-in');
+    }
     this.renderCurrentWorkspace();
   }
 
@@ -859,7 +867,7 @@ export class YomicApp {
       message.toLowerCase().includes('terlepas') ||
       message.toLowerCase().includes('diputuskan');
     const icon = iconName || (isAlert ? 'info-circle-linear' : 'check-circle-linear');
-    const iconSvg = getIconSvg(icon, { size: 18, color: '#0066CC' });
+    const iconSvg = getIconSvg(icon, { size: 18, color: 'var(--ink-primary)' });
     pill.innerHTML = `<span class="toast-icon">${iconSvg}</span><span class="toast-text">${message}</span>`;
     container.appendChild(pill);
     window.setTimeout(() => {

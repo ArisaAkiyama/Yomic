@@ -45,6 +45,7 @@ export function bindBackendEvents(this: YomicApp): void {
   });
   this.bridge.on<{ active: boolean; current: number; total: number }>('event:library-sync-progress', (prog) => {
     if (!prog) return;
+    const wasActive = this.syncProgress.active;
     this.syncProgress = {
       active: prog.active,
       current: prog.current,
@@ -59,22 +60,16 @@ export function bindBackendEvents(this: YomicApp): void {
     fillEls.forEach((el) => {
       (el as HTMLElement).style.width = `${syncPercent}%`;
     });
-    const syncPill = document.querySelector('.v1-sync-pill');
-    if (syncPill) {
-      const pillCount = syncPill.querySelector('.v1-sync-pill-top span.tabular-nums');
-      if (pillCount) pillCount.textContent = `${this.syncProgress.current}/${this.syncProgress.total}`;
-      const pillFill = syncPill.querySelector('.v1-sync-fill') as HTMLElement | null;
-      if (pillFill) pillFill.style.width = `${syncPercent}%`;
-      syncPill.classList.toggle('open', prog.active && this.mangaList.some((m) => m.inLibrary));
-    }
     if (this.currentTab === 'library' && !this.activeDetailMangaId) {
       const container = document.getElementById('viewContainer');
-      if (container && (!this.mangaList.some((m) => m.inLibrary) || !prog.active || this.syncProgress.current === 0)) {
+      if (container && (prog.active !== wasActive || this.syncProgress.current === 0)) {
         this.renderLibraryView(container);
       }
     } else if (this.currentTab === 'updates') {
       const container = document.getElementById('viewContainer');
-      if (container && !prog.active) this.renderUpdatesView(container);
+      if (container && (prog.active !== wasActive || this.syncProgress.current === 0)) {
+        this.renderUpdatesView(container);
+      }
     }
   });
   this.bridge.on<{ active: boolean; current: number; total: number }>('event:source-check-progress', (prog) => {
@@ -260,7 +255,7 @@ export async function bootstrapFromBackend(this: YomicApp): Promise<void> {
     this.updateSidebarCounters();
     this.persistLocalCache();
     this.renderCurrentWorkspace(true);
-    this.tutorial.checkAutoTrigger();
+    this.tutorial.refreshLocale();
     if (this.settings.autoSyncStartup && this.mangaList.some((m) => m.inLibrary)) {
       void this.triggerLibrarySyncProgress(false);
     }

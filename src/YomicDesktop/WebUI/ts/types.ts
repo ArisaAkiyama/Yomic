@@ -262,6 +262,8 @@ export interface AppSettingsState {
   preloadNextChapter: boolean;
   autoDownloadNextChapter: boolean;
   skipFilteredChapters: boolean;
+  saveDownloadsAsCbz: boolean;
+  autoDeleteAfterRead: boolean;
   maxReaderCacheSize: '250MB' | '500MB' | '1GB' | '2GB';
   autoSyncStartup: boolean;
   smartUpdate: boolean;

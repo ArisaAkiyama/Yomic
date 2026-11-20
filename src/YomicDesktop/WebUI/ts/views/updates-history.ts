@@ -60,46 +60,36 @@ export function renderUpdatesView(this: YomicApp, container: HTMLElement): void 
 
   let bodyHtml = '';
 
-  if (this.activityUpdates.length === 0) {
-    bodyHtml = this.syncProgress.active
-      ? `
-        <div class="empty-state-box">
-          <div class="empty-state-icon-wrap">
-            <div class="empty-state-spinner"></div>
-          </div>
-          <div class="empty-state-title">
-            ${this.l('Memeriksa Pembaruan...', 'Checking for Updates...')} <span class="empty-state-counter tabular-nums" style="color:var(--ocean-primary); font-weight:700;">(${this.syncProgress.current}/${this.syncProgress.total})</span>
-          </div>
-          <div class="empty-state-desc">${this.l('Sedang memeriksa bab baru dari komik di pustaka Anda...', 'Checking for new chapters from comics in your library...')}</div>
-          <div class="empty-state-progress-track" style="width: 220px; height: 4px; background: var(--bg-surface-alt); border-radius: 2px; overflow: hidden; margin-top: 6px;">
-            <div class="empty-state-progress-fill" style="width: ${Math.round((this.syncProgress.current / Math.max(1, this.syncProgress.total)) * 100)}%; height: 100%; background: var(--ocean-primary); border-radius: 2px; transition: width 0.25s ease;"></div>
-          </div>
+  if (this.syncProgress.active) {
+    bodyHtml = `
+      <div class="empty-state-box">
+        <div class="empty-state-icon-wrap">
+          <svg class="empty-state-spinner-svg" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="22" cy="22" r="18" stroke="var(--border-subtle)" stroke-width="3.5" />
+            <circle cx="22" cy="22" r="18" stroke="var(--ocean-primary)" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="28 85" />
+          </svg>
         </div>
-      `
-      : `
-        <div class="empty-state-box">
-          <div class="empty-state-icon-wrap">
-            ${getIconSvg('refresh-line', { size: 48 })}
-          </div>
-          <div class="empty-state-title">${this.t('updates.emptyTitle')}</div>
-          <div class="empty-state-desc">${this.t('updates.emptyDesc')}</div>
-          <button id="btnCheckUpdatesNow" class="empty-state-btn primary">${this.t('updates.syncNow')}</button>
-        </div>`;
+        <div class="empty-state-title">
+          ${this.l('Memeriksa Pembaruan...', 'Checking for Updates...')} <span class="empty-state-counter tabular-nums" style="color:var(--ocean-primary); font-weight:700;">(${this.syncProgress.current}/${this.syncProgress.total})</span>
+        </div>
+        <div class="empty-state-desc">${this.l('Sedang memeriksa bab baru dari komik di pustaka Anda...', 'Checking for new chapters from comics in your library...')}</div>
+        <div class="empty-state-progress-track" style="width: 220px; height: 4px; background: var(--bg-surface-alt); border-radius: 2px; overflow: hidden; margin-top: 6px;">
+          <div class="empty-state-progress-fill" style="width: ${Math.round((this.syncProgress.current / Math.max(1, this.syncProgress.total)) * 100)}%; height: 100%; background: var(--ocean-primary); border-radius: 2px; transition: width 0.25s ease;"></div>
+        </div>
+      </div>
+    `;
+  } else if (this.activityUpdates.length === 0) {
+    bodyHtml = `
+      <div class="empty-state-box">
+        <div class="empty-state-icon-wrap">
+          ${getIconSvg('refresh-line', { size: 48 })}
+        </div>
+        <div class="empty-state-title">${this.t('updates.emptyTitle')}</div>
+        <div class="empty-state-desc">${this.t('updates.emptyDesc')}</div>
+        <button id="btnCheckUpdatesNow" class="empty-state-btn primary">${this.t('updates.syncNow')}</button>
+      </div>`;
   } else {
-    const syncBarHtml = this.syncProgress.active
-      ? `
-        <div class="v1-updates-sync-bar" style="margin-bottom: 16px; padding: 10px 14px; background: var(--bg-surface-alt); border-radius: 8px; border: 1px solid var(--border-soft); display: flex; align-items: center; justify-content: space-between;">
-          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500;">
-            <div class="v1-lib-action-btn-spinner" style="width: 14px; height: 14px;"></div>
-            <span>${this.l('Memeriksa Pembaruan...', 'Checking for Updates...')}</span>
-            <span class="empty-state-counter tabular-nums" style="color: var(--ocean-primary); font-weight: 700;">(${this.syncProgress.current}/${this.syncProgress.total})</span>
-          </div>
-          <div class="empty-state-progress-track" style="width: 140px; height: 4px; background: var(--border-soft); border-radius: 2px; overflow: hidden;">
-            <div class="empty-state-progress-fill" style="width: ${Math.round((this.syncProgress.current / Math.max(1, this.syncProgress.total)) * 100)}%; height: 100%; background: var(--ocean-primary); border-radius: 2px; transition: width 0.25s ease;"></div>
-          </div>
-        </div>
-      `
-      : '';
+    const syncBarHtml = '';
 
     const listHtml = groups
       .map(
@@ -159,18 +149,18 @@ export function renderUpdatesView(this: YomicApp, container: HTMLElement): void 
             <span class="v1-lib-title-text">${this.t('updates.title')}</span>
             <span class="v1-lib-count-inline tabular-nums">(${this.activityUpdates.length})</span>
           </div>
-          <div class="v1-lib-actions">
-            ${
-              this.activityUpdates.length > 0
-                ? `<button id="btnClearAllUpdates" class="v1-lib-action-btn" title="${this.l('Bersihkan Daftar Pembaruan', 'Clear Updates List')}" aria-label="${this.l('Bersihkan Daftar Pembaruan', 'Clear Updates List')}">
-                     ${getIconSvg('delete-bin-line', { size: 18 })}
-                   </button>`
-                : ''
-            }
+          ${
+            this.activityUpdates.length > 0
+              ? `<div class="v1-lib-actions">
+            <button id="btnClearAllUpdates" class="v1-lib-action-btn" title="${this.l('Bersihkan Daftar Pembaruan', 'Clear Updates List')}" aria-label="${this.l('Bersihkan Daftar Pembaruan', 'Clear Updates List')}">
+              ${getIconSvg('delete-bin-line', { size: 18 })}
+            </button>
             <button id="btnRefreshUpdates" class="v1-lib-action-btn ${this.syncProgress.active ? 'loading' : ''}" title="${this.syncProgress.active ? this.l('Sedang Memeriksa...', 'Checking...') : this.l('Periksa Pembaruan', 'Check for Updates')}" aria-label="${this.l('Periksa Pembaruan', 'Check for Updates')}" ${this.syncProgress.active ? 'disabled' : ''}>
               ${this.syncProgress.active ? '<div class="v1-lib-action-btn-spinner"></div>' : getIconSvg('refresh-line', { size: 18 })}
             </button>
-          </div>
+          </div>`
+              : ''
+          }
         </div>
       </div>
       ${bodyHtml}
@@ -316,9 +306,8 @@ export function renderHistoryView(this: YomicApp, container: HTMLElement): void 
                       </div>
                       <div class="v1-update-right">
                         <span class="v1-update-time tabular-nums">${escapeXml(m.lastReadTimeAgo || '')}</span>
-                        <button class="v1-update-action-btn primary" data-quick-read="${m.id}" data-ch="${m.lastReadChapter}" title="${escapeXml(this.l('Lanjutkan Membaca Ch. ' + m.lastReadChapter, 'Continue Reading Ch. ' + m.lastReadChapter))}">
-                          ${getIconSvg('play-linear', { size: 12 })}
-                          <span>${this.t('common.continueReading')}</span>
+                        <button class="v1-history-play-btn" data-quick-read="${m.id}" data-ch="${m.lastReadChapter}" title="${escapeXml(this.l('Lanjutkan Membaca Ch. ' + m.lastReadChapter, 'Continue Reading Ch. ' + m.lastReadChapter))}" aria-label="${escapeXml(this.l('Lanjutkan Membaca', 'Continue Reading'))}">
+                          ${getIconSvg('play-linear', { size: 16 })}
                         </button>
                         <button class="v1-history-del-btn" data-del-history="${m.id}" title="${escapeXml(this.l('Hapus dari Riwayat', 'Remove from History'))}" aria-label="${escapeXml(this.l('Hapus dari Riwayat', 'Remove from History'))}">
                           ${getIconSvg('delete-bin-line', { size: 15 })}
@@ -342,24 +331,24 @@ export function renderHistoryView(this: YomicApp, container: HTMLElement): void 
           <span class="v1-lib-title-text">${this.t('nav.history')}</span>
           <span class="v1-lib-count-inline tabular-nums">(${historyItems.length})</span>
         </div>
-        <div class="v1-lib-actions">
+        ${
+          historyItems.length > 0
+            ? `<div class="v1-lib-actions">
           <button id="btnOpenStatsFromHistory" class="v1-lib-action-btn" title="${this.l('Statistik Membaca', 'Reading Statistics')}" aria-label="${this.l('Statistik Membaca', 'Reading Statistics')}">
             ${getIconSvg('chart-2-linear', { size: 19 })}
           </button>
-          ${
-            historyItems.length > 0
-              ? `<button id="btnClearAllHistory" class="v1-lib-action-btn hazard" title="${this.l('Hapus Semua Riwayat', 'Clear All History')}" aria-label="${this.l('Hapus Semua Riwayat', 'Clear All History')}">
-                   ${getIconSvg('delete-bin-line', { size: 19 })}
-                 </button>`
-              : ''
-          }
+          <button id="btnClearAllHistory" class="v1-lib-action-btn hazard" title="${this.l('Hapus Semua Riwayat', 'Clear All History')}" aria-label="${this.l('Hapus Semua Riwayat', 'Clear All History')}">
+            ${getIconSvg('delete-bin-line', { size: 19 })}
+          </button>
           <button id="btnRefreshHistory" class="v1-lib-action-btn" title="${this.l('Segarkan Riwayat', 'Refresh History')}" aria-label="${this.l('Segarkan Riwayat', 'Refresh History')}">
-          ${getIconSvg('refresh-line', { size: 19 })}
-        </button>
+            ${getIconSvg('refresh-line', { size: 19 })}
+          </button>
           <button id="btnToggleHistoryViewMode" class="v1-lib-action-btn" title="${this.l('Alihkan Mode Tampilan (Grid / Linimasa)', 'Switch View Mode (Grid / Timeline)')}" aria-label="${this.l('Alihkan Mode Tampilan', 'Switch View Mode')}">
             ${getIconSvg(this.historyViewMode === 'grid' ? 'list' : 'layout-grid', { size: 19 })}
           </button>
-        </div>
+        </div>`
+            : ''
+        }
       </div>
     </div>
     ${contentHtml}

@@ -63,7 +63,7 @@ export class TutorialController {
     this.bindEvents();
   }
 
-  public open(slideIndex = 0): void {
+  public open(slideIndex = 0, immediate = false): void {
     const backdrop = document.getElementById('tutorialModalBackdrop');
     if (!backdrop) return;
 
@@ -74,13 +74,21 @@ export class TutorialController {
 
     backdrop.style.display = 'flex';
     backdrop.classList.remove('closing');
-    void backdrop.offsetWidth;
-    backdrop.classList.add('open');
+    if (immediate) {
+      backdrop.classList.add('instant', 'open');
+      document.documentElement.removeAttribute('data-onboarding-pending');
+    } else {
+      backdrop.classList.remove('instant');
+      document.documentElement.removeAttribute('data-onboarding-pending');
+      void backdrop.offsetWidth;
+      backdrop.classList.add('open');
+    }
   }
 
   public close(markCompleted = false): void {
     const backdrop = document.getElementById('tutorialModalBackdrop');
     document.getElementById('btnOpenTutorialSidebar')?.classList.remove('active');
+    document.documentElement.removeAttribute('data-onboarding-pending');
     if (!backdrop || !backdrop.classList.contains('open')) return;
 
     if (markCompleted) {
@@ -88,10 +96,11 @@ export class TutorialController {
     }
 
     if (backdrop.classList.contains('closing')) return;
+    backdrop.classList.remove('instant');
     backdrop.classList.add('closing');
 
     setTimeout(() => {
-      backdrop.classList.remove('open', 'closing');
+      backdrop.classList.remove('open', 'closing', 'instant');
       backdrop.style.display = 'none';
     }, 180);
   }
@@ -112,15 +121,18 @@ export class TutorialController {
     }
   }
 
-  public checkAutoTrigger(): void {
-    // Only auto-trigger if not completed before, and library has 0 items
+  public checkAutoTrigger(immediate = false): void {
     if (!this.isTutorialCompleted()) {
-      setTimeout(() => {
-        // Double check after UI finishes bootstrap
-        if (!this.isTutorialCompleted()) {
-          this.open(0);
-        }
-      }, 450);
+      this.open(0, immediate);
+    } else {
+      document.documentElement.removeAttribute('data-onboarding-pending');
+    }
+  }
+
+  public refreshLocale(): void {
+    const backdrop = document.getElementById('tutorialModalBackdrop');
+    if (backdrop?.classList.contains('open')) {
+      this.updateCarouselState(false);
     }
   }
 

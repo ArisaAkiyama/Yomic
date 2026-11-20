@@ -8,11 +8,14 @@ import { AnnouncementItem } from '../types.js';
 
 export const DEFAULT_ANNOUNCEMENTS: AnnouncementItem[] = [
   {
-    id: 'ann-v2-release',
-    title: 'Pembaruan Antarmuka Yomic v2 Minimalis',
-    date: '02 Nov 2026 · Developer Yomic',
+    id: '2026-11-20-yomic-v2-release',
+    title: 'Rilis Resmi Yomic v2: Arsitektur Baru & Pengalaman Membaca Lebih Cepat',
+    date: '2026-11-20',
+    type: 'update',
+    typeDisplay: 'Pembaruan',
+    badgeBackground: '#10B981',
     content:
-      'Selamat datang di Yomic!\n\nNavigasi bilah samping kini disesuaikan dengan struktur Yomic yang ringkas, bersih, dan langsung menuju Pustaka, Pembaruan, Riwayat, Unduhan, Jelajahi Sumber, dan Ekstensi.\n\nGunakan pintasan Ctrl+B untuk menciutkan atau memperlebar bilah navigasi kapan saja, serta Ctrl+K untuk pencarian cepat koleksi komik.'
+      'Kepada seluruh pengguna Yomic,\n\nKami dengan bangga mengumumkan perilisan resmi Yomic v2. Pembaruan besar ini menghadirkan perombakan menyeluruh pada arsitektur aplikasi menggunakan fondasi hibrida (.NET 8, WebView2, dan TypeScript modular) demi menghadirkan performa yang lebih ringan, responsif, dan stabil untuk penggunaan jangka panjang.\n\nPembaruan Utama:\n• Antarmuka baru yang lebih bersih dan modern dengan dukungan penuh Mode Gelap serta Mode Terang, tata letak pustaka yang rapi, dan navigasi bilah samping yang lebih intuitif.\n• Mesin pemrosesan gambar berbasis SkiaSharp untuk pemuatan halaman komik yang lebih cepat, tajam, serta hemat penggunaan memori.\n• Dasbor Statistik Membaca yang menampilkan aktivitas baca 14 hari terakhir, genre terpopuler, persentase penyelesaian, dan catatan konsistensi harian (Daily Streak).\n• Arsitektur ekstensi modular dengan katalog sumber yang lebih luas, pengaturan bahasa per sumber, serta mekanisme verifikasi otomatis untuk sumber yang dilindungi pemeriksaan keamanan.\n• Peningkatan keamanan dan keandalan data, meliputi enkripsi token pelacakan MyAnimeList, perlindungan single-instance, serta sistem pencadangan dan pemulihan (.yomicbackup) yang lebih aman.\n\nCatatan untuk Pengguna:\n• Pengguna baru kini dapat memilih dan memasang ekstensi sumber komik secara mandiri melalui menu Ekstensi sesuai kebutuhan.\n• Apabila Anda menemukan kendala atau memiliki saran pengembangan, silakan sampaikan langsung melalui menu Kirim Masukan.\n\nTerima kasih atas kepercayaan dan dukungan Anda terhadap pengembangan Yomic.\n\nHormat kami,\nTim Pengembang Yomic'
   },
   {
     id: '2026-08-15-komikcast-shutdown-v2',
@@ -119,13 +122,147 @@ export function closeAnnouncementsModal(this: YomicApp): void {
   this.closeModalWithAnimation('announcementModalBackdrop', 'btnOpenAnnouncements');
 }
 
+const READ_ANNOUNCEMENTS_KEY = 'yomic_read_announcements';
+
+function getReadAnnouncementIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(READ_ANNOUNCEMENTS_KEY);
+    if (!raw) return new Set<string>();
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return new Set<string>(parsed.map((v) => String(v)));
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return new Set<string>();
+}
+
+function markAnnouncementReadLocal(id: string): void {
+  if (!id) return;
+  try {
+    const set = getReadAnnouncementIds();
+    if (!set.has(id)) {
+      set.add(id);
+      localStorage.setItem(READ_ANNOUNCEMENTS_KEY, JSON.stringify(Array.from(set)));
+    }
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function formatAnnouncementDate(rawDate: string, lang: 'id' | 'en'): string {
+  const trimmed = String(rawDate || '').trim();
+  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+  if (!isoMatch) return trimmed;
+  const year = Number(isoMatch[1]);
+  const monthIdx = Number(isoMatch[2]) - 1;
+  const day = Number(isoMatch[3]);
+  const monthsId = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  const monthsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  if (monthIdx < 0 || monthIdx > 11 || day < 1 || day > 31) return trimmed;
+  return lang === 'en'
+    ? `${monthsEn[monthIdx]} ${day}, ${year}`
+    : `${day} ${monthsId[monthIdx]} ${year}`;
+}
+
+function getAnnouncementBadgeTone(type?: string): 'info' | 'update' | 'warning' | 'danger' {
+  const norm = String(type || 'info').toLowerCase().trim();
+  if (norm === 'danger' || norm === 'urgent' || norm === 'error' || norm === 'critical' || norm === 'shutdown') {
+    return 'danger';
+  }
+  if (norm === 'warning' || norm === 'warn' || norm === 'maintenance') {
+    return 'warning';
+  }
+  if (norm === 'update' || norm === 'release' || norm === 'feature' || norm === 'success') {
+    return 'update';
+  }
+  return 'info';
+}
+
+function getAnnouncementBadgeLabel(tone: 'info' | 'update' | 'warning' | 'danger', lang: 'id' | 'en'): string {
+  if (tone === 'update') return lang === 'en' ? 'Update' : 'Pembaruan';
+  if (tone === 'warning') return lang === 'en' ? 'Warning' : 'Peringatan';
+  if (tone === 'danger') return lang === 'en' ? 'Important' : 'Penting';
+  return 'Info';
+}
+
+function isBulletLine(line: string): boolean {
+  return /^(?:•|-|\*)\s+/.test(line.trim());
+}
+
+function stripBulletPrefix(line: string): string {
+  return line.trim().replace(/^(?:•|-|\*)\s+/, '');
+}
+
+function isQuotedLine(line: string): boolean {
+  const t = line.trim();
+  return (
+    t.startsWith('>') ||
+    (t.length >= 2 && ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith('“') && t.endsWith('”'))))
+  );
+}
+
+function stripQuoteWrapper(line: string): string {
+  let t = line.trim();
+  if (t.startsWith('>')) {
+    t = t.replace(/^>\s*/, '');
+  }
+  if (t.length >= 2 && ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith('“') && t.endsWith('”')))) {
+    t = t.slice(1, -1).trim();
+  }
+  return t;
+}
+
 function formatAnnouncementContentHtml(rawContent: string): string {
   const normalized = String(rawContent || '').replace(/\r\n/g, '\n').trim();
   if (!normalized) return '';
-  return normalized
-    .split(/\n{2,}/)
-    .map((paragraph) => `<p>${escapeXml(paragraph.trim()).replace(/\n/g, '<br/>')}</p>`)
-    .join('');
+
+  const blocks = normalized.split(/\n{2,}/);
+  const htmlParts: string[] = [];
+
+  for (const rawBlock of blocks) {
+    const lines = rawBlock
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
+    if (lines.length === 0) continue;
+
+    // Case 1: Block starts with a short section label ending with ":" followed by bullets or a quote
+    let startIdx = 0;
+    if (lines.length >= 2 && lines[0].endsWith(':') && lines[0].length <= 64) {
+      const rest = lines.slice(1);
+      if (rest.every(isBulletLine) || rest.every(isQuotedLine)) {
+        htmlParts.push(`<div class="announcement-section-label">${escapeXml(lines[0].slice(0, -1))}</div>`);
+        startIdx = 1;
+      }
+    }
+
+    const activeLines = lines.slice(startIdx);
+    if (activeLines.length === 0) continue;
+
+    // Case 2: All remaining lines are bullets
+    if (activeLines.every(isBulletLine)) {
+      const itemsHtml = activeLines
+        .map((line) => `<li>${escapeXml(stripBulletPrefix(line))}</li>`)
+        .join('');
+      htmlParts.push(`<ul class="announcement-list">${itemsHtml}</ul>`);
+      continue;
+    }
+
+    // Case 3: All remaining lines are quoted text
+    if (activeLines.every(isQuotedLine)) {
+      const quoteHtml = activeLines.map((line) => escapeXml(stripQuoteWrapper(line))).join('<br/>');
+      htmlParts.push(`<blockquote class="announcement-quote">${quoteHtml}</blockquote>`);
+      continue;
+    }
+
+    // Case 4: Standard paragraph (still handle inline bullet mix if present)
+    const renderedParagraph = activeLines.map((line) => escapeXml(line)).join('<br/>');
+    htmlParts.push(`<p>${renderedParagraph}</p>`);
+  }
+
+  return htmlParts.join('');
 }
 
 export function renderAnnouncementModalBody(this: YomicApp): void {
@@ -139,29 +276,52 @@ export function renderAnnouncementModalBody(this: YomicApp): void {
     detailCol.innerHTML = `<div class="announcement-empty">${this.l('Belum ada pengumuman saat ini.', 'No announcements yet.')}</div>`;
     return;
   }
+
+  markAnnouncementReadLocal(selected.id);
+  const readIds = getReadAnnouncementIds();
+  const lang = this.settings.appLanguage === 'en' ? 'en' : 'id';
+
   listCol.innerHTML = this.announcements
-    .map(
-      (item) => `
-      <button class="announcement-item-btn ${item.id === selected.id ? 'active' : ''}" data-ann-id="${escapeXml(item.id)}">
-        <span class="announcement-item-title">${escapeXml(item.title)}</span>
-        <span class="announcement-item-date">${escapeXml(item.date)}</span>
+    .map((item) => {
+      const isSelected = item.id === selected.id;
+      const isUnread = !isSelected && !readIds.has(item.id);
+      const formattedDate = formatAnnouncementDate(item.date, lang);
+      return `
+      <button class="announcement-item-btn ${isSelected ? 'active' : ''} ${isUnread ? 'unread' : ''}" data-ann-id="${escapeXml(item.id)}">
+        <div class="announcement-item-top">
+          <span class="announcement-item-title">${escapeXml(item.title)}</span>
+          ${isUnread ? '<span class="announcement-item-unread-dot" aria-label="Belum dibaca"></span>' : ''}
+        </div>
+        <div class="announcement-item-meta">
+          <span class="announcement-item-date">${escapeXml(formattedDate)}</span>
+        </div>
       </button>
-    `
-    )
+    `;
+    })
     .join('');
-  const badgeHtml = selected.typeDisplay
-    ? `<span class="announcement-type-text">${escapeXml(selected.typeDisplay)}</span><span class="announcement-meta-sep" aria-hidden="true">·</span>`
-    : '';
+
+  const selectedTone = getAnnouncementBadgeTone(selected.type);
+  const badgeLabel = getAnnouncementBadgeLabel(selectedTone, lang);
+  const badgeHtml = `<span class="announcement-type-badge tone-${selectedTone}">${escapeXml(badgeLabel)}</span>`;
+  const formattedSelectedDate = formatAnnouncementDate(selected.date, lang);
   const linkBtnHtml =
     selected.url && selected.url.trim() !== ''
-      ? `<div class="announcement-link-row"><button id="btnOpenAnnouncementUrl" class="btn-secondary" style="font-size:12px;padding:6px 12px;" data-url="${escapeXml(selected.url)}">${this.l('Buka Tautan Informasi', 'Open Information Link')}</button></div>`
+      ? `<div class="announcement-link-row"><button id="btnOpenAnnouncementUrl" class="btn-secondary announcement-ext-link-btn" data-url="${escapeXml(selected.url)}"><span>${this.l('Buka Tautan Informasi', 'Open Information Link')}</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button></div>`
       : '';
+
   detailCol.innerHTML = `
-      <div class="announcement-detail-title">${escapeXml(selected.title)}</div>
-      <div class="announcement-detail-date">${badgeHtml}<span>${escapeXml(selected.date)}</span></div>
+      <div class="announcement-detail-header">
+        <div class="announcement-detail-meta-row">
+          ${badgeHtml}
+          <span class="announcement-detail-date-text">${escapeXml(formattedSelectedDate)}</span>
+        </div>
+        <h3 class="announcement-detail-title">${escapeXml(selected.title)}</h3>
+      </div>
       <div class="announcement-detail-content">${formatAnnouncementContentHtml(selected.content)}</div>
       ${linkBtnHtml}
     `;
+  detailCol.scrollTop = 0;
+
   document.getElementById('btnOpenAnnouncementUrl')?.addEventListener('click', (ev) => {
     const target = ev.currentTarget as HTMLElement;
     const url = target?.dataset?.url;
@@ -173,6 +333,7 @@ export function renderAnnouncementModalBody(this: YomicApp): void {
     btn.addEventListener('click', () => {
       if (btn.dataset.annId) {
         this.selectedAnnouncementId = btn.dataset.annId;
+        markAnnouncementReadLocal(btn.dataset.annId);
         this.renderAnnouncementModalBody();
       }
     });
@@ -342,6 +503,30 @@ export function bindModalShellEvents(this: YomicApp): void {
   });
   document.getElementById('btnCloseAnnouncements')?.addEventListener('click', () => {
     this.closeAnnouncementsModal();
+  });
+  document.getElementById('btnRefreshAnnouncements')?.addEventListener('click', () => {
+    const btn = document.getElementById('btnRefreshAnnouncements') as HTMLButtonElement | null;
+    if (!btn || btn.classList.contains('spinning')) return;
+    btn.classList.add('spinning');
+    if (this.bridge.isWebViewHost) {
+      void this.bridge
+        .invoke<{ announcements?: any[]; hasUnread?: boolean }>('announcements:get-list', { force: true })
+        .then((res) => {
+          if (res && Array.isArray(res.announcements) && res.announcements.length > 0) {
+            this.applyBackendAnnouncements(res.announcements, false);
+          }
+          this.showToast(this.l('Pengumuman berhasil diperbarui.', 'Announcements refreshed.'));
+        })
+        .catch(() => {
+          this.showToast(this.l('Gagal memuat ulang pengumuman.', 'Failed to refresh announcements.'));
+        })
+        .finally(() => {
+          window.setTimeout(() => btn.classList.remove('spinning'), 300);
+        });
+    } else {
+      this.renderAnnouncementModalBody();
+      window.setTimeout(() => btn.classList.remove('spinning'), 350);
+    }
   });
   annBackdrop?.addEventListener('click', (ev) => {
     if (ev.target === annBackdrop) {

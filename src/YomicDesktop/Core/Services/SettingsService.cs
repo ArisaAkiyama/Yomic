@@ -80,6 +80,8 @@ namespace Yomic.Core.Services
         public bool LibraryIsListView { get; set; } = false;
         public bool AutoDownloadNextChapter { get; set; } = false;
         public bool SkipFilteredChapters { get; set; } = false;
+        public bool SaveDownloadsAsCbz { get; set; } = false;
+        public bool AutoDeleteAfterRead { get; set; } = false;
         public string LastBackupTime { get; set; } = "";
         public string LastBackupSize { get; set; } = "";
         public string MangaDexLanguage { get; set; } = "en";
@@ -151,6 +153,8 @@ namespace Yomic.Core.Services
                         LibraryIsListView = settings.LibraryIsListView;
                         AutoDownloadNextChapter = settings.AutoDownloadNextChapter;
                         SkipFilteredChapters = settings.SkipFilteredChapters;
+                        SaveDownloadsAsCbz = settings.SaveDownloadsAsCbz;
+                        AutoDeleteAfterRead = settings.AutoDeleteAfterRead;
                         LastBackupTime = settings.LastBackupTime ?? "";
                         LastBackupSize = settings.LastBackupSize ?? "";
                         MangaDexLanguage = settings.MangaDexLanguage ?? "en";
@@ -248,6 +252,8 @@ namespace Yomic.Core.Services
                     LibraryIsListView = LibraryIsListView,
                     AutoDownloadNextChapter = AutoDownloadNextChapter,
                     SkipFilteredChapters = SkipFilteredChapters,
+                    SaveDownloadsAsCbz = SaveDownloadsAsCbz,
+                    AutoDeleteAfterRead = AutoDeleteAfterRead,
                     LastBackupTime = LastBackupTime,
                     LastBackupSize = LastBackupSize,
                     MangaDexLanguage = MangaDexLanguage,
@@ -305,6 +311,8 @@ namespace Yomic.Core.Services
                 LibraryIsListView = false;
                 AutoDownloadNextChapter = false;
                 SkipFilteredChapters = false;
+                SaveDownloadsAsCbz = false;
+                AutoDeleteAfterRead = false;
                 LastBackupTime = "";
                 LastBackupSize = "";
                 DefaultReaderMode = 0;
@@ -458,6 +466,8 @@ namespace Yomic.Core.Services
             public bool LibraryIsListView { get; set; } = false;
             public bool AutoDownloadNextChapter { get; set; } = false;
             public bool SkipFilteredChapters { get; set; } = false;
+            public bool SaveDownloadsAsCbz { get; set; } = false;
+            public bool AutoDeleteAfterRead { get; set; } = false;
             public string LastBackupTime { get; set; } = "";
             public string LastBackupSize { get; set; } = "";
             public string MangaDexLanguage { get; set; } = "en";

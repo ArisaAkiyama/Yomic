@@ -298,8 +298,6 @@ namespace Yomic.Core.Services
 
             _httpClient.DefaultRequestHeaders.Accept.ParseAdd("application/json, text/plain, */*");
 
-            EnsureInitialPluginsIfEmpty();
-
         }
 
         private string GetCacheFilePath()
@@ -322,52 +320,6 @@ namespace Yomic.Core.Services
 
             return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins", "Catalog");
 
-        }
-
-        private void EnsureInitialPluginsIfEmpty()
-        {
-            try
-            {
-                var pluginsDir = SourceManager.GetUserPluginsDirectory();
-                var seededMarker = Path.Combine(pluginsDir, ".seeded");
-                var existingFiles = Directory.Exists(pluginsDir)
-                    ? Directory.GetFiles(pluginsDir, "*.js")
-                    : Array.Empty<string>();
-
-                if (existingFiles.Length > 0)
-                {
-                    if (!File.Exists(seededMarker))
-                    {
-                        try { File.WriteAllText(seededMarker, DateTime.UtcNow.ToString("O")); } catch { }
-                    }
-                    return;
-                }
-
-                if (!File.Exists(seededMarker))
-                {
-                    var catalogDir = GetBundledCatalogDir();
-                    if (Directory.Exists(catalogDir))
-                    {
-                        var defaultScripts = new[] { "komiku.js", "kiryuu.js", "westmanga.js", "softkomik.js", "mangadex.js", "mangabat.js" };
-                        foreach (var script in defaultScripts)
-                        {
-                            var srcPath = Path.Combine(catalogDir, script);
-                            var dstPath = Path.Combine(pluginsDir, script);
-                            if (File.Exists(srcPath) && !File.Exists(dstPath))
-                            {
-                                File.Copy(srcPath, dstPath, true);
-                            }
-                        }
-
-                        try { File.WriteAllText(seededMarker, DateTime.UtcNow.ToString("O")); } catch { }
-                        _sourceManager.LoadPlugins();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogService.Error("ExtensionRepo", "Failed to seed initial plugins", ex);
-            }
         }
 
         private static string CleanExtensionName(string rawName)

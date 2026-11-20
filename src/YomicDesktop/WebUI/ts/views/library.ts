@@ -127,7 +127,7 @@ export function renderLibraryView(this: YomicApp, container: HTMLElement): void 
   // Toggle View Mode icon (List icon when in Grid view, Grid icon when in List view — LibraryView.axaml L449-458)
   const toggleViewIconPath = this.libraryViewMode === 'grid' ? SOLAR_PATHS['list'] : SOLAR_PATHS['layout-grid'];
   let contentHtml = '';
-  if (this.syncProgress.active && libraryManga.length === 0) {
+  if (this.syncProgress.active) {
     const syncPercent = Math.round((this.syncProgress.current / Math.max(1, this.syncProgress.total)) * 100);
     contentHtml = `
       <div class="empty-state-box">
@@ -154,13 +154,7 @@ export function renderLibraryView(this: YomicApp, container: HTMLElement): void 
         </div>
         <div class="empty-state-title">${this.t('library.emptyTitle')}</div>
         <div class="empty-state-desc">${this.t('library.emptyDesc')}</div>
-        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center;">
-          <button id="btnGoBrowseFromEmpty" class="empty-state-btn primary">${this.t('library.browseAction')}</button>
-          <button id="btnOpenTutorialFromLibrary" class="empty-state-btn">
-            ${getIconSvg('compass-3-line', { size: 14 })}
-            <span>${this.l('Lihat Panduan', 'View Guide')}</span>
-          </button>
-        </div>
+        <button id="btnGoBrowseFromEmpty" class="empty-state-btn primary">${this.t('library.browseAction')}</button>
       </div>
     `;
   } else if (filtered.length === 0) {
@@ -194,13 +188,15 @@ export function renderLibraryView(this: YomicApp, container: HTMLElement): void 
             <span class="v1-lib-count-inline tabular-nums">(${libraryManga.length})</span>
           </div>
         </div>
-        <div class="v1-lib-actions">
+        ${
+          libraryManga.length > 0
+            ? `<div class="v1-lib-actions">
           <!-- 1. Morphing Animated Expandable Search -->
           <div id="libraryExpandSearch" class="v1-expand-search ${this.isLibrarySearchOpen || this.searchQuery ? 'open' : ''}">
-            <button id="btnToggleLibSearch" class="v1-expand-search-icon-btn" title="${escapeXml(this.t('library.searchPlaceholder'))}" aria-label="${escapeXml(this.t('library.searchPlaceholder'))}">
+            <button id="btnToggleLibSearch" class="v1-expand-search-icon-btn" title="${escapeXml(this.t('library.searchPlaceholder'))} (Ctrl+K)" aria-label="${escapeXml(this.t('library.searchPlaceholder'))}">
               ${getIconSvg('search-line', { size: 18 })}
             </button>
-            <input id="librarySearchInput" class="v1-expand-search-input" type="text" placeholder="${escapeXml(this.t('library.searchPlaceholder'))}" value="${escapeXml(this.searchQuery)}" autocomplete="off" />
+            <input id="librarySearchInput" class="v1-expand-search-input" type="text" placeholder="${escapeXml(this.t('library.searchPlaceholder'))} (Ctrl+K)" value="${escapeXml(this.searchQuery)}" autocomplete="off" />
             <button id="btnClearLibSearch" class="v1-expand-search-clear-btn" title="${escapeXml(this.t('modal.close'))}" aria-label="${escapeXml(this.t('modal.close'))}">
               ${getIconSvg('close-line', { size: 13 })}
             </button>
@@ -221,7 +217,9 @@ export function renderLibraryView(this: YomicApp, container: HTMLElement): void 
           <button id="btnToggleLibViewMode" class="v1-lib-action-btn" title="${escapeXml(this.libraryViewMode === 'grid' ? this.t('library.viewList') : this.t('library.viewGrid'))}" aria-label="${escapeXml(this.t('library.viewGrid'))}">
             ${getIconSvg(this.libraryViewMode === 'grid' ? 'list' : 'layout-grid', { size: 18 })}
           </button>
-        </div>
+        </div>`
+            : ''
+        }
       </div>
     </div>
     <div id="libContentArea" style="width:100%; min-width:0;">
@@ -424,16 +422,6 @@ export function renderLibraryView(this: YomicApp, container: HTMLElement): void 
         </div>
       `;
     })()}
-    <!-- Bottom Real-Time Sync Progress Floating Pill (LibraryView.axaml L1007-1036) -->
-    <div class="v1-sync-pill ${this.syncProgress.active && libraryManga.length > 0 ? 'open' : ''}">
-      <div class="v1-sync-pill-top">
-        <span>${this.l('Memperbarui pustaka...', 'Updating library...')}</span>
-        <span class="tabular-nums" style="color:var(--ocean-primary);">${this.syncProgress.current}/${this.syncProgress.total}</span>
-      </div>
-      <div class="v1-sync-track">
-        <div class="v1-sync-fill" style="width:${syncPercent}%;"></div>
-      </div>
-    </div>
   `;
 
   const bindCardContextMenus = (rootEl: HTMLElement) => {
@@ -709,9 +697,6 @@ export function renderLibraryView(this: YomicApp, container: HTMLElement): void 
   });
   document.getElementById('btnGoBrowseFromEmpty')?.addEventListener('click', () => {
     this.navigateToTab('browse');
-  });
-  document.getElementById('btnOpenTutorialFromLibrary')?.addEventListener('click', () => {
-    this.openTutorial(0);
   });
 
   // Right-click context menu on cards/rows

@@ -146,16 +146,12 @@ export function renderBrowseView(this: YomicApp, container: HTMLElement, preserv
       if (this.browseLangFilter !== 'ALL' && srcLang !== this.browseLangFilter && srcLang !== 'ALL' && !isMangaDex) {
         return false;
       }
-      if (this.browseSearchQuery) {
-        const q = this.browseSearchQuery.toLowerCase();
-        return e.name.toLowerCase().includes(q) || e.baseUrl.toLowerCase().includes(q);
-      }
       return true;
     })
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 
   const checkSvg = getIconSvg('check', { size: 13, strokeWidth: 2.5 });
-  const isFiltered = this.browseSearchQuery.trim() !== '' || this.browseLangFilter !== 'ALL';
+  const isFiltered = this.browseLangFilter !== 'ALL';
   const totalInstalledCount = this.extensions.filter((e) => e.installed && (this.settings.showNsfw || (!e.isNsfw && !isAdultExtension(e)))).length;
   let listHtml = '';
 
@@ -197,15 +193,9 @@ export function renderBrowseView(this: YomicApp, container: HTMLElement, preserv
                  ${getIconSvg('refresh-line', { size: 14 })}
                  <span>${this.l('Atur Ulang Pencarian', 'Reset Search')}</span>
                </button>`
-            : `<div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center;">
-                 <button id="btnGoExtensionsFromBrowse" class="empty-state-btn primary">
-                   <span>${this.l('Buka Ekstensi', 'Open Extensions')}</span>
-                 </button>
-                 <button id="btnOpenTutorialFromBrowse" class="empty-state-btn">
-                   ${getIconSvg('compass-3-line', { size: 14 })}
-                   <span>${this.l('Lihat Panduan', 'View Tutorial')}</span>
-                 </button>
-               </div>`
+            : `<button id="btnGoExtensionsFromBrowse" class="empty-state-btn primary">
+                 <span>${this.l('Buka Ekstensi', 'Open Extensions')}</span>
+               </button>`
         }
       </div>`;
   } else {
@@ -259,7 +249,9 @@ export function renderBrowseView(this: YomicApp, container: HTMLElement, preserv
           </div>
         </div>
         <!-- Action Toolbar with Morphing Expandable Search Box -->
-        <div class="v1-lib-actions">
+        ${
+          totalInstalledCount > 0
+            ? `<div class="v1-lib-actions">
           <!-- 1. Morphing Animated Expandable Search -->
           <div id="browseExpandSearch" class="v1-expand-search ${this.isBrowseSearchOpen || this.browseSearchQuery ? 'open' : ''}">
             <button id="btnToggleBrowseSearch" class="v1-expand-search-icon-btn" title="${this.l('Cari Sumber Komik', 'Search Comic Sources')}" aria-label="${this.l('Cari Sumber', 'Search Sources')}">
@@ -296,7 +288,9 @@ export function renderBrowseView(this: YomicApp, container: HTMLElement, preserv
               <span>English</span>
             </button>
           </div>
-        </div>
+        </div>`
+            : ''
+        }
       </div>
     </div>
     ${listHtml}
@@ -343,6 +337,10 @@ export function renderBrowseView(this: YomicApp, container: HTMLElement, preserv
       emptyBox.style.display = 'none';
     }
   };
+
+  if (this.browseSearchQuery.trim()) {
+    filterRowsInPlace();
+  }
 
   document.getElementById('btnToggleBrowseSearch')?.addEventListener('click', (ev) => {
     ev.stopPropagation();
@@ -408,11 +406,6 @@ export function renderBrowseView(this: YomicApp, container: HTMLElement, preserv
   document.getElementById('btnGoExtensionsFromBrowse')?.addEventListener('click', (ev) => {
     ev.stopPropagation();
     this.navigateToTab('extensions');
-  });
-
-  document.getElementById('btnOpenTutorialFromBrowse')?.addEventListener('click', (ev) => {
-    ev.stopPropagation();
-    this.openTutorial(1); // open straight to Step 1: Pasang Ekstensi
   });
 
   // Refresh Source Status: Uses real backend progress so counter never outruns actual checks
@@ -716,15 +709,17 @@ export function renderSourceCatalogFeed(this: YomicApp, container: HTMLElement, 
 
   let emptyStateHtml: string;
   if (this.isSourceFeedLoading) {
-    emptyStateHtml = `
-      <div class="empty-state-box">
-        <div class="empty-state-icon-wrap">
-          <div class="empty-state-spinner"></div>
-        </div>
-        <div class="empty-state-title">${this.l('Memuat Katalog...', 'Loading Catalog...')}</div>
-        <div class="empty-state-desc">${this.l(`Sedang mengambil daftar komik terbaru dari ${escapeXml(source.name)}.`, `Fetching the latest comics from ${escapeXml(source.name)}.`)}</div>
-      </div>
-    `;
+    const skeletonCards = Array.from({ length: 12 })
+      .map(
+        () => `
+        <div class="v1-skeleton-card" aria-hidden="true">
+          <div class="v1-skeleton-cover v1-skeleton-shimmer"></div>
+          <div class="v1-skeleton-line v1-skeleton-shimmer" style="width: 86%;"></div>
+          <div class="v1-skeleton-line v1-skeleton-shimmer" style="width: 58%;"></div>
+        </div>`
+      )
+      .join('');
+    emptyStateHtml = `<div class="manga-grid" aria-busy="true" aria-label="${escapeXml(this.l('Memuat Katalog...', 'Loading Catalog...'))}">${skeletonCards}</div>`;
   } else if (isSearchOrFilter && feedManga.length === 0 && !isOffline) {
     emptyStateHtml = `
       <div class="empty-state-box">
@@ -968,15 +963,6 @@ export function renderSourceCatalogFeed(this: YomicApp, container: HTMLElement, 
                     </div>
                     <div class="manga-card-body">
                       <div class="manga-card-title" title="${escapeXml(m.title)}">${escapeXml(m.title)}</div>
-                      <div class="manga-card-meta">
-                        <span>${escapeXml(m.type || 'Manga')}</span>
-                        <span>·</span>
-                        ${
-                          m.rating > 0
-                            ? `<span class="tabular-nums" style="display:inline-flex;align-items:center;gap:3px;">${getIconSvg('star-filled', { size: 11, fill: '#EAB308' })} ${m.rating.toFixed(1)}</span>`
-                            : `<span>${escapeXml(m.status === 'Completed' ? this.l('Tamat', 'Completed') : 'Ongoing')}</span>`
-                        }
-                      </div>
                     </div>
                   </article>`;
               })
@@ -987,7 +973,7 @@ export function renderSourceCatalogFeed(this: YomicApp, container: HTMLElement, 
               ? `<div id="sourceFeedLoadingSentinel" style="display:flex;justify-content:center;align-items:center;gap:8px;padding:24px 0 16px 0;color:var(--ink-muted);font-size:12.5px;">
                    ${
                      this.isSourceFeedLoading
-                       ? `<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(0,102,204,0.2);border-top-color:#0066CC;border-radius:50%;animation:spin 0.8s linear infinite;"></span>
+                       ? `<span style="display:inline-block;width:16px;height:16px;border:2px solid var(--border-strong);border-top-color:var(--ocean-primary);border-radius:50%;animation:spin 0.8s linear infinite;"></span>
                           <span>${this.l('Memuat lebih banyak komik...', 'Loading more comics...')}</span>`
                        : `<span style="opacity:0.4;">${this.l('Memuat otomatis saat scroll ke bawah', 'Auto-loads as you scroll down')}</span>`
                    }

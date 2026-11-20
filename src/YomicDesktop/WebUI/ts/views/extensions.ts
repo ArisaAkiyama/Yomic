@@ -15,17 +15,13 @@ export function renderExtensionsView(this: YomicApp, container: HTMLElement): vo
       if (this.extensionLangFilter !== 'ALL' && extLang !== this.extensionLangFilter && extLang !== 'ALL' && !isMangaDex) {
         return false;
       }
-      if (this.extensionSearchQuery) {
-        const q = this.extensionSearchQuery.toLowerCase();
-        return e.name.toLowerCase().includes(q) || (e.baseUrl && e.baseUrl.toLowerCase().includes(q));
-      }
       return true;
     })
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 
   const installedExts = filteredExts.filter((e) => e.installed);
   const availableExts = filteredExts.filter((e) => !e.installed);
-  const isFiltered = this.extensionSearchQuery.trim() !== '' || this.extensionLangFilter !== 'ALL';
+  const isFiltered = this.extensionLangFilter !== 'ALL';
   const checkSvg = getIconSvg('check', { size: 13, strokeWidth: 2.5 });
 
   const buildExtRow = (ext: ExtensionItem): string => {
@@ -45,7 +41,6 @@ export function renderExtensionsView(this: YomicApp, container: HTMLElement): vo
         ${
           ext.hasUpdate
             ? `<button class="v1-ext-pill-btn update" data-update-ext="${escapeXml(ext.id)}" title="${escapeXml(this.l('Perbarui ke versi terbaru', 'Update to latest version'))}" aria-label="${escapeXml(this.t('extensions.update'))}">
-                 ${getIconSvg('refresh-line', { size: 13 })}
                  <span>${this.t('extensions.update')}</span>
                </button>`
             : ''
@@ -61,7 +56,7 @@ export function renderExtensionsView(this: YomicApp, container: HTMLElement): vo
         </button>`;
     }
     return `
-      <div class="v1-ext-row" data-ext-id="${escapeXml(ext.id)}">
+      <div class="v1-ext-row" data-ext-id="${escapeXml(ext.id)}" data-ext-url="${escapeXml(ext.baseUrl || '')}">
         ${this.buildSourceLogoHtml(ext)}
         <div class="v1-source-info">
           <div class="v1-ext-title-row">
@@ -77,7 +72,24 @@ export function renderExtensionsView(this: YomicApp, container: HTMLElement): vo
   };
 
   let listContentHtml = '';
-  if (filteredExts.length === 0) {
+  if (this.extVerificationProgress.active) {
+    listContentHtml = `
+      <div class="empty-state-box">
+        <div class="empty-state-icon-wrap">
+          <svg class="empty-state-spinner-svg" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="22" cy="22" r="18" stroke="var(--border-subtle)" stroke-width="3.5" />
+            <circle cx="22" cy="22" r="18" stroke="var(--ocean-primary)" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="28 85" />
+          </svg>
+        </div>
+        <div class="empty-state-title">
+          ${this.l('Memeriksa Repositori Ekstensi...', 'Checking Extension Repository...')}
+        </div>
+        <div class="empty-state-desc">${this.l('Sedang memeriksa pembaruan dan daftar ekstensi sumber terbaru...', 'Checking for updates and the latest source extension list...')}</div>
+        <div class="empty-state-progress-track" style="width: 220px; height: 4px; background: var(--bg-surface-alt); border-radius: 2px; overflow: hidden; margin-top: 6px;">
+          <div class="empty-state-progress-fill" style="width: 65%; height: 100%; background: var(--ocean-primary); border-radius: 2px; animation: extPulse 1.2s infinite ease-in-out;"></div>
+        </div>
+      </div>`;
+  } else if (filteredExts.length === 0) {
     listContentHtml = `
       <div class="empty-state-box">
         <div class="empty-state-icon-wrap">
@@ -109,7 +121,6 @@ export function renderExtensionsView(this: YomicApp, container: HTMLElement): vo
         <div class="v1-ext-section" data-section-type="installed">
           <div class="v1-ext-section-head">
             <span class="v1-ext-section-title">${this.t('extensions.filterInstalled')}</span>
-            <span class="v1-ext-section-count tabular-nums">${installedExts.length}</span>
           </div>
           <div class="v1-ext-group">
             ${installedExts.map((ext) => buildExtRow(ext)).join('')}
@@ -123,7 +134,6 @@ export function renderExtensionsView(this: YomicApp, container: HTMLElement): vo
         <div class="v1-ext-section" data-section-type="available">
           <div class="v1-ext-section-head">
             <span class="v1-ext-section-title">${this.t('extensions.filterAvailable')}</span>
-            <span class="v1-ext-section-count tabular-nums">${availableExts.length}</span>
           </div>
           <div class="v1-ext-group">
             ${availableExts.map((ext) => buildExtRow(ext)).join('')}
@@ -132,7 +142,7 @@ export function renderExtensionsView(this: YomicApp, container: HTMLElement): vo
           : installedExts.length > 0 && !isFiltered
           ? `
         <div class="v1-ext-all-installed-note" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:28px 0 16px 0;color:var(--ink-muted);font-size:12.5px;">
-          ${getIconSvg('check-circle-linear', { size: 16, color: '#0066CC' })}
+          ${getIconSvg('check-circle-linear', { size: 16, color: 'var(--ink-secondary)' })}
           <span>${this.l('Semua ekstensi dari repositori telah terpasang.', 'All extensions from the repository are installed.')}</span>
         </div>`
           : ''
@@ -140,21 +150,7 @@ export function renderExtensionsView(this: YomicApp, container: HTMLElement): vo
     `;
   }
 
-  // Floating Sync Pill if refresh is active
-  let syncPillHtml = '';
-  if (this.extVerificationProgress.active) {
-    syncPillHtml = `
-      <div id="extSyncPill" class="v1-sync-pill open">
-        <div class="v1-sync-pill-top">
-          <span>${this.l('Memeriksa Repositori Ekstensi...', 'Checking Extension Repository...')}</span>
-          <span class="tabular-nums" style="color:var(--ocean-primary); font-weight:700;">${this.l('Sinkronisasi', 'Syncing')}</span>
-        </div>
-        <div class="v1-sync-track">
-          <div class="empty-state-progress-fill" style="width: 100%; height: 100%; background: var(--ocean-primary); border-radius: 2px; animation: extPulse 1.2s infinite ease-in-out;"></div>
-        </div>
-      </div>
-    `;
-  }
+  const syncPillHtml = '';
 
   container.innerHTML = `
     <!-- Header: 3D Cube Icon + "Ekstensi" (ExtensionsView.axaml L347-363) -->
@@ -222,7 +218,8 @@ export function renderExtensionsView(this: YomicApp, container: HTMLElement): vo
 
     rows.forEach((row) => {
       const name = (row.querySelector('.v1-source-name')?.textContent ?? '').toLowerCase();
-      const matches = !q || name.includes(q);
+      const url = (row.getAttribute('data-ext-url') ?? '').toLowerCase();
+      const matches = !q || name.includes(q) || url.includes(q);
       row.style.display = matches ? '' : 'none';
       if (matches) {
         const sec = row.closest('.v1-ext-section');
@@ -270,6 +267,10 @@ export function renderExtensionsView(this: YomicApp, container: HTMLElement): vo
       emptyBox.style.display = 'none';
     }
   };
+
+  if (this.extensionSearchQuery.trim()) {
+    filterExtRowsInPlace();
+  }
 
   document.getElementById('btnToggleExtSearch')?.addEventListener('click', (ev) => {
     ev.stopPropagation();
@@ -332,34 +333,11 @@ export function renderExtensionsView(this: YomicApp, container: HTMLElement): vo
     this.renderExtensionsView(container);
   });
 
-  // Non-destructive refresh: keep extensions visible and show floating sync pill
+  // Centered progress view matching Browse/Library/Updates refresh UX
   const refreshExtensionsAction = () => {
     if (this.extVerificationProgress.active) return;
     this.extVerificationProgress = { active: true, current: 0, total: 1 };
-
-    const btn = document.getElementById('btnRefreshExtensions');
-    if (btn) {
-      btn.classList.add('is-disabled');
-      btn.setAttribute('disabled', 'true');
-      btn.title = this.l('Sedang Memeriksa...', 'Checking...');
-    }
-
-    let pill = document.getElementById('extSyncPill');
-    if (!pill) {
-      pill = document.createElement('div');
-      pill.id = 'extSyncPill';
-      pill.className = 'v1-sync-pill open';
-      pill.innerHTML = `
-        <div class="v1-sync-pill-top">
-          <span>${this.l('Memeriksa Repositori Ekstensi...', 'Checking Extension Repository...')}</span>
-          <span class="tabular-nums" style="color:var(--ocean-primary); font-weight:700;">${this.l('Sinkronisasi', 'Syncing')}</span>
-        </div>
-        <div class="v1-sync-track">
-          <div class="empty-state-progress-fill" style="width: 100%; height: 100%; background: var(--ocean-primary); border-radius: 2px; animation: extPulse 1.2s infinite ease-in-out;"></div>
-        </div>
-      `;
-      container.appendChild(pill);
-    }
+    this.renderExtensionsView(container);
 
     const finishRefresh = (list?: ExtensionItem[]) => {
       if (Array.isArray(list) && list.length > 0) {
@@ -368,8 +346,6 @@ export function renderExtensionsView(this: YomicApp, container: HTMLElement): vo
       }
       setTimeout(() => {
         this.extVerificationProgress.active = false;
-        const curPill = document.getElementById('extSyncPill');
-        if (curPill) curPill.remove();
         if (this.currentTab === 'extensions') {
           this.renderExtensionsView(container);
         }

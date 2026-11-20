@@ -142,6 +142,8 @@ export const DEFAULT_APP_SETTINGS: AppSettingsState = {
   enableAutoCropBorders: false,
   maxImageDimension: 2160,
   enableImageSharpening: false,
+  saveDownloadsAsCbz: false,
+  autoDeleteAfterRead: false,
   appLanguage: 'id',
   mangaDexLanguage: 'en'
 };

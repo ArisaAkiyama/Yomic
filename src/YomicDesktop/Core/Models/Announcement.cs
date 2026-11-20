@@ -21,6 +21,7 @@ namespace Yomic.Core.Models
 
         public string BadgeBackground => Type?.ToLowerInvariant() switch
         {
+            "update" or "release" => "#10B981",
             "warning" => "#F59E0B",
             "error" => "#EF4444",
             _ => "#0078D4"
@@ -28,8 +29,9 @@ namespace Yomic.Core.Models
 
         public string TypeDisplay => Type?.ToLowerInvariant() switch
         {
-            "warning" => "Warning",
-            "error" => "Error",
+            "update" or "release" => "Pembaruan",
+            "warning" => "Peringatan",
+            "error" => "Penting",
             _ => "Info"
         };
     }

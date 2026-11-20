@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -29,6 +30,7 @@ namespace Yomic.Core.Services
         private readonly SourceManager _sourceManager;
         private readonly LibraryService _libraryService;
         private readonly NetworkService _networkService;
+        private readonly SettingsService? _settingsService;
         private readonly string _downloadBaseDir;
 
         // Queue management - using List + lock for proper removal support
@@ -74,11 +76,12 @@ namespace Yomic.Core.Services
             }
         }
 
-        public DownloadService(SourceManager sourceManager, LibraryService libraryService, NetworkService networkService)
+        public DownloadService(SourceManager sourceManager, LibraryService libraryService, NetworkService networkService, SettingsService? settingsService = null)
         {
             _sourceManager = sourceManager;
             _libraryService = libraryService;
             _networkService = networkService;
+            _settingsService = settingsService;
             
             // Base directory: AppData/Yomic/Downloads
             _downloadBaseDir = DownloadPathService.BaseDirectory;
@@ -744,16 +747,39 @@ namespace Yomic.Core.Services
                         try { Directory.Delete(chapterDir, true); } catch { }
                     }
 
-                    try
+                    bool saveAsCbz = _settingsService?.SaveDownloadsAsCbz == true;
+                    if (saveAsCbz)
                     {
-                        Directory.Move(tempChapterDir, chapterDir);
+                        var cbzPath = DownloadPathService.GetChapterCbzPath(request.Manga, request.Chapter);
+                        try
+                        {
+                            if (File.Exists(cbzPath)) File.Delete(cbzPath);
+                            ZipFile.CreateFromDirectory(tempChapterDir, cbzPath, CompressionLevel.Optimal, includeBaseDirectory: false);
+                            try { Directory.Delete(tempChapterDir, true); } catch { }
+                        }
+                        catch (Exception cbzEx)
+                        {
+                            LogService.Warning("Download", $"CBZ packaging failed, falling back to folder: {cbzEx.Message}");
+                            try { if (File.Exists(cbzPath)) File.Delete(cbzPath); } catch { }
+                            if (Directory.Exists(tempChapterDir))
+                            {
+                                Directory.Move(tempChapterDir, chapterDir);
+                            }
+                        }
                     }
-                    catch
+                    else
                     {
-                        // Fallback move
-                        if (Directory.Exists(tempChapterDir))
+                        try
                         {
                             Directory.Move(tempChapterDir, chapterDir);
+                        }
+                        catch
+                        {
+                            // Fallback move
+                            if (Directory.Exists(tempChapterDir))
+                            {
+                                Directory.Move(tempChapterDir, chapterDir);
+                            }
                         }
                     }
 
