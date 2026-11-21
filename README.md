@@ -18,6 +18,14 @@
 [![Latest Release](https://img.shields.io/github/v/release/ArisaAkiyama/yomic?style=flat-square&color=0066FF&label=Latest)](https://github.com/ArisaAkiyama/yomic/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/ArisaAkiyama/yomic/total?style=flat-square&color=22C55E&label=Downloads)](https://github.com/ArisaAkiyama/yomic/releases)
 [![Stars](https://img.shields.io/github/stars/ArisaAkiyama/yomic?style=flat-square&color=EBCB8B&label=Stars&logo=github)](https://github.com/ArisaAkiyama/yomic/stargazers)
+[![Android Companion](https://img.shields.io/badge/Android-Yomic%20Mobile-3DDC84.svg?style=flat-square&logo=android&logoColor=white)](https://github.com/ArisaAkiyama/yomic-android)
+
+<br/>
+
+### 🌐 Language / Bahasa
+
+[![English](https://img.shields.io/badge/Language-English%20(Active)-0066CC?style=for-the-badge)](./README.md)
+[![Bahasa Indonesia](https://img.shields.io/badge/Bahasa-Indonesia-22C55E?style=for-the-badge)](./README.id.md)
 
 <br/>
 
@@ -30,14 +38,20 @@
 
 <table>
   <tr>
-    <td align="center" width="260">
-      <b>📥 Download Installer</b><br/><br/>
+    <td align="center" width="240">
+      <b>📥 Download Installer (PC)</b><br/><br/>
       <a href="https://github.com/ArisaAkiyama/yomic/releases/latest">
         <img src="https://img.shields.io/badge/Download-Yomic_Setup_v2.1.0.exe-0066CC?style=for-the-badge&logo=windows&logoColor=white" alt="Download Yomic v2 for Windows"/>
       </a>
     </td>
-    <td align="center" width="260">
-      <b>☕ Support & Donation</b><br/><br/>
+    <td align="center" width="240">
+      <b>📱 Yomic Mobile (Android)</b><br/><br/>
+      <a href="https://github.com/ArisaAkiyama/yomic-android">
+        <img src="https://img.shields.io/badge/Android-Yomic_Mobile-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Yomic Mobile for Android"/>
+      </a>
+    </td>
+    <td align="center" width="240">
+      <b>☕ Support &amp; Donation</b><br/><br/>
       <a href="https://trakteer.id/Arisa-Akiyama" target="_blank">
         <img src="https://edge-cdn.trakteer.id/images/embed/trbtn-red-1.png?v=14-05-2025" alt="Support on Trakteer" height="40"/>
       </a>
