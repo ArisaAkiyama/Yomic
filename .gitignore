@@ -34,13 +34,5 @@ Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
 
-# Android Mobile Build
-mobile/.gradle/
-mobile/build/
-mobile/app/build/
-mobile/local.properties
-mobile/.idea/
-*.apk
-*.aab
-*.keystore
-*.jks
+# Android Mobile (moved to separate repo: ArisaAkiyama/yomic-android)
+mobile/
