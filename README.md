@@ -22,13 +22,6 @@
 
 <br/>
 
-### 🌐 Language / Bahasa
-
-[![English](https://img.shields.io/badge/Language-English%20(Active)-0066CC?style=for-the-badge)](./README.md)
-[![Bahasa Indonesia](https://img.shields.io/badge/Bahasa-Indonesia-22C55E?style=for-the-badge)](./README.id.md)
-
-<br/>
-
 <p align="center">
   <b>Yomic v2</b> is a modern, open-source Windows desktop application for reading manga, manhwa, manhua, and webtoons.<br/>
   Powered by a hybrid <b>.NET 8 WPF + WebView2 + TypeScript</b> architecture with zero ads, offline downloads, and modular JS extensions.
